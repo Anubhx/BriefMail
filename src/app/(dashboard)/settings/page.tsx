@@ -13,7 +13,7 @@ export default function SettingsPage() {
         <div className="grid grid-cols-3 gap-4">
           <div className="p-4 rounded-lg bg-surface-elevated border border-brand/20">
             <h3 className="font-ui text-sm font-bold text-brand">Fast Tier</h3>
-            <p className="text-xs text-text-muted mt-1">Gemini 1.5 Flash (Quick Triage)</p>
+            <p className="text-xs text-text-muted mt-1">Gemini 3.5 Flash Lite (Quick Triage)</p>
           </div>
           <div className="p-4 rounded-lg bg-surface-elevated border border-border-subtle">
             <h3 className="font-ui text-sm font-bold text-text-primary">Balanced Tier</h3>

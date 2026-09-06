@@ -38,25 +38,7 @@ export async function classifyEmail(email: EmailInput): Promise<ClassificationOu
     };
   }
 
-  // Tier 2: HuggingFace zero-shot classification
-  const hf = await modelRouter.classifyWithHF(
-    email.subject,
-    email.snippet ?? ""
-  );
-
-  if (hf && hf.score >= 0.75) {
-    return {
-      category: hf.label,
-      subcategory: "unknown",
-      confidence: hf.score,
-      tier: "huggingface",
-      has_action_item: false,
-    };
-  }
-
-  // HF returned low-confidence (0.5–0.74) or null (throttled) — escalate to Gemini
-
-  // Tier 3: Gemini 2.5 Flash-Lite
+  // Tier 2: Gemini Flash-Lite (Direct escalation for all non-regex emails)
   const gem = await modelRouter.classifyWithGemini({
     from_email: email.from_email,
     subject: email.subject,

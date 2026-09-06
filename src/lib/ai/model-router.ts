@@ -152,7 +152,7 @@ class ModelRouter {
       const candidate = this.geminiKeys[idx];
       const rpm = await this.getRPMUsed(candidate.alias);
 
-      if (rpm < 14) {
+      if (rpm < 100) {
         await this.redis.set(rrKey, ((idx + 1) % this.geminiKeys.length).toString());
         return { key: candidate.key, alias: candidate.alias, tier: "gemini" };
       }
@@ -244,31 +244,38 @@ class ModelRouter {
     if (!keyStatus) return null;
 
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${keyStatus.key}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: SYSTEM_PROMPT + JSON.stringify(email),
-                  },
-                ],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.1,
-              maxOutputTokens: 500,
-              responseMimeType: "application/json",
-            },
-          }),
-        }
-      );
+      const models = ["gemini-2.5-flash-lite", "gemini-1.5-flash", "gemini-2.5-flash"];
+      let res: Response | null = null;
 
-      if (!res.ok) return null;
+      for (const model of models) {
+        res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keyStatus.key}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: SYSTEM_PROMPT + JSON.stringify(email),
+                    },
+                  ],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 500,
+                responseMimeType: "application/json",
+              },
+            }),
+          }
+        );
+
+        if (res.ok) break;
+      }
+
+      if (!res || !res.ok) return null;
 
       const data = (await res.json()) as GeminiApiResponse;
       await this.incrementRPM(keyStatus.alias);
