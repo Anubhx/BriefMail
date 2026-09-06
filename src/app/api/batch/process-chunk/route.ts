@@ -6,7 +6,7 @@ import { decryptToken, refreshAccessToken } from "@/lib/gmail/tokens";
 
 const processChunkSchema = z.object({
   job_id: z.string().uuid(),
-  chunk_size: z.number().min(1).max(500).default(100),
+  chunk_size: z.number().min(1).max(500).default(400),
 });
 
 function validateN8nSecret(request: NextRequest): boolean {

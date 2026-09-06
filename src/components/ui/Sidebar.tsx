@@ -17,7 +17,9 @@ import {
   User,
   Plus,
   CheckCircle2,
+  ShieldCheck,
 } from "lucide-react";
+
 import { clsx } from "clsx";
 import gsap from "gsap";
 import { useGSAP } from "@/hooks/useGSAP";
@@ -44,9 +46,10 @@ const categoryNavItems = [
   { href: "/finance", label: "Finance", icon: DollarSign, color: "bg-emerald-500" },
   { href: "/career", label: "Career", icon: Briefcase, color: "bg-blue-500" },
   { href: "/meetings", label: "Meetings", icon: Calendar, color: "bg-purple-500" },
-  { href: "/investments", label: "Investments", icon: TrendingUp, color: "bg-amber-500" },
-  { href: "/jobs", label: "Jobs", icon: Briefcase, color: "bg-cyan-500" },
+  { href: "/system", label: "System Triage", icon: ShieldCheck, color: "bg-amber-500" },
+  { href: "/investments", label: "Investments", icon: TrendingUp, color: "bg-cyan-500" },
 ];
+
 
 const connectedAccounts = [
   { email: "anubhav@gmail.com", active: true, color: "bg-emerald-400" },

@@ -5,10 +5,12 @@ const isProtectedRoute = createRouteMatcher([
   "/finance(.*)",
   "/career(.*)",
   "/meetings(.*)",
+  "/system(.*)",
   "/settings(.*)",
   "/dashboard(.*)",
   "/api/(.*)",
 ]);
+
 
 const isPublicRoute = createRouteMatcher([
   // Google Webhooks & Cron
