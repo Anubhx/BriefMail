@@ -7,7 +7,7 @@ const isProtectedRoute = createRouteMatcher([
 
 const isPublicApiRoute = createRouteMatcher([
   "/api/webhooks/gmail",
-  "/api/cron",
+  "/api/cron(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

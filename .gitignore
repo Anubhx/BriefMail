@@ -15,7 +15,8 @@
 .env.development.local
 .env.test.local
 .env.production.local
-!.env.local.example
+!.env.local.example 
+.env.docker
 
 # Logs & debug outputs
 *.log
@@ -41,5 +42,5 @@ Thumbs.db
 .vercel
 
 # Explicitly track project documentation & agent skills
-!/.docs/
-!/.agents/
+/.docs/
+/.agents/

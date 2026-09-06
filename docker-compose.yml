@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: briefmail-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - WEBHOOK_URL=http://host.docker.internal:5678
+      - N8N_PROTOCOL=http
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - GENERIC_TIMEZONE=Asia/Kolkata
+      - TZ=Asia/Kolkata
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=${SUPABASE_DB_HOST}
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=postgres
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=${SUPABASE_DB_PASSWORD}
+      - DB_POSTGRESDB_SCHEMA=n8n
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - GEMINI_KEY_1=${GEMINI_KEY_1}
+      - GEMINI_KEY_2=${GEMINI_KEY_2}
+      - GEMINI_KEY_3=${GEMINI_KEY_3}
+      - GEMINI_KEY_4=${GEMINI_KEY_4}
+      - HF_KEY_1=${HF_KEY_1}
+      - HF_KEY_2=${HF_KEY_2}
+      - HF_KEY_3=${HF_KEY_3}
+      - HF_KEY_4=${HF_KEY_4}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    volumes:
+      - /Volumes/EXHDD1Tb/n8n-data:/home/node/.n8n
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider http://localhost:5678/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: briefmail-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - /Volumes/EXHDD1Tb/redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+
+  batch-worker:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: briefmail-batch-worker
+    depends_on:
+      redis:
+        condition: service_started
+      n8n:
+        condition: service_healthy
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - WEBHOOK_URL=http://host.docker.internal:5678
+      - N8N_PROTOCOL=http
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - GENERIC_TIMEZONE=Asia/Kolkata
+      - TZ=Asia/Kolkata
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=${SUPABASE_DB_HOST}
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=postgres
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=${SUPABASE_DB_PASSWORD}
+      - DB_POSTGRESDB_SCHEMA=n8n
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - GEMINI_KEY_1=${GEMINI_KEY_1}
+      - GEMINI_KEY_2=${GEMINI_KEY_2}
+      - GEMINI_KEY_3=${GEMINI_KEY_3}
+      - GEMINI_KEY_4=${GEMINI_KEY_4}
+      - HF_KEY_1=${HF_KEY_1}
+      - HF_KEY_2=${HF_KEY_2}
+      - HF_KEY_3=${HF_KEY_3}
+      - HF_KEY_4=${HF_KEY_4}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - /Volumes/EXHDD1Tb/worker-logs:/app/logs
+    restart: unless-stopped

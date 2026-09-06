@@ -1,0 +1,105 @@
+{
+  "name": "AdvancedMail — 04 Daily Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 1 * * *"
+            }
+          ]
+        }
+      },
+      "id": "daily-trigger",
+      "name": "Daily at 7:00 AM IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.NEXT_PUBLIC_APP_URL }}/api/digest/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      },
+      "id": "generate-digest",
+      "name": "Generate Digest Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "users",
+        "options": {}
+      },
+      "id": "split-users",
+      "name": "Split Per User",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.digest_enabled }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ]
+        }
+      },
+      "id": "digest-enabled",
+      "name": "Digest Enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXT_PUBLIC_APP_URL }}/api/digest/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"user_id\": \"{{ $json.user_id }}\",\n  \"stats\": {{ JSON.stringify($json.stats) }},\n  \"highlights\": {{ JSON.stringify($json.highlights) }},\n  \"action_items\": {{ JSON.stringify($json.action_items) }},\n  \"upcoming_meetings\": {{ JSON.stringify($json.upcoming_meetings) }}\n}",
+        "options": {}
+      },
+      "id": "send-digest",
+      "name": "Send Digest Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 200]
+    }
+  ],
+  "connections": {
+    "Daily at 7:00 AM IST": { "main": [[{ "node": "Generate Digest Data", "type": "main", "index": 0 }]] },
+    "Generate Digest Data": { "main": [[{ "node": "Split Per User", "type": "main", "index": 0 }]] },
+    "Split Per User": { "main": [[{ "node": "Digest Enabled?", "type": "main", "index": 0 }]] },
+    "Digest Enabled?": {
+      "main": [
+        [{ "node": "Send Digest Email", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1", "saveExecutionProgress": true },
+  "tags": [{ "name": "advanced-mail" }],
+  "active": true
+}

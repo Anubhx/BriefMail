@@ -1,0 +1,164 @@
+{
+  "name": "AdvancedMail — 03 Action Dispatcher",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "email-action",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "action-webhook",
+      "name": "Action Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "email-action"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.action }}",
+              "rightValue": "archive",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "is-archive",
+      "name": "Archive?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [240, 180]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.action }}",
+              "rightValue": "label",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "is-label",
+      "name": "Label?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [240, 420]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/gmail/v1/users/me/messages/{{ $json.body.message_id }}/modify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $json.body.access_token }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"removeLabelIds\": [\"INBOX\"]\n}",
+        "options": {}
+      },
+      "id": "gmail-archive",
+      "name": "Gmail: Archive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/gmail/v1/users/me/messages/{{ $json.body.message_id }}/modify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $json.body.access_token }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"addLabelIds\": [\"{{ $('Action Webhook').item.json.body.label_id }}\"],\n  \"removeLabelIds\": []\n}",
+        "options": {}
+      },
+      "id": "gmail-label",
+      "name": "Gmail: Apply Label",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 420]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/gmail/v1/users/me/messages/{{ $json.body.message_id }}/modify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $json.body.access_token }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"removeLabelIds\": [\"UNREAD\"]\n}",
+        "options": {}
+      },
+      "id": "gmail-mark-read",
+      "name": "Gmail: Mark Read",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXT_PUBLIC_APP_URL }}/api/gmail/action-complete",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"email_id\": \"{{ $('Action Webhook').item.json.body.email_id }}\",\n  \"action\": \"{{ $('Action Webhook').item.json.body.action }}\",\n  \"success\": true\n}",
+        "options": {}
+      },
+      "id": "update-db",
+      "name": "Update DB via API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "Action Webhook": {
+      "main": [[
+        { "node": "Archive?", "type": "main", "index": 0 },
+        { "node": "Label?", "type": "main", "index": 0 }
+      ]]
+    },
+    "Archive?": {
+      "main": [
+        [{ "node": "Gmail: Archive", "type": "main", "index": 0 }],
+        [{ "node": "Gmail: Mark Read", "type": "main", "index": 0 }]
+      ]
+    },
+    "Label?": { "main": [[{ "node": "Gmail: Apply Label", "type": "main", "index": 0 }]] },
+    "Gmail: Archive": { "main": [[{ "node": "Update DB via API", "type": "main", "index": 0 }]] },
+    "Gmail: Mark Read": { "main": [[{ "node": "Update DB via API", "type": "main", "index": 0 }]] },
+    "Gmail: Apply Label": { "main": [[{ "node": "Update DB via API", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveExecutionProgress": false },
+  "tags": [{ "name": "advanced-mail" }],
+  "active": true
+}

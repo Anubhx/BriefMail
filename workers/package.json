@@ -1,0 +1,10 @@
+{
+  "name": "briefmail-batch-worker",
+  "version": "1.0.0",
+  "description": "Background email batch processing worker for BriefMail",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {}
+}

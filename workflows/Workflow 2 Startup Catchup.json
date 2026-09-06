@@ -1,0 +1,157 @@
+{
+  "name": "AdvancedMail — 02 Startup Catchup",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "startup-catchup",
+        "authentication": "headerAuth",
+        "options": { "responseMode": "responseNode" }
+      },
+      "id": "webhook-trigger",
+      "name": "Startup Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "startup-catchup"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"catchup_started\", \"timestamp\": \"{{ new Date().toISOString() }}\" }",
+        "options": {}
+      },
+      "id": "respond-immediately",
+      "name": "Respond 200 Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [220, 180]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.NEXT_PUBLIC_APP_URL }}/api/queue/pending",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-pending-queue",
+      "name": "Get Pending Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 420]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ]
+        }
+      },
+      "id": "has-pending",
+      "name": "Queue Has Items?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 420]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "items",
+        "options": {}
+      },
+      "id": "split-queue-items",
+      "name": "Split Queue Items",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "id": "batch-10",
+      "name": "Batch of 10",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXT_PUBLIC_APP_URL }}/api/classify/single",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"queue_item_id\": \"{{ $json.id }}\"\n}",
+        "options": {
+          "timeout": 45000,
+          "batching": { "batch": { "batchSize": 1, "batchInterval": 3000 } }
+        }
+      },
+      "id": "classify-single",
+      "name": "Classify Single Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "seconds"
+      },
+      "id": "rate-limit-wait",
+      "name": "Wait 2s (Rate Limit)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "queue-empty",
+      "name": "Queue Empty — Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [660, 480]
+    }
+  ],
+  "connections": {
+    "Startup Webhook": {
+      "main": [[
+        { "node": "Respond 200 Immediately", "type": "main", "index": 0 },
+        { "node": "Get Pending Queue", "type": "main", "index": 0 }
+      ]]
+    },
+    "Get Pending Queue": { "main": [[{ "node": "Queue Has Items?", "type": "main", "index": 0 }]] },
+    "Queue Has Items?": {
+      "main": [
+        [{ "node": "Split Queue Items", "type": "main", "index": 0 }],
+        [{ "node": "Queue Empty — Done", "type": "main", "index": 0 }]
+      ]
+    },
+    "Split Queue Items": { "main": [[{ "node": "Batch of 10", "type": "main", "index": 0 }]] },
+    "Batch of 10": { "main": [[{ "node": "Classify Single Email", "type": "main", "index": 0 }]] },
+    "Classify Single Email": { "main": [[{ "node": "Wait 2s (Rate Limit)", "type": "main", "index": 0 }]] },
+    "Wait 2s (Rate Limit)": { "main": [[{ "node": "Batch of 10", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveExecutionProgress": true },
+  "tags": [{ "name": "advanced-mail" }],
+  "active": true
+}
