@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { encryptToken } from "@/lib/gmail/tokens";
 
-const SETTINGS_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "") + "/dashboard/settings";
+const SETTINGS_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "") + "/settings";
 
 function redirectError(reason: string): NextResponse {
   return NextResponse.redirect(`${SETTINGS_URL}?error=${reason}`);

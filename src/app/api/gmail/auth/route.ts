@@ -22,7 +22,7 @@ export async function GET(): Promise<NextResponse> {
   if (error || !appUser) {
     return NextResponse.redirect(
       new URL(
-        "/dashboard/settings?error=user_not_found",
+        "/settings?error=user_not_found",
         process.env.NEXT_PUBLIC_APP_URL!
       )
     );
@@ -42,6 +42,9 @@ export async function GET(): Promise<NextResponse> {
       "https://www.googleapis.com/auth/gmail.readonly",
       "https://www.googleapis.com/auth/gmail.modify",
       "https://www.googleapis.com/auth/gmail.labels",
+      "email",
+      "profile",
+      "openid",
     ].join(" "),
     access_type: "offline",
     prompt: "consent",
