@@ -101,6 +101,8 @@ class ModelRouter {
   private geminiKeys: Array<{ key: string; alias: string }>;
   private hfKeys: Array<{ key: string; alias: string }>;
   private redis: Redis | null = null;
+  private inMemoryGeminiIdx = 0;
+  private inMemoryHfIdx = 0;
 
   constructor() {
     // Load Gemini keys — skip if env var is empty
@@ -128,7 +130,6 @@ class ModelRouter {
           enableOfflineQueue: false,
         });
         this.redis.on("error", (err) => {
-          // Suppress unhandled redis error events
           console.warn("[ModelRouter] Redis connection warning (falling back to in-memory/direct key usage):", err?.message || err);
         });
       } catch (err) {
@@ -174,21 +175,27 @@ class ModelRouter {
       process.env.GEMINI_KEY_4,
     ].filter(Boolean) as string[];
 
-    if (this.geminiKeys.length === 0 && envKeys.length === 0) return null;
+    const activeKeys =
+      this.geminiKeys.length > 0
+        ? this.geminiKeys
+        : envKeys.map((k, i) => ({ key: k, alias: `gemini_${i + 1}` }));
+
+    if (activeKeys.length === 0) return null;
 
     try {
       if (!this.redis) throw new Error("no redis");
       const rrKey = "adv_mail:gemini_rr_idx";
       const startIdx = parseInt((await this.redis.get(rrKey)) ?? "0", 10) || 0;
 
-      for (let offset = 0; offset < this.geminiKeys.length; offset++) {
-        const idx = (startIdx + offset) % this.geminiKeys.length;
-        const candidate = this.geminiKeys[idx];
+      for (let offset = 0; offset < activeKeys.length; offset++) {
+        const idx = (startIdx + offset) % activeKeys.length;
+        const candidate = activeKeys[idx];
         const rpm = await this.getRPMUsed(candidate.alias);
 
-        if (rpm < 100) {
+        // Free tier has 15 RPM max -> keep threshold at 14 to avoid 429
+        if (rpm < 14) {
           try {
-            await this.redis.set(rrKey, ((idx + 1) % this.geminiKeys.length).toString());
+            await this.redis.set(rrKey, ((idx + 1) % activeKeys.length).toString());
           } catch {
             // Ignore Redis write error
           }
@@ -198,14 +205,10 @@ class ModelRouter {
 
       return null; // All throttled
     } catch {
-      // Fallback: return first available Gemini key without round robin
-      if (this.geminiKeys.length > 0) {
-        return { key: this.geminiKeys[0].key, alias: this.geminiKeys[0].alias, tier: "gemini" };
-      }
-      if (envKeys.length > 0) {
-        return { key: envKeys[0], alias: "gemini_1", tier: "gemini" };
-      }
-      return null;
+      // Fallback: smooth in-memory round-robin across all active keys
+      const idx = this.inMemoryGeminiIdx % activeKeys.length;
+      this.inMemoryGeminiIdx = (this.inMemoryGeminiIdx + 1) % activeKeys.length;
+      return { key: activeKeys[idx].key, alias: activeKeys[idx].alias, tier: "gemini" };
     }
   }
 
@@ -217,22 +220,26 @@ class ModelRouter {
       process.env.HF_KEY_4,
     ].filter(Boolean) as string[];
 
-    if (this.hfKeys.length === 0 && envKeys.length === 0) return null;
+    const activeKeys =
+      this.hfKeys.length > 0
+        ? this.hfKeys
+        : envKeys.map((k, i) => ({ key: k, alias: `hf_${i + 1}` }));
 
-    // If Redis unavailable, just return first available HF key
+    if (activeKeys.length === 0) return null;
+
     try {
       if (!this.redis) throw new Error("no redis");
       const rrKey = "adv_mail:hf_rr_idx";
       const startIdx = parseInt((await this.redis.get(rrKey)) ?? "0", 10) || 0;
 
-      for (let offset = 0; offset < this.hfKeys.length; offset++) {
-        const idx = (startIdx + offset) % this.hfKeys.length;
-        const candidate = this.hfKeys[idx];
+      for (let offset = 0; offset < activeKeys.length; offset++) {
+        const idx = (startIdx + offset) % activeKeys.length;
+        const candidate = activeKeys[idx];
         const rpm = await this.getRPMUsed(candidate.alias);
 
         if (rpm < 9) {
           try {
-            await this.redis.set(rrKey, ((idx + 1) % this.hfKeys.length).toString());
+            await this.redis.set(rrKey, ((idx + 1) % activeKeys.length).toString());
           } catch {
             // Ignore Redis write error
           }
@@ -242,14 +249,9 @@ class ModelRouter {
 
       return null; // All throttled
     } catch {
-      // Fallback: return first available HF key without round robin
-      if (this.hfKeys.length > 0) {
-        return { key: this.hfKeys[0].key, alias: this.hfKeys[0].alias, tier: "huggingface" };
-      }
-      if (envKeys.length > 0) {
-        return { key: envKeys[0], alias: "hf_1", tier: "huggingface" };
-      }
-      return null;
+      const idx = this.inMemoryHfIdx % activeKeys.length;
+      this.inMemoryHfIdx = (this.inMemoryHfIdx + 1) % activeKeys.length;
+      return { key: activeKeys[idx].key, alias: activeKeys[idx].alias, tier: "huggingface" };
     }
   }
 
@@ -263,7 +265,6 @@ class ModelRouter {
       const budgetRemaining = parseInt(val, 10);
       return isNaN(budgetRemaining) || budgetRemaining > 0;
     } catch {
-      // If Redis unavailable, skip the budget check and proceed with classification
       return true;
     }
   }
@@ -312,7 +313,6 @@ class ModelRouter {
       );
 
       if (res.status === 503 || res.status === 429) return null;
-
       if (!res.ok) return null;
 
       const data = (await res.json()) as HFApiResponse;
@@ -336,53 +336,70 @@ class ModelRouter {
       body_preview?: string;
     }
   ): Promise<GeminiResult | null> {
-    try {
-      const keyStatus = await this.getNextGeminiKey();
-      if (!keyStatus) return null;
+    const maxAttempts = Math.min(Math.max(this.geminiKeys.length, 1), 4);
 
-      const models = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash"];
-      let res: Response | null = null;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const keyStatus = await this.getNextGeminiKey();
+        if (!keyStatus) return null;
 
-      for (const model of models) {
-        res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keyStatus.key}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
+        // Primary model: gemini-3.5-flash-lite, fallback: gemini-3.6-flash
+        const models = ["gemini-3.5-flash-lite", "gemini-3.6-flash"];
+        let res: Response | null = null;
+
+        for (const model of models) {
+          try {
+            res = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keyStatus.key}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  contents: [
                     {
-                      text: SYSTEM_PROMPT + JSON.stringify(email),
+                      parts: [
+                        {
+                          text: SYSTEM_PROMPT + JSON.stringify(email),
+                        },
+                      ],
                     },
                   ],
-                },
-              ],
-              generationConfig: {
-                temperature: 0.1,
-                maxOutputTokens: 500,
-                responseMimeType: "application/json",
-              },
-            }),
+                  generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 500,
+                    responseMimeType: "application/json",
+                  },
+                }),
+              }
+            );
+
+            if (res.ok) break;
+
+            // If 429 rate limit hit, break model loop and rotate to next key
+            if (res.status === 429) {
+              console.warn(`[ModelRouter] Gemini key ${keyStatus.alias} hit 429 rate limit. Rotating key...`);
+              break;
+            }
+          } catch (fetchErr) {
+            console.warn(`[ModelRouter] Fetch error on ${model}:`, fetchErr);
           }
-        );
+        }
 
-        if (res.ok) break;
+        if (res && res.ok) {
+          const data = (await res.json()) as GeminiApiResponse;
+          await this.incrementRPM(keyStatus.alias);
+
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!text) return null;
+
+          return JSON.parse(text) as GeminiResult;
+        }
+      } catch (err) {
+        console.warn("[ModelRouter] Gemini attempt failed:", err);
       }
-
-      if (!res || !res.ok) return null;
-
-      const data = (await res.json()) as GeminiApiResponse;
-      await this.incrementRPM(keyStatus.alias);
-
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) return null;
-
-      return JSON.parse(text) as GeminiResult;
-    } catch {
-      return null;
     }
+
+    return null;
   }
 }
 
