@@ -28,6 +28,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/classify/single",
   "/api/classify/batch",
   "/api/queue/pending",
+  "/api/queue/drain",
   "/api/batch/active-jobs",
   "/api/batch/process-chunk",
   "/api/batch/update-progress",
