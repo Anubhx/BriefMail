@@ -5,6 +5,9 @@ import { modelRouter } from "./model-router";
 
 export interface EmailInput extends Tier1EmailInput {
   body_preview?: string;
+  body_text?: string;
+  body_html?: string;
+  received_at?: Date;
 }
 
 export interface ClassificationOutput {
