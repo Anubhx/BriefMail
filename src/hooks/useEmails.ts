@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEmailStore } from "@/store/useEmailStore";
 
-export function useEmails() {
-  const emails = useEmailStore((state) => state.emails);
+export function useEmails(category: string = "all") {
   return useQuery({
-    queryKey: ["emails"],
+    queryKey: ["emails", category],
     queryFn: async () => {
-      return emails;
+      const res = await fetch(`/api/emails?category=${encodeURIComponent(category)}`);
+      if (!res.ok) throw new Error("Failed to fetch emails");
+      return res.json();
     },
-    initialData: emails,
+    staleTime: 30 * 1000,
   });
 }
