@@ -4,7 +4,8 @@ import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
 
 const snoozeSchema = z.object({
-  snooze_until: z.string().datetime(),
+  snooze_until: z.string().datetime().nullable().optional(),
+  is_snoozed: z.boolean().optional(),
 });
 
 // PATCH /api/emails/[id]/snooze
@@ -44,11 +45,15 @@ export async function PATCH(
     return NextResponse.json({ error: "user_not_found" }, { status: 404 });
   }
 
+  const isSnoozed = parsed.data.is_snoozed !== undefined ? parsed.data.is_snoozed : true;
+  const snoozeUntil = isSnoozed ? parsed.data.snooze_until || null : null;
+
   const { error } = await db
     .from("emails")
     .update({
-      is_snoozed: true,
-      snoozed_until: parsed.data.snooze_until,
+      is_snoozed: isSnoozed,
+      snooze_until: snoozeUntil,
+      snoozed_until: snoozeUntil,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)

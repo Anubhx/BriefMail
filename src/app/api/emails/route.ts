@@ -16,6 +16,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const search = searchParams.get("search")?.trim();
   const isReadParam = searchParams.get("is_read");
   const isArchivedParam = searchParams.get("is_archived");
+  const isStarredParam = searchParams.get("is_starred");
+  const isSnoozedParam = searchParams.get("is_snoozed");
 
   const db = createServerClient();
 
@@ -62,11 +64,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     )
     .eq("user_id", appUser.id);
 
-  // Archive filter: default to non-archived unless specifically requested
+  // Archive filter: default to non-archived unless specifically requested, or when querying starred/snoozed directly
   if (isArchivedParam === "true") {
     query = query.eq("is_archived", true);
-  } else if (isArchivedParam === "false" || !isArchivedParam) {
+  } else if (isArchivedParam === "false") {
     query = query.eq("is_archived", false);
+  } else if (!isArchivedParam && isStarredParam !== "true" && isSnoozedParam !== "true") {
+    query = query.eq("is_archived", false);
+  }
+
+  // Starred filter
+  if (isStarredParam === "true") {
+    query = query.eq("is_starred", true);
+  } else if (isStarredParam === "false") {
+    query = query.eq("is_starred", false);
+  }
+
+  // Snoozed filter
+  if (isSnoozedParam === "true") {
+    query = query.eq("is_snoozed", true);
+  } else if (isSnoozedParam === "false") {
+    query = query.eq("is_snoozed", false);
   }
 
   // Category filter

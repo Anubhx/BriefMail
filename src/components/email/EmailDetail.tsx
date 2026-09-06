@@ -41,6 +41,8 @@ export interface LiveEmailDetail {
   is_starred?: boolean;
   is_archived?: boolean;
   is_snoozed?: boolean;
+  snoozed_until?: string | null;
+  snooze_until?: string | null;
   attachments?: any[];
 }
 
