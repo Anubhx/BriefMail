@@ -100,7 +100,7 @@ const HF_LABEL_MAP: Record<string, string> = {
 class ModelRouter {
   private geminiKeys: Array<{ key: string; alias: string }>;
   private hfKeys: Array<{ key: string; alias: string }>;
-  private redis: Redis;
+  private redis: Redis | null = null;
 
   constructor() {
     // Load Gemini keys — skip if env var is empty
@@ -119,75 +119,171 @@ class ModelRouter {
       }))
       .filter((k) => k.key.length > 0);
 
-    this.redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379", {
-      maxRetriesPerRequest: 2,
-      lazyConnect: true,
-    });
+    if (process.env.REDIS_URL) {
+      try {
+        this.redis = new Redis(process.env.REDIS_URL, {
+          maxRetriesPerRequest: 1,
+          lazyConnect: true,
+          connectTimeout: 2000,
+          enableOfflineQueue: false,
+        });
+        this.redis.on("error", (err) => {
+          // Suppress unhandled redis error events
+          console.warn("[ModelRouter] Redis connection warning (falling back to in-memory/direct key usage):", err?.message || err);
+        });
+      } catch (err) {
+        console.warn("[ModelRouter] Redis init skipped:", err);
+        this.redis = null;
+      }
+    } else {
+      this.redis = null;
+    }
   }
 
   // ── RPM tracking ────────────────────────────────────────────────────────────
 
   private async getRPMUsed(alias: string): Promise<number> {
-    const val = await this.redis.get(`adv_mail:rpm:${alias}`);
-    return parseInt(val ?? "0", 10) || 0;
+    try {
+      if (!this.redis) return 0;
+      const val = await this.redis.get(`adv_mail:rpm:${alias}`);
+      return parseInt(val ?? "0", 10) || 0;
+    } catch {
+      return 0;
+    }
   }
 
   private async incrementRPM(alias: string): Promise<void> {
-    const pipeline = this.redis.multi();
-    pipeline.incr(`adv_mail:rpm:${alias}`);
-    pipeline.expire(`adv_mail:rpm:${alias}`, 60);
-    await pipeline.exec();
+    try {
+      if (!this.redis) return;
+      const pipeline = this.redis.multi();
+      pipeline.incr(`adv_mail:rpm:${alias}`);
+      pipeline.expire(`adv_mail:rpm:${alias}`, 60);
+      await pipeline.exec();
+    } catch {
+      // Redis tracking failure is non-fatal
+    }
   }
 
   // ── Round-robin key selection ───────────────────────────────────────────────
 
   async getNextGeminiKey(): Promise<KeyStatus | null> {
-    if (this.geminiKeys.length === 0) return null;
+    const envKeys = [
+      process.env.GEMINI_KEY_1,
+      process.env.GEMINI_KEY_2,
+      process.env.GEMINI_KEY_3,
+      process.env.GEMINI_KEY_4,
+    ].filter(Boolean) as string[];
 
-    const rrKey = "adv_mail:gemini_rr_idx";
-    const startIdx = parseInt((await this.redis.get(rrKey)) ?? "0", 10) || 0;
+    if (this.geminiKeys.length === 0 && envKeys.length === 0) return null;
 
-    for (let offset = 0; offset < this.geminiKeys.length; offset++) {
-      const idx = (startIdx + offset) % this.geminiKeys.length;
-      const candidate = this.geminiKeys[idx];
-      const rpm = await this.getRPMUsed(candidate.alias);
+    try {
+      if (!this.redis) throw new Error("no redis");
+      const rrKey = "adv_mail:gemini_rr_idx";
+      const startIdx = parseInt((await this.redis.get(rrKey)) ?? "0", 10) || 0;
 
-      if (rpm < 100) {
-        await this.redis.set(rrKey, ((idx + 1) % this.geminiKeys.length).toString());
-        return { key: candidate.key, alias: candidate.alias, tier: "gemini" };
+      for (let offset = 0; offset < this.geminiKeys.length; offset++) {
+        const idx = (startIdx + offset) % this.geminiKeys.length;
+        const candidate = this.geminiKeys[idx];
+        const rpm = await this.getRPMUsed(candidate.alias);
+
+        if (rpm < 100) {
+          try {
+            await this.redis.set(rrKey, ((idx + 1) % this.geminiKeys.length).toString());
+          } catch {
+            // Ignore Redis write error
+          }
+          return { key: candidate.key, alias: candidate.alias, tier: "gemini" };
+        }
       }
-    }
 
-    return null; // All throttled
+      return null; // All throttled
+    } catch {
+      // Fallback: return first available Gemini key without round robin
+      if (this.geminiKeys.length > 0) {
+        return { key: this.geminiKeys[0].key, alias: this.geminiKeys[0].alias, tier: "gemini" };
+      }
+      if (envKeys.length > 0) {
+        return { key: envKeys[0], alias: "gemini_1", tier: "gemini" };
+      }
+      return null;
+    }
   }
 
   async getNextHFKey(): Promise<KeyStatus | null> {
-    if (this.hfKeys.length === 0) return null;
+    const envKeys = [
+      process.env.HF_KEY_1,
+      process.env.HF_KEY_2,
+      process.env.HF_KEY_3,
+      process.env.HF_KEY_4,
+    ].filter(Boolean) as string[];
 
-    const rrKey = "adv_mail:hf_rr_idx";
-    const startIdx = parseInt((await this.redis.get(rrKey)) ?? "0", 10) || 0;
+    if (this.hfKeys.length === 0 && envKeys.length === 0) return null;
 
-    for (let offset = 0; offset < this.hfKeys.length; offset++) {
-      const idx = (startIdx + offset) % this.hfKeys.length;
-      const candidate = this.hfKeys[idx];
-      const rpm = await this.getRPMUsed(candidate.alias);
+    // If Redis unavailable, just return first available HF key
+    try {
+      if (!this.redis) throw new Error("no redis");
+      const rrKey = "adv_mail:hf_rr_idx";
+      const startIdx = parseInt((await this.redis.get(rrKey)) ?? "0", 10) || 0;
 
-      if (rpm < 9) {
-        await this.redis.set(rrKey, ((idx + 1) % this.hfKeys.length).toString());
-        return { key: candidate.key, alias: candidate.alias, tier: "huggingface" };
+      for (let offset = 0; offset < this.hfKeys.length; offset++) {
+        const idx = (startIdx + offset) % this.hfKeys.length;
+        const candidate = this.hfKeys[idx];
+        const rpm = await this.getRPMUsed(candidate.alias);
+
+        if (rpm < 9) {
+          try {
+            await this.redis.set(rrKey, ((idx + 1) % this.hfKeys.length).toString());
+          } catch {
+            // Ignore Redis write error
+          }
+          return { key: candidate.key, alias: candidate.alias, tier: "huggingface" };
+        }
       }
-    }
 
-    return null; // All throttled
+      return null; // All throttled
+    } catch {
+      // Fallback: return first available HF key without round robin
+      if (this.hfKeys.length > 0) {
+        return { key: this.hfKeys[0].key, alias: this.hfKeys[0].alias, tier: "huggingface" };
+      }
+      if (envKeys.length > 0) {
+        return { key: envKeys[0], alias: "hf_1", tier: "huggingface" };
+      }
+      return null;
+    }
+  }
+
+  // ── AI Rate Budget tracking ──────────────────────────────────────────────────
+
+  async checkAIRateBudget(key = "adv_mail:ai_rate_budget"): Promise<boolean> {
+    try {
+      if (!this.redis) return true;
+      const val = await this.redis.get(key);
+      if (val === null) return true;
+      const budgetRemaining = parseInt(val, 10);
+      return isNaN(budgetRemaining) || budgetRemaining > 0;
+    } catch {
+      // If Redis unavailable, skip the budget check and proceed with classification
+      return true;
+    }
+  }
+
+  async recordAIRateBudgetUsage(key = "adv_mail:ai_rate_budget", amount = 1): Promise<void> {
+    try {
+      if (!this.redis) return;
+      await this.redis.decrby(key, amount);
+    } catch {
+      // Redis unavailable - skip budget tracking
+    }
   }
 
   // ── HuggingFace inference ───────────────────────────────────────────────────
 
   async classifyWithHF(subject: string, snippet: string): Promise<HFResult | null> {
-    const keyStatus = await this.getNextHFKey();
-    if (!keyStatus) return null;
-
     try {
+      const keyStatus = await this.getNextHFKey();
+      if (!keyStatus) return null;
+
       const res = await fetch(
         "https://api-inference.huggingface.co/models/facebook/bart-large-mnli",
         {
@@ -240,10 +336,10 @@ class ModelRouter {
       body_preview?: string;
     }
   ): Promise<GeminiResult | null> {
-    const keyStatus = await this.getNextGeminiKey();
-    if (!keyStatus) return null;
-
     try {
+      const keyStatus = await this.getNextGeminiKey();
+      if (!keyStatus) return null;
+
       const models = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash"];
       let res: Response | null = null;
 
