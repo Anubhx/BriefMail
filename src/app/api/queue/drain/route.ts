@@ -6,7 +6,7 @@ import { classifyEmail } from "@/lib/ai/classify-pipeline";
 import { saveClassifiedEmail } from "@/lib/ai/save-classified-email";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60; // Allow up to 60s for draining 20 emails
+export const maxDuration = 60;
 
 function validateN8nSecret(request: NextRequest): boolean {
   return request.headers.get("x-n8n-secret") === process.env.N8N_WEBHOOK_SECRET;
@@ -61,21 +61,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const rows = (rawRows || []) as unknown as QueueRow[];
 
   if (rows.length === 0) {
-    // Queue is empty
     return NextResponse.json({
       processed: 0,
       remaining: 0,
     });
   }
 
-  // 3. Mark selected rows as 'processing' so parallel drain workers don't grab them
+  // 3. Mark selected rows as 'processing' so parallel drain calls don't pick them
   const rowIds = rows.map((r) => r.id);
   await db
     .from("pending_queue")
     .update({ status: "processing" })
     .in("id", rowIds);
 
-  // Cache access tokens per account across the batch to minimize Google OAuth refreshes
   const tokenCache = new Map<string, string>();
 
   async function getAccessToken(account: AccountRecord): Promise<string | null> {
@@ -114,7 +112,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       console.warn(`[queue/drain] Token refresh error for account ${account.id}:`, err);
     }
 
-    // Fallback: try decrypting existing access token
     if (account.access_token) {
       try {
         const decrypted = decryptToken(account.access_token);
@@ -130,13 +127,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   let processedCount = 0;
 
-  // Helper to process a single queue item
   async function processRow(row: QueueRow): Promise<void> {
     const rawAccount = row.gmail_accounts;
     const account = (Array.isArray(rawAccount) ? rawAccount[0] : rawAccount) as AccountRecord | null;
 
     if (!account) {
-      console.warn(`[queue/drain] gmail_account not found for queue item ${row.id}`);
       await db
         .from("pending_queue")
         .update({
@@ -150,7 +145,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const accessToken = await getAccessToken(account);
     if (!accessToken) {
-      console.warn(`[queue/drain] could not obtain valid access token for account ${account.id}`);
       await db
         .from("pending_queue")
         .update({
@@ -162,14 +156,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return;
     }
 
-    // Resolve message ID(s): can be a numeric historyId or direct messageId
     const rawId = ((row.message_id || row.history_id) as string || "").trim();
     const isNumericHistoryId = /^\d+$/.test(rawId);
     let messageIds: string[] = [];
 
     if (isNumericHistoryId) {
       try {
-        const historyResult = await getHistory(accessToken, rawId);
+        const historyResult = await getHistory(accessToken, rawId, { maxResults: 5 });
         for (const entry of historyResult.history || []) {
           if (entry.messagesAdded) {
             for (const added of entry.messagesAdded) {
@@ -187,7 +180,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       messageIds = [rawId];
     }
 
-    // If no new messages associated with this history event, mark completed
     if (messageIds.length === 0) {
       await db
         .from("pending_queue")
@@ -200,7 +192,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return;
     }
 
-    // Process each resolved message
     let atLeastOneSuccess = false;
     for (const msgId of messageIds) {
       try {
@@ -240,7 +231,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Mark pending_queue row completed
     await db
       .from("pending_queue")
       .update({
@@ -252,14 +242,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     processedCount++;
   }
 
-  // Process rows in small concurrent batches of 4 to maximize throughput safely
-  const CONCURRENCY = 4;
-  for (let i = 0; i < rows.length; i += CONCURRENCY) {
-    const chunk = rows.slice(i, i + CONCURRENCY);
-    await Promise.allSettled(chunk.map((row) => processRow(row)));
-  }
+  // Process all selected rows concurrently in parallel
+  await Promise.allSettled(rows.map((row) => processRow(row)));
 
-  // 4. Query remaining pending items count
+  // 4. Query remaining count
   const { count: remainingCount } = await db
     .from("pending_queue")
     .select("*", { count: "exact", head: true })
