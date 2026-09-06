@@ -1,17 +1,42 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isProtectedRoute = createRouteMatcher([
+  "/inbox(.*)",
+  "/finance(.*)",
+  "/career(.*)",
+  "/meetings(.*)",
+  "/settings(.*)",
   "/dashboard(.*)",
   "/api/(.*)",
 ]);
 
-const isPublicApiRoute = createRouteMatcher([
+const isPublicRoute = createRouteMatcher([
+  // Google Webhooks & Cron
   "/api/webhooks/gmail",
   "/api/cron(.*)",
+
+  // n8n & Worker endpoints (authenticated via x-n8n-secret header)
+  "/api/gmail/accounts/active",
+  "/api/gmail/refresh",
+  "/api/gmail/sync",
+  "/api/gmail/action-complete",
+  "/api/classify/single",
+  "/api/classify/batch",
+  "/api/queue/pending",
+  "/api/batch/active-jobs",
+  "/api/batch/process-chunk",
+  "/api/batch/update-progress",
+
+  // Public status endpoint
+  "/api/settings/n8n-status",
+
+  // Auth pages
+  "/sign-in(.*)",
+  "/sign-up(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req) && !isPublicApiRoute(req)) {
+  if (isProtectedRoute(req) && !isPublicRoute(req)) {
     await auth.protect();
   }
 });
