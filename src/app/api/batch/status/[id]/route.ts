@@ -19,7 +19,7 @@ export async function GET(
 
   const db = createServerClient();
 
-  // Get app_user record
+  // 1. Get app_user record
   const { data: appUser, error: userErr } = await db
     .from("app_users")
     .select("id")
@@ -30,11 +30,11 @@ export async function GET(
     return NextResponse.json({ error: "user_not_found" }, { status: 404 });
   }
 
-  // Fetch job ensuring user ownership (prevent IDOR)
+  // 2. Fetch job ensuring user ownership (prevent IDOR)
   const { data: job, error: jobErr } = await db
     .from("batch_jobs")
     .select(
-      "id, gmail_account_id, status, total_emails, processed_count, failed_count, started_at, completed_at"
+      "id, gmail_account_id, status, total_emails, processed_count, failed_count, date_from, date_to, started_at, completed_at, created_at"
     )
     .eq("id", jobId)
     .eq("user_id", appUser.id)
@@ -44,7 +44,7 @@ export async function GET(
     return NextResponse.json({ error: "batch_job_not_found" }, { status: 404 });
   }
 
-  // Fetch account email
+  // 3. Fetch account email
   let gmailAccountEmail = "";
   if (job.gmail_account_id) {
     const { data: acc } = await db
@@ -61,20 +61,31 @@ export async function GET(
   const processedCount = job.processed_count ?? 0;
   const failedCount = job.failed_count ?? 0;
   const emailsRemaining = Math.max(0, totalEmails - processedCount);
-  const pace = 20; // 20 emails per minute (conservative estimate)
+  const pace = 20; // 20 emails per minute
   const etaMinutes = Math.ceil(emailsRemaining / pace);
-  const progressPct = totalEmails > 0 ? Math.min(100, Math.round((processedCount / totalEmails) * 100)) : 0;
+  
+  let percent = 0;
+  if (job.status === "completed") {
+    percent = 100;
+  } else if (totalEmails > 0) {
+    percent = Math.min(100, Math.round((processedCount / totalEmails) * 100));
+  }
 
   return NextResponse.json({
     job_id: job.id,
+    id: job.id,
     status: job.status,
     total_emails: totalEmails,
     processed_count: processedCount,
     failed_count: failedCount,
-    progress_pct: progressPct,
+    percent,
+    progress_pct: percent,
     eta_minutes: etaMinutes,
+    date_from: job.date_from,
+    date_to: job.date_to,
     started_at: job.started_at,
     completed_at: job.completed_at,
+    gmail_account_id: job.gmail_account_id,
     gmail_account_email: gmailAccountEmail,
   });
 }

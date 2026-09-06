@@ -63,22 +63,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // 3. Check for existing pending or processing job for this account
+  // 3. Check for existing active batch job for this account
   const { data: existingJobs } = await db
     .from("batch_jobs")
-    .select("id")
+    .select("id, status")
     .eq("gmail_account_id", gmail_account_id)
     .in("status", ["pending", "processing"]);
 
   if (existingJobs && existingJobs.length > 0) {
     return NextResponse.json(
-      { error: "active_batch_job_exists", job_id: existingJobs[0].id },
+      {
+        error: "active_batch_job_exists",
+        job_id: existingJobs[0].id,
+        status: existingJobs[0].status,
+      },
       { status: 409 }
     );
   }
 
-  // 4. Get active access token to query Gmail API for estimate
-  let accessToken: string;
+  // 4. Get active access token to estimate total emails
+  let accessToken: string | null = null;
   try {
     const expiry = new Date(gmailAccount.token_expiry as string);
     if (expiry <= new Date(Date.now() + 5 * 60 * 1000)) {
@@ -95,28 +99,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       accessToken = decryptToken(gmailAccount.access_token as string);
     }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "token_error";
-    return NextResponse.json({ error: "gmail_token_error", details: msg }, { status: 500 });
+    console.warn("Could not decrypt/refresh token for estimation:", err);
   }
 
   // 5. Estimate total emails using Gmail API query
-  let queryStr = `after:${date_from}`;
-  if (date_to) {
-    queryStr += ` before:${date_to}`;
-  }
-
   let estimate = 0;
-  try {
-    const listRes = await getEmailList(accessToken, {
-      query: queryStr,
-      maxResults: 1,
-    });
-    estimate = listRes.resultSizeEstimate;
-  } catch (err) {
-    console.warn("Failed to get Gmail result estimate:", err);
+  if (accessToken) {
+    let queryStr = `after:${date_from}`;
+    if (date_to) {
+      queryStr += ` before:${date_to}`;
+    }
+
+    try {
+      const listRes = await getEmailList(accessToken, {
+        query: queryStr,
+        maxResults: 1,
+      });
+      estimate = listRes.resultSizeEstimate || 0;
+    } catch (err) {
+      console.warn("Failed to get Gmail result estimate:", err);
+    }
   }
 
-  // 6. Create batch_job record
+  // 6. Insert into batch_jobs table
   const { data: newJob, error: jobCreateErr } = await db
     .from("batch_jobs")
     .insert({
@@ -125,7 +130,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       gmail_account_id,
       job_type: "historical_ingest",
       status: "pending",
-      total_emails: estimate,
+      total_emails: estimate > 0 ? estimate : 0,
       processed_count: 0,
       failed_count: 0,
       date_from,
@@ -133,7 +138,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       chunk_size,
       current_page_token: null,
     })
-    .select("id")
+    .select("id, status")
     .single();
 
   if (jobCreateErr || !newJob) {
@@ -145,7 +150,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   return NextResponse.json({
     job_id: newJob.id,
+    status: "pending",
     estimated_total: estimate,
-    message: "Batch job created. n8n will process hourly.",
   });
 }

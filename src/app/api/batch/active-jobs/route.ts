@@ -15,7 +15,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const { data: jobs, error } = await db
     .from("batch_jobs")
-    .select("id, user_id, tenant_id, gmail_account_id, status, total_emails, processed_count, current_page_token, date_from, date_to, chunk_size, created_at")
+    .select(
+      "id, user_id, tenant_id, gmail_account_id, status, total_emails, processed_count, current_page_token, date_from, date_to, chunk_size, created_at"
+    )
     .in("status", ["pending", "processing"])
     .order("created_at", { ascending: true });
 
@@ -26,8 +28,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  const activeJobs = jobs ?? [];
+
   return NextResponse.json({
-    jobs_count: jobs?.length ?? 0,
-    jobs: jobs ?? [],
+    jobs_count: activeJobs.length,
+    jobs: activeJobs,
   });
 }

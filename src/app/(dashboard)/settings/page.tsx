@@ -19,6 +19,10 @@ import {
   ArrowRight,
   ShieldCheck,
   Server,
+  Calendar,
+  History,
+  Play,
+  Clock,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -36,6 +40,17 @@ export interface N8nStatus {
   version?: string;
 }
 
+export interface BatchJobInfo {
+  job_id: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  total_emails: number;
+  processed_count: number;
+  percent: number;
+  eta_minutes?: number;
+  date_from?: string;
+  date_to?: string;
+}
+
 function SettingsContent() {
   const searchParams = useSearchParams();
   const pageContainerRef = useRef<HTMLDivElement>(null);
@@ -45,6 +60,18 @@ function SettingsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [n8nStatus, setN8nStatus] = useState<N8nStatus | null>(null);
   const [isN8nLoading, setIsN8nLoading] = useState(true);
+
+  // Historical Batch States
+  const defaultFromDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+  const defaultToDate = new Date().toISOString().split("T")[0];
+
+  const [dateRanges, setDateRanges] = useState<
+    Record<string, { from: string; to: string }>
+  >({});
+  const [accountJobs, setAccountJobs] = useState<Record<string, BatchJobInfo>>({});
+  const [startingJobAccountId, setStartingJobAccountId] = useState<string | null>(null);
 
   // Interaction States
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -63,7 +90,6 @@ function SettingsContent() {
         type: "success",
         text: "Gmail account successfully connected! Sync has been initialized.",
       });
-      // Clean query string from URL without full reload
       window.history.replaceState({}, "", window.location.pathname);
     } else if (searchParams.get("error")) {
       const err = searchParams.get("error");
@@ -84,7 +110,7 @@ function SettingsContent() {
   }, [toastMessage]);
 
   // Fetch Accounts
-  const fetchAccounts = async () => {
+  const fetchAccounts = React.useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await fetch("/api/settings/gmail-accounts");
@@ -92,8 +118,15 @@ function SettingsContent() {
         throw new Error("Failed to fetch connected accounts");
       }
       const data = await res.json();
-      const accountsList = Array.isArray(data) ? data : data.accounts || [];
+      const accountsList: GmailAccount[] = Array.isArray(data) ? data : data.accounts || [];
       setAccounts(accountsList);
+
+      // Initialize date ranges for each account
+      const initialRanges: Record<string, { from: string; to: string }> = {};
+      accountsList.forEach((acc) => {
+        initialRanges[acc.id] = { from: defaultFromDate, to: defaultToDate };
+      });
+      setDateRanges((prev) => ({ ...initialRanges, ...prev }));
     } catch (err) {
       console.error(err);
       setToastMessage({
@@ -103,10 +136,40 @@ function SettingsContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [defaultFromDate, defaultToDate]);
+
+  // Fetch User's existing Batch Jobs on mount
+  const fetchUserJobs = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/batch/user-jobs");
+      if (res.ok) {
+        const jobs = await res.json();
+        if (Array.isArray(jobs)) {
+          const map: Record<string, BatchJobInfo> = {};
+          jobs.forEach((j) => {
+            if (j.gmail_account_id && !map[j.gmail_account_id]) {
+              map[j.gmail_account_id] = {
+                job_id: j.id,
+                status: j.status,
+                total_emails: j.total_emails || 0,
+                processed_count: j.processed_count || 0,
+                percent: j.percent || 0,
+                eta_minutes: j.eta_minutes,
+                date_from: j.date_from,
+                date_to: j.date_to,
+              };
+            }
+          });
+          setAccountJobs((prev) => ({ ...map, ...prev }));
+        }
+      }
+    } catch (err) {
+      console.warn("Could not fetch user batch jobs:", err);
+    }
+  }, []);
 
   // Fetch n8n Status
-  const fetchN8nStatus = async () => {
+  const fetchN8nStatus = React.useCallback(async () => {
     try {
       setIsN8nLoading(true);
       const res = await fetch("/api/settings/n8n-status");
@@ -121,12 +184,50 @@ function SettingsContent() {
     } finally {
       setIsN8nLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAccounts();
     fetchN8nStatus();
-  }, []);
+    fetchUserJobs();
+  }, [fetchAccounts, fetchN8nStatus, fetchUserJobs]);
+
+  // Polling active batch jobs every 10 seconds
+  useEffect(() => {
+    const activeAccountEntries = Object.entries(accountJobs).filter(
+      ([_, job]) => job.status === "pending" || job.status === "processing"
+    );
+
+    if (activeAccountEntries.length === 0) return;
+
+    const interval = setInterval(async () => {
+      for (const [accId, job] of activeAccountEntries) {
+        try {
+          const res = await fetch(`/api/batch/status/${job.job_id}`);
+          if (res.ok) {
+            const data = await res.json();
+            setAccountJobs((prev) => ({
+              ...prev,
+              [accId]: {
+                job_id: data.job_id || job.job_id,
+                status: data.status,
+                total_emails: data.total_emails || 0,
+                processed_count: data.processed_count || 0,
+                percent: data.percent ?? data.progress_pct ?? 0,
+                eta_minutes: data.eta_minutes,
+                date_from: data.date_from,
+                date_to: data.date_to,
+              },
+            }));
+          }
+        } catch (err) {
+          console.error("Batch polling error:", err);
+        }
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [accountJobs]);
 
   // GSAP Entrance animation
   useGSAP(
@@ -222,6 +323,75 @@ function SettingsContent() {
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // Start Historical Batch Import
+  const handleStartImport = async (account: GmailAccount) => {
+    if (startingJobAccountId) return;
+    const range = dateRanges[account.id] || { from: defaultFromDate, to: defaultToDate };
+
+    setStartingJobAccountId(account.id);
+    try {
+      const res = await fetch("/api/batch/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gmail_account_id: account.id,
+          date_from: range.from,
+          date_to: range.to,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 409 && data.job_id) {
+          // Active job already exists — link to it
+          setAccountJobs((prev) => ({
+            ...prev,
+            [account.id]: {
+              job_id: data.job_id,
+              status: "processing",
+              total_emails: 0,
+              processed_count: 0,
+              percent: 0,
+            },
+          }));
+          setToastMessage({
+            type: "info",
+            text: `An active import is already in progress for ${account.email}`,
+          });
+          return;
+        }
+        throw new Error(data.error || "Failed to start batch import");
+      }
+
+      setAccountJobs((prev) => ({
+        ...prev,
+        [account.id]: {
+          job_id: data.job_id,
+          status: "pending",
+          total_emails: data.estimated_total || 0,
+          processed_count: 0,
+          percent: 0,
+          date_from: range.from,
+          date_to: range.to,
+        },
+      }));
+
+      setToastMessage({
+        type: "success",
+        text: `Historical import queued for ${account.email}! n8n will process chunks in the background.`,
+      });
+    } catch (err) {
+      console.error("Failed to start historical import:", err);
+      setToastMessage({
+        type: "error",
+        text: `Unable to start import for ${account.email}. Please try again.`,
+      });
+    } finally {
+      setStartingJobAccountId(null);
     }
   };
 
@@ -428,7 +598,7 @@ function SettingsContent() {
             </p>
           </div>
 
-          {/* SECTION 2: Add Gmail Account Button (Top desktop / action bar) */}
+          {/* SECTION 2: Add Gmail Account Button */}
           <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
             <motion.button
               whileTap={maxAccountsReached ? undefined : { scale: 0.98 }}
@@ -458,7 +628,6 @@ function SettingsContent() {
         {/* Accounts List / Skeleton / Empty State */}
         <div className="flex flex-col gap-3">
           {isLoading ? (
-            /* Loading Skeleton: 3 placeholder cards */
             <div className="flex flex-col gap-3">
               {[1, 2, 3].map((i) => (
                 <div
@@ -481,7 +650,6 @@ function SettingsContent() {
               ))}
             </div>
           ) : accounts.length === 0 ? (
-            /* Empty State */
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -509,7 +677,6 @@ function SettingsContent() {
               </motion.button>
             </motion.div>
           ) : (
-            /* Connected Accounts Cards with Framer Motion stagger */
             <motion.div
               initial="hidden"
               animate="visible"
@@ -522,7 +689,7 @@ function SettingsContent() {
               }}
               className="flex flex-col gap-3"
             >
-              {accounts.map((account, index) => {
+              {accounts.map((account) => {
                 const initialLetter = (account.display_name || account.email)
                   .charAt(0)
                   .toUpperCase();
@@ -642,6 +809,179 @@ function SettingsContent() {
             </motion.div>
           )}
         </div>
+      </div>
+
+      {/* SECTION: Historical Email Sync */}
+      <div className="bg-surface rounded-2xl border border-border-subtle p-4 sm:p-6 flex flex-col gap-5 shadow-elevation-1">
+        <div className="border-b border-border-subtle pb-4">
+          <div className="flex items-center gap-2">
+            <History className="w-4 h-4 text-brand" />
+            <h2 className="text-base font-semibold text-text-primary">
+              Historical Email Sync
+            </h2>
+          </div>
+          <p className="text-xs sm:text-sm text-text-muted mt-1">
+            Import your past emails for finance tracking, job history, and meeting summaries.
+          </p>
+        </div>
+
+        {accounts.length === 0 ? (
+          <div className="py-6 text-center text-xs text-text-muted">
+            Connect a Gmail account above to start historical imports.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {accounts.map((account) => {
+              const currentRange = dateRanges[account.id] || {
+                from: defaultFromDate,
+                to: defaultToDate,
+              };
+              const activeJob = accountJobs[account.id];
+              const isStarting = startingJobAccountId === account.id;
+              const isProcessing =
+                activeJob?.status === "pending" || activeJob?.status === "processing";
+              const isCompleted = activeJob?.status === "completed";
+
+              return (
+                <div
+                  key={account.id}
+                  className="p-4 rounded-xl bg-surface-elevated border border-border-subtle flex flex-col gap-4 shadow-elevation-1"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <Mail className="w-4 h-4 text-text-muted shrink-0" />
+                      <span className="font-bold text-sm text-text-primary">
+                        {account.email}
+                      </span>
+                    </div>
+
+                    {isCompleted ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 self-start sm:self-auto">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        ✓ Import complete
+                      </span>
+                    ) : isProcessing ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-subtle border border-brand/25 text-brand self-start sm:self-auto animate-pulse">
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        {activeJob.status === "pending" ? "In Queue..." : "Syncing..."}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {/* Date Pickers & Import Action */}
+                  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-2 border-t border-border-subtle/60">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full md:w-auto">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-semibold text-text-muted flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          From
+                        </label>
+                        <input
+                          type="date"
+                          disabled={isProcessing}
+                          value={currentRange.from}
+                          onChange={(e) =>
+                            setDateRanges((prev) => ({
+                              ...prev,
+                              [account.id]: {
+                                ...currentRange,
+                                from: e.target.value,
+                              },
+                            }))
+                          }
+                          className="px-3 py-1.5 rounded-lg bg-surface border border-border-subtle text-xs text-text-primary focus:outline-none focus:border-brand font-mono disabled:opacity-50 transition-colors"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-semibold text-text-muted flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          To
+                        </label>
+                        <input
+                          type="date"
+                          disabled={isProcessing}
+                          value={currentRange.to}
+                          onChange={(e) =>
+                            setDateRanges((prev) => ({
+                              ...prev,
+                              [account.id]: {
+                                ...currentRange,
+                                to: e.target.value,
+                              },
+                            }))
+                          }
+                          className="px-3 py-1.5 rounded-lg bg-surface border border-border-subtle text-xs text-text-primary focus:outline-none focus:border-brand font-mono disabled:opacity-50 transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end md:self-auto shrink-0 w-full sm:w-auto">
+                      <motion.button
+                        whileTap={isProcessing || isStarting ? undefined : { scale: 0.98 }}
+                        disabled={isProcessing || isStarting}
+                        onClick={() => handleStartImport(account)}
+                        className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-ui font-semibold text-xs transition-all shadow-elevation-1 ${
+                          isProcessing
+                            ? "bg-surface-elevated border border-border-subtle text-text-disabled cursor-not-allowed"
+                            : "bg-brand text-text-primary hover:bg-brand-hover shadow-brand-glow"
+                        }`}
+                      >
+                        {isStarting ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Queueing...</span>
+                          </>
+                        ) : isProcessing ? (
+                          <>
+                            <Clock className="w-3.5 h-3.5 text-brand" />
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>{isCompleted ? "Re-import" : "Start Import"}</span>
+                          </>
+                        )}
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar Display */}
+                  {activeJob && (
+                    <div className="flex flex-col gap-2 pt-2 border-t border-border-subtle/50">
+                      <div className="flex items-center justify-between text-xs text-text-muted">
+                        <span>
+                          {isCompleted
+                            ? `Completed import of ${activeJob.processed_count} emails`
+                            : activeJob.total_emails > 0
+                            ? `Processing ${activeJob.processed_count} of ${activeJob.total_emails} emails...`
+                            : `Processing ${activeJob.processed_count} emails...`}
+                        </span>
+                        <span className="font-mono font-bold text-text-primary">
+                          {activeJob.percent}%
+                        </span>
+                      </div>
+
+                      <div className="w-full h-2 rounded-full bg-surface overflow-hidden border border-border-subtle/50">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, Math.max(0, activeJob.percent))}%` }}
+                          transition={{ duration: 0.5, ease: "easeOut" }}
+                          className={`h-full rounded-full ${
+                            isCompleted
+                              ? "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]"
+                              : "bg-gradient-to-r from-brand to-brand-hover shadow-brand-glow"
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Confirmation Dialog for Delete */}

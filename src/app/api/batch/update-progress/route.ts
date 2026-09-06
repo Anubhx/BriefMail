@@ -4,9 +4,9 @@ import { createServerClient } from "@/lib/supabase/server";
 
 const updateProgressSchema = z.object({
   job_id: z.string().uuid(),
-  processed: z.number(),
-  next_page_token: z.string().nullable(),
-  is_complete: z.boolean(),
+  processed: z.number().default(0),
+  next_page_token: z.string().nullable().optional(),
+  is_complete: z.boolean().default(false),
 });
 
 function validateN8nSecret(request: NextRequest): boolean {
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     .from("batch_jobs")
     .update({
       processed_count: updatedProcessedCount,
-      current_page_token: next_page_token,
+      current_page_token: next_page_token ?? null,
       status: newStatus,
       completed_at: completedAt,
     })
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   return NextResponse.json({
+    updated: true,
     job_id,
     status: newStatus,
     total_processed: updatedProcessedCount,
