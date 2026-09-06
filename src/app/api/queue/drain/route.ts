@@ -25,10 +25,10 @@ interface AccountRecord {
 interface QueueRow {
   id: string;
   gmail_account_id: string;
-  tenant_id: string;
+  tenant_id?: string;
   message_id: string;
   history_id?: string;
-  arrived_at: string;
+  arrived_at?: string;
   gmail_accounts?: AccountRecord | AccountRecord[] | null;
 }
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const db = createServerClient();
 
-  // 2. Select 20 pending items ordered by arrived_at ASC
+  // 2. Select 50 pending items
   const { data: rawRows, error: selectErr } = await db
     .from("pending_queue")
     .select(
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     )
     .eq("status", "pending")
     .order("arrived_at", { ascending: true })
-    .limit(20);
+    .limit(50);
 
   if (selectErr) {
     console.error("[queue/drain] Database select error:", selectErr);
@@ -61,9 +61,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const rows = (rawRows || []) as unknown as QueueRow[];
 
   if (rows.length === 0) {
+    const { count: remainingCount } = await db
+      .from("pending_queue")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending");
+
     return NextResponse.json({
       processed: 0,
-      remaining: 0,
+      failed: 0,
+      remaining_count: remainingCount ?? 0,
+      remaining: remainingCount ?? 0,
     });
   }
 
@@ -74,62 +81,68 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     .update({ status: "processing" })
     .in("id", rowIds);
 
-  const tokenCache = new Map<string, string>();
+  const tokenPromises = new Map<string, Promise<string | null>>();
 
-  async function getAccessToken(account: AccountRecord): Promise<string | null> {
-    if (tokenCache.has(account.id)) {
-      return tokenCache.get(account.id)!;
-    }
+  function getAccessToken(account: AccountRecord): Promise<string | null> {
+    const existing = tokenPromises.get(account.id);
+    if (existing) return existing;
 
-    try {
-      const expiry = account.token_expiry ? new Date(account.token_expiry) : null;
-      const isExpired = !expiry || expiry.getTime() <= Date.now() + 2 * 60 * 1000;
-
-      if (!isExpired && account.access_token) {
-        const decrypted = decryptToken(account.access_token);
-        if (decrypted) {
-          tokenCache.set(account.id, decrypted);
-          return decrypted;
-        }
-      }
-
-      if (account.refresh_token) {
-        const refreshed = await refreshAccessToken(account.refresh_token);
-        if (refreshed?.access_token) {
-          await db
-            .from("gmail_accounts")
-            .update({
-              access_token: refreshed.encrypted_access_token,
-              token_expiry: refreshed.expiry.toISOString(),
-            })
-            .eq("id", account.id);
-
-          tokenCache.set(account.id, refreshed.access_token);
-          return refreshed.access_token;
-        }
-      }
-    } catch (err) {
-      console.warn(`[queue/drain] Token refresh error for account ${account.id}:`, err);
-    }
-
-    if (account.access_token) {
+    const promise = (async () => {
       try {
-        const decrypted = decryptToken(account.access_token);
-        if (decrypted) {
-          tokenCache.set(account.id, decrypted);
-          return decrypted;
-        }
-      } catch {}
-    }
+        const expiry = account.token_expiry ? new Date(account.token_expiry) : null;
+        const isExpired = !expiry || expiry.getTime() <= Date.now() + 2 * 60 * 1000;
 
-    return null;
+        if (!isExpired && account.access_token) {
+          const decrypted = decryptToken(account.access_token);
+          if (decrypted) return decrypted;
+        }
+
+        if (account.refresh_token) {
+          const refreshed = await refreshAccessToken(account.refresh_token);
+          if (refreshed?.access_token) {
+            await db
+              .from("gmail_accounts")
+              .update({
+                access_token: refreshed.encrypted_access_token,
+                token_expiry: refreshed.expiry.toISOString(),
+              })
+              .eq("id", account.id);
+
+            return refreshed.access_token;
+          }
+        }
+      } catch (err) {
+        console.warn(`[queue/drain] Token refresh error for account ${account.id}:`, err);
+      }
+
+      if (account.access_token) {
+        try {
+          const decrypted = decryptToken(account.access_token);
+          if (decrypted) return decrypted;
+        } catch {}
+      }
+
+      return null;
+    })();
+
+    tokenPromises.set(account.id, promise);
+    return promise;
   }
 
-  let processedCount = 0;
-
-  async function processRow(row: QueueRow): Promise<void> {
+  async function processRow(row: QueueRow): Promise<boolean> {
     const rawAccount = row.gmail_accounts;
-    const account = (Array.isArray(rawAccount) ? rawAccount[0] : rawAccount) as AccountRecord | null;
+    let account = (Array.isArray(rawAccount) ? rawAccount[0] : rawAccount) as AccountRecord | null;
+
+    if (!account) {
+      const { data: fetchedAccount } = await db
+        .from("gmail_accounts")
+        .select("id, user_id, tenant_id, access_token, refresh_token, token_expiry, email")
+        .eq("id", row.gmail_account_id)
+        .single();
+      if (fetchedAccount) {
+        account = fetchedAccount as AccountRecord;
+      }
+    }
 
     if (!account) {
       await db
@@ -140,7 +153,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           processed_at: new Date().toISOString(),
         })
         .eq("id", row.id);
-      return;
+      return false;
     }
 
     const accessToken = await getAccessToken(account);
@@ -153,7 +166,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           processed_at: new Date().toISOString(),
         })
         .eq("id", row.id);
-      return;
+      return false;
     }
 
     const rawId = ((row.message_id || row.history_id) as string || "").trim();
@@ -184,15 +197,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       await db
         .from("pending_queue")
         .update({
-          status: "completed",
+          status: "processed",
           processed_at: new Date().toISOString(),
         })
         .eq("id", row.id);
-      processedCount++;
-      return;
+      return true;
     }
 
     let atLeastOneSuccess = false;
+    let lastError: string | null = null;
+
     for (const msgId of messageIds) {
       try {
         const parsedMsg = await getEmailDetail(accessToken, msgId);
@@ -227,25 +241,39 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
         atLeastOneSuccess = true;
       } catch (err) {
+        lastError = err instanceof Error ? err.message : String(err);
         console.error(`[queue/drain] Error classifying message ${msgId}:`, err);
       }
     }
 
+    const finalStatus = atLeastOneSuccess || messageIds.length === 0 ? "processed" : "failed";
     await db
       .from("pending_queue")
       .update({
-        status: atLeastOneSuccess || messageIds.length === 0 ? "completed" : "failed",
+        status: finalStatus,
         processed_at: new Date().toISOString(),
+        error_message: finalStatus === "failed" ? lastError : null,
       })
       .eq("id", row.id);
 
-    processedCount++;
+    return atLeastOneSuccess || messageIds.length === 0;
   }
 
-  // Process all selected rows concurrently in parallel
-  await Promise.allSettled(rows.map((row) => processRow(row)));
+  // 4. Process all selected rows concurrently in parallel with Promise.allSettled
+  const results = await Promise.allSettled(rows.map((row) => processRow(row)));
 
-  // 4. Query remaining count
+  let processedCount = 0;
+  let failedCount = 0;
+
+  for (const res of results) {
+    if (res.status === "fulfilled" && res.value === true) {
+      processedCount++;
+    } else {
+      failedCount++;
+    }
+  }
+
+  // 5. Query remaining count
   const { count: remainingCount } = await db
     .from("pending_queue")
     .select("*", { count: "exact", head: true })
@@ -253,6 +281,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   return NextResponse.json({
     processed: processedCount,
+    failed: failedCount,
+    remaining_count: remainingCount ?? 0,
     remaining: remainingCount ?? 0,
   });
 }
