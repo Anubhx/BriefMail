@@ -6,7 +6,7 @@ import { decryptToken, refreshAccessToken } from "@/lib/gmail/tokens";
 
 const processChunkSchema = z.object({
   job_id: z.string().uuid(),
-  chunk_size: z.number().min(1).max(100).default(20),
+  chunk_size: z.number().min(1).max(500).default(100),
 });
 
 function validateN8nSecret(request: NextRequest): boolean {
@@ -49,6 +49,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (jobErr || !job) {
     return NextResponse.json({ error: "batch_job_not_found" }, { status: 404 });
   }
+
+  const isFirstChunk = !job.current_page_token;
 
   // 2. Mark job as processing & set started_at if first chunk
   const jobUpdates: Record<string, unknown> = { status: "processing" };
@@ -132,19 +134,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // 6. Update batch_jobs record
+  // 6. Update batch_jobs record (update total_emails on first chunk using actual resultSizeEstimate)
   const updatedProcessedCount = (job.processed_count || 0) + messages.length;
   const newStatus = isComplete ? "completed" : "processing";
   const completedAt = isComplete ? new Date().toISOString() : null;
 
+  const batchUpdates: Record<string, unknown> = {
+    processed_count: updatedProcessedCount,
+    current_page_token: nextPageToken,
+    status: newStatus,
+    completed_at: completedAt,
+  };
+
+  // Update total_emails with actual resultSizeEstimate on first chunk
+  if (
+    isFirstChunk &&
+    typeof listRes.resultSizeEstimate === "number" &&
+    listRes.resultSizeEstimate > 0
+  ) {
+    batchUpdates.total_emails = listRes.resultSizeEstimate;
+  }
+
   await db
     .from("batch_jobs")
-    .update({
-      processed_count: updatedProcessedCount,
-      current_page_token: nextPageToken,
-      status: newStatus,
-      completed_at: completedAt,
-    })
+    .update(batchUpdates)
     .eq("id", job_id);
 
   return NextResponse.json({
@@ -153,5 +166,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     next_page_token: nextPageToken,
     is_complete: isComplete,
     total_processed: updatedProcessedCount,
+    total_emails:
+      isFirstChunk && listRes.resultSizeEstimate
+        ? listRes.resultSizeEstimate
+        : job.total_emails,
+    result_size_estimate: listRes.resultSizeEstimate,
   });
 }
+

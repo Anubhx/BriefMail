@@ -9,8 +9,9 @@ const startBatchSchema = z.object({
   gmail_account_id: z.string().uuid(),
   date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, expected YYYY-MM-DD"),
   date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, expected YYYY-MM-DD").optional(),
-  chunk_size: z.number().min(5).max(50).default(20),
+  chunk_size: z.number().min(5).max(500).default(100),
 });
+
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const { userId } = await auth();
