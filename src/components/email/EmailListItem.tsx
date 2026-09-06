@@ -7,16 +7,21 @@ import { Archive, Trash2, Star } from "lucide-react";
 export interface EmailListItemProps {
   id: string;
   subject: string;
-  fromName: string;
-  fromEmail: string;
+  fromName?: string;
+  fromEmail?: string;
+  sender?: string;
   snippet: string;
-  receivedAt: Date;
+  date?: string;
+  receivedAt?: Date;
   category: string;
   subcategory?: string;
   isRead?: boolean;
+  isUnread?: boolean;
   hasActionItem?: boolean;
+  isSelected?: boolean;
   onArchive?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onSnooze?: (id: string) => void;
   onStar?: (id: string) => void;
   onClick?: (id: string) => void;
 }
@@ -28,16 +33,24 @@ export function EmailListItem({
   id,
   subject,
   fromName,
+  sender,
   snippet,
+  date,
   receivedAt,
   category,
   isRead = false,
+  isUnread,
   hasActionItem = false,
+  isSelected = false,
   onArchive,
   onDelete,
+  onSnooze,
   onStar,
   onClick,
 }: EmailListItemProps) {
+  const displayName = sender || fromName || "Unknown";
+  const displayDate = date || (receivedAt ? new Date(receivedAt).toLocaleDateString() : "");
+  const unreadState = isUnread !== undefined ? isUnread : !isRead;
   const x = useMotionValue(0);
 
   // Left swipe → archive (negative x)
@@ -117,7 +130,7 @@ export function EmailListItem({
       >
         {/* Unread indicator */}
         <div className="mt-1.5 shrink-0">
-          {!isRead ? (
+          {unreadState ? (
             <span className="w-2 h-2 rounded-full bg-brand block" />
           ) : (
             <span className="w-2 h-2 rounded-full bg-transparent block" />
@@ -129,17 +142,17 @@ export function EmailListItem({
           <div className="flex items-center justify-between gap-2 mb-0.5">
             <span
               className={`text-sm font-ui truncate ${
-                isRead ? "text-text-secondary font-normal" : "text-text-primary font-semibold"
+                !unreadState ? "text-text-secondary font-normal" : "text-text-primary font-semibold"
               }`}
             >
-              {fromName}
+              {displayName}
             </span>
-            <span className="text-xs text-text-muted font-mono shrink-0">{formattedTime}</span>
+            <span className="text-xs text-text-muted font-mono shrink-0">{displayDate || formattedTime}</span>
           </div>
 
           <p
             className={`text-sm truncate mb-1 ${
-              isRead ? "text-text-muted" : "text-text-secondary font-medium"
+              !unreadState ? "text-text-muted" : "text-text-secondary font-medium"
             }`}
           >
             {subject}
