@@ -244,7 +244,7 @@ class ModelRouter {
     if (!keyStatus) return null;
 
     try {
-      const models = ["gemini-2.5-flash-lite", "gemini-1.5-flash", "gemini-2.5-flash"];
+      const models = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash"];
       let res: Response | null = null;
 
       for (const model of models) {
