@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, FileText, ArrowUpRight, ArrowDownRight, Layers } from "lucide-react";
+import { FileText, ArrowUpRight, ArrowDownRight, Layers } from "lucide-react";
 import { clsx } from "clsx";
 
 export interface SIPItem {
@@ -31,56 +31,32 @@ const formatCurrency = (val: number) => {
 };
 
 export function SIPDashboard({
-  sips = [],
+  sips,
   totalValue,
   totalInvested,
   overallReturnsPct,
 }: SIPDashboardProps) {
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [, setHoveredIdx] = useState<number | null>(null);
 
-  const defaultSIPs: SIPItem[] = [
-    {
-      id: "sip-1",
-      fund_name: "Mirae Asset Large Cap Fund",
-      category: "Equity",
-      monthly_amount: 5000,
-      total_invested: 150000,
-      current_value: 192500,
-      returns_pct: 28.33,
-    },
-    {
-      id: "sip-2",
-      fund_name: "Parag Parikh Flexi Cap Fund",
-      category: "Flexi Cap",
-      monthly_amount: 5000,
-      total_invested: 140000,
-      current_value: 178000,
-      returns_pct: 27.14,
-    },
-    {
-      id: "sip-3",
-      fund_name: "UTI Nifty 50 Index Fund",
-      category: "Index",
-      monthly_amount: 3000,
-      total_invested: 60000,
-      current_value: 71500,
-      returns_pct: 19.16,
-    },
-    {
-      id: "sip-4",
-      fund_name: "Axis Small Cap Fund",
-      category: "Small Cap",
-      monthly_amount: 2000,
-      total_invested: 40000,
-      current_value: 43000,
-      returns_pct: 7.5,
-    },
-  ];
+  // Clean empty state when no SIPs or investment emails
+  if (!sips || sips.length === 0) {
+    return (
+      <div className="p-10 text-center border border-dashed border-border-subtle rounded-xl text-text-muted text-sm font-ui bg-surface/30 flex flex-col items-center justify-center gap-2">
+        <Layers className="w-8 h-8 text-text-muted/50 mb-1" />
+        <p className="font-medium text-text-secondary">No financial emails processed yet</p>
+        <p className="text-xs text-text-muted">Mutual fund SIP statements and investment notifications will appear here.</p>
+      </div>
+    );
+  }
 
-  const list = sips.length > 0 ? sips : defaultSIPs;
-  const portfolioTotal = totalValue ?? list.reduce((a, b) => a + b.current_value, 0);
-  const investedTotal = totalInvested ?? list.reduce((a, b) => a + b.total_invested, 0);
-  const overallReturn = overallReturnsPct ?? Math.round(((portfolioTotal - investedTotal) / investedTotal) * 10000) / 100;
+  const list = sips;
+  const portfolioTotal = totalValue ?? list.reduce((a, b) => a + (b.current_value || 0), 0);
+  const investedTotal = totalInvested ?? list.reduce((a, b) => a + (b.total_invested || 0), 0);
+  const overallReturn =
+    overallReturnsPct ??
+    (investedTotal > 0
+      ? Math.round(((portfolioTotal - investedTotal) / investedTotal) * 10000) / 100
+      : 0);
 
   // Chart segment colors
   const colors = ["#6366F1", "#10B981", "#F59E0B", "#06B6D4", "#EC4899"];
@@ -133,8 +109,14 @@ export function SIPDashboard({
             </div>
             <div>
               <span className="text-xs text-text-muted block">Total Gain / Profit</span>
-              <span className="text-lg font-bold font-mono text-emerald-400">
-                +{formatCurrency(portfolioTotal - investedTotal)}
+              <span
+                className={clsx(
+                  "text-lg font-bold font-mono",
+                  portfolioTotal >= investedTotal ? "text-emerald-400" : "text-rose-400"
+                )}
+              >
+                {portfolioTotal >= investedTotal ? "+" : ""}
+                {formatCurrency(portfolioTotal - investedTotal)}
               </span>
             </div>
           </div>
@@ -151,7 +133,7 @@ export function SIPDashboard({
               {(() => {
                 let accumulated = 0;
                 return list.map((item, idx) => {
-                  const pct = (item.current_value / portfolioTotal) * 100;
+                  const pct = portfolioTotal > 0 ? (item.current_value / portfolioTotal) * 100 : 100 / list.length;
                   const dashArray = `${pct} ${100 - pct}`;
                   const offset = accumulated;
                   accumulated += pct;
@@ -189,7 +171,7 @@ export function SIPDashboard({
                   className="w-2 h-2 rounded-full inline-block"
                   style={{ backgroundColor: colors[idx % colors.length] }}
                 />
-                <span>{item.category}</span>
+                <span>{item.category || item.fund_name}</span>
               </div>
             ))}
           </div>
@@ -240,7 +222,14 @@ export function SIPDashboard({
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-text-muted block">Current Value</span>
-                <span className="font-bold text-emerald-400">{formatCurrency(item.current_value)}</span>
+                <span
+                  className={clsx(
+                    "font-bold",
+                    item.current_value >= item.total_invested ? "text-emerald-400" : "text-rose-400"
+                  )}
+                >
+                  {formatCurrency(item.current_value)}
+                </span>
               </div>
             </div>
           </motion.div>

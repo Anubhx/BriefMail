@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, Filter, ArrowUpRight, ArrowDownLeft, CreditCard, Landmark, Smartphone } from "lucide-react";
+import { Search, ArrowUpRight, ArrowDownLeft, CreditCard, Landmark, Smartphone } from "lucide-react";
 import { clsx } from "clsx";
 
 export interface TransactionItem {
@@ -27,90 +27,56 @@ const formatCurrency = (val: number) => {
   }).format(val);
 };
 
-export function TransactionList({ transactions = [] }: TransactionListProps) {
+export function TransactionList({ transactions }: TransactionListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMode, setSelectedMode] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
 
-  const defaultTransactions: TransactionItem[] = [
-    {
-      id: "tx-1",
-      date: "2026-09-06",
-      description: "Swiggy Food Delivery",
-      merchant: "Swiggy",
-      category: "Food",
-      amount: 485,
-      type: "debit",
-      payment_mode: "UPI",
-    },
-    {
-      id: "tx-2",
-      date: "2026-09-06",
-      description: "Salary Credit - Acme Corp",
-      merchant: "Acme Corp",
-      category: "Income",
-      amount: 125000,
-      type: "credit",
-      payment_mode: "NetBanking",
-    },
-    {
-      id: "tx-3",
-      date: "2026-09-05",
-      description: "Amazon India Shopping",
-      merchant: "Amazon",
-      category: "Shopping",
-      amount: 2499,
-      type: "debit",
-      payment_mode: "Card",
-    },
-    {
-      id: "tx-4",
-      date: "2026-09-04",
-      description: "Uber Trip to Airport",
-      merchant: "Uber",
-      category: "Travel",
-      amount: 650,
-      type: "debit",
-      payment_mode: "UPI",
-    },
-    {
-      id: "tx-5",
-      date: "2026-09-02",
-      description: "Netflix Premium Subscription",
-      merchant: "Netflix",
-      category: "Entertainment",
-      amount: 649,
-      type: "debit",
-      payment_mode: "Card",
-    },
-  ];
+  // Clean empty state if no transactions
+  if (!transactions || transactions.length === 0) {
+    return (
+      <div className="p-10 text-center border border-dashed border-border-subtle rounded-xl text-text-muted text-sm font-ui bg-surface/30 flex flex-col items-center justify-center gap-2">
+        <CreditCard className="w-8 h-8 text-text-muted/50 mb-1" />
+        <p className="font-medium text-text-secondary">No financial emails processed yet</p>
+        <p className="text-xs text-text-muted">Bank debit/credit alerts and transaction receipts will appear here.</p>
+      </div>
+    );
+  }
 
-  const list = transactions.length > 0 ? transactions : defaultTransactions;
+  const list = transactions;
 
   // Filter transactions
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const filteredList = useMemo(() => {
     return list.filter((item) => {
+      const desc = item.description || "";
+      const merch = item.merchant || "";
+      const cat = item.category || "";
       const matchesSearch =
-        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.merchant.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchQuery.toLowerCase());
+        desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        merch.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cat.toLowerCase().includes(searchQuery.toLowerCase());
 
+      const itemMode = (item.payment_mode || "").toLowerCase();
       const matchesMode =
-        selectedMode === "all" || item.payment_mode.toLowerCase() === selectedMode.toLowerCase();
+        selectedMode === "all" || itemMode === selectedMode.toLowerCase();
 
+      const itemType = (item.type || "").toLowerCase();
       const matchesType =
-        selectedType === "all" || item.type.toLowerCase() === selectedType.toLowerCase();
+        selectedType === "all" || itemType === selectedType.toLowerCase();
 
       return matchesSearch && matchesMode && matchesType;
     });
   }, [list, searchQuery, selectedMode, selectedType]);
 
   // Group by date
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const groupedByDate = useMemo(() => {
     const groups: Record<string, TransactionItem[]> = {};
     filteredList.forEach((tx) => {
-      if (!groups[tx.date]) groups[tx.date] = [];
-      groups[tx.date].push(tx);
+      const d = tx.date || "Recent";
+      if (!groups[d]) groups[d] = [];
+      groups[d].push(tx);
     });
     return groups;
   }, [filteredList]);

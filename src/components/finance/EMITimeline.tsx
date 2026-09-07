@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Calendar, Percent, Building2 } from "lucide-react";
+import { ChevronDown, Calendar, Building2 } from "lucide-react";
 import { clsx } from "clsx";
 
 export interface AmortizationRow {
@@ -39,48 +39,22 @@ const formatCurrency = (val: number) => {
   }).format(val);
 };
 
-export function EMITimeline({ items = [], totalOutstanding }: EMITimelineProps) {
+export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Default fallback data if empty
-  const defaultItems: EMIItem[] = [
-    {
-      id: "emi-1",
-      lender: "HDFC Bank",
-      loan_type: "Home Loan",
-      total_amount: 2500000,
-      remaining_amount: 1620000,
-      monthly_emi: 24500,
-      tenure_months: 240,
-      months_paid: 72,
-      next_due: "2026-09-12",
-      interest_rate: 8.5,
-      amortization: [
-        { month: "Sep 2026", principal: 13000, interest: 11500, balance: 1607000 },
-        { month: "Oct 2026", principal: 13100, interest: 11400, balance: 1593900 },
-        { month: "Nov 2026", principal: 13200, interest: 11300, balance: 1580700 },
-      ],
-    },
-    {
-      id: "emi-2",
-      lender: "ICICI Bank",
-      loan_type: "Car Loan",
-      total_amount: 600000,
-      remaining_amount: 225000,
-      monthly_emi: 12500,
-      tenure_months: 60,
-      months_paid: 30,
-      next_due: "2026-09-18",
-      interest_rate: 9.1,
-      amortization: [
-        { month: "Sep 2026", principal: 10800, interest: 1700, balance: 214200 },
-        { month: "Oct 2026", principal: 10900, interest: 1600, balance: 203300 },
-      ],
-    },
-  ];
+  // Clean empty state if no items
+  if (!items || items.length === 0) {
+    return (
+      <div className="p-10 text-center border border-dashed border-border-subtle rounded-xl text-text-muted text-sm font-ui bg-surface/30 flex flex-col items-center justify-center gap-2">
+        <Building2 className="w-8 h-8 text-text-muted/50 mb-1" />
+        <p className="font-medium text-text-secondary">No financial emails processed yet</p>
+        <p className="text-xs text-text-muted">EMI and loan tracking will appear here once loan statement emails arrive.</p>
+      </div>
+    );
+  }
 
-  const list = items.length > 0 ? items : defaultItems;
-  const grandTotal = totalOutstanding ?? list.reduce((acc, i) => acc + i.remaining_amount, 0);
+  const list = items;
+  const grandTotal = totalOutstanding ?? list.reduce((acc, i) => acc + (i.remaining_amount || 0), 0);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -108,8 +82,10 @@ export function EMITimeline({ items = [], totalOutstanding }: EMITimelineProps) 
       <div className="flex flex-col gap-4">
         {list.map((item) => {
           const isExpanded = expandedId === item.id;
-          const monthsRemaining = item.tenure_months - item.months_paid;
-          const pctPaid = Math.min(100, Math.round((item.months_paid / item.tenure_months) * 100));
+          const monthsRemaining = Math.max(0, item.tenure_months - item.months_paid);
+          const pctPaid = item.tenure_months > 0
+            ? Math.min(100, Math.round((item.months_paid / item.tenure_months) * 100))
+            : 0;
 
           return (
             <div
@@ -167,56 +143,60 @@ export function EMITimeline({ items = [], totalOutstanding }: EMITimelineProps) 
               </div>
 
               {/* Expand Toggle Button */}
-              <button
-                onClick={() => toggleExpand(item.id)}
-                className="mt-2 flex items-center justify-between w-full pt-2 border-t border-border-subtle/50 text-xs font-medium text-text-muted hover:text-text-primary transition-colors"
-              >
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-brand" />
-                  {isExpanded ? "Hide Amortization Schedule" : "View Amortization Schedule"}
-                </span>
-                <ChevronDown
-                  className={clsx("w-4 h-4 transition-transform duration-200", isExpanded && "rotate-180")}
-                />
-              </button>
-
-              {/* Collapsible Amortization Table */}
-              <AnimatePresence>
-                {isExpanded && item.amortization && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="overflow-hidden mt-3 pt-3 border-t border-border-subtle"
+              {item.amortization && item.amortization.length > 0 && (
+                <>
+                  <button
+                    onClick={() => toggleExpand(item.id)}
+                    className="mt-2 flex items-center justify-between w-full pt-2 border-t border-border-subtle/50 text-xs font-medium text-text-muted hover:text-text-primary transition-colors"
                   >
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs font-mono">
-                        <thead>
-                          <tr className="border-b border-border-subtle text-text-muted text-[11px]">
-                            <th className="py-1.5 font-medium">Month</th>
-                            <th className="py-1.5 font-medium">Principal</th>
-                            <th className="py-1.5 font-medium">Interest</th>
-                            <th className="py-1.5 font-medium text-right">Balance</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border-subtle/30 text-text-secondary">
-                          {item.amortization.map((row, rIdx) => (
-                            <tr key={rIdx} className="hover:bg-surface-elevated/40">
-                              <td className="py-1.5">{row.month}</td>
-                              <td className="py-1.5 text-emerald-400">{formatCurrency(row.principal)}</td>
-                              <td className="py-1.5 text-rose-400">{formatCurrency(row.interest)}</td>
-                              <td className="py-1.5 text-right font-bold text-text-primary">
-                                {formatCurrency(row.balance)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-brand" />
+                      {isExpanded ? "Hide Amortization Schedule" : "View Amortization Schedule"}
+                    </span>
+                    <ChevronDown
+                      className={clsx("w-4 h-4 transition-transform duration-200", isExpanded && "rotate-180")}
+                    />
+                  </button>
+
+                  {/* Collapsible Amortization Table */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="overflow-hidden mt-3 pt-3 border-t border-border-subtle"
+                      >
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs font-mono">
+                            <thead>
+                              <tr className="border-b border-border-subtle text-text-muted text-[11px]">
+                                <th className="py-1.5 font-medium">Month</th>
+                                <th className="py-1.5 font-medium">Principal</th>
+                                <th className="py-1.5 font-medium">Interest</th>
+                                <th className="py-1.5 font-medium text-right">Balance</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border-subtle/30 text-text-secondary">
+                              {item.amortization.map((row, rIdx) => (
+                                <tr key={rIdx} className="hover:bg-surface-elevated/40">
+                                  <td className="py-1.5">{row.month}</td>
+                                  <td className="py-1.5 text-emerald-400">{formatCurrency(row.principal)}</td>
+                                  <td className="py-1.5 text-rose-400">{formatCurrency(row.interest)}</td>
+                                  <td className="py-1.5 text-right font-bold text-text-primary">
+                                    {formatCurrency(row.balance)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              )}
             </div>
           );
         })}
