@@ -347,7 +347,7 @@ function SettingsContent() {
 
       if (!res.ok) {
         if (res.status === 409 && data.job_id) {
-          // Active job already exists — link to it
+          // Active job already exists - link to it
           setAccountJobs((prev) => ({
             ...prev,
             [account.id]: {
@@ -432,13 +432,12 @@ function SettingsContent() {
             initial={{ opacity: 0, y: -20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -15, scale: 0.96 }}
-            className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm shadow-xs ${
-              toastMessage.type === "success"
+            className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm shadow-xs ${toastMessage.type === "success"
                 ? "bg-emerald-50 border-emerald-200 text-emerald-900"
                 : toastMessage.type === "error"
-                ? "bg-rose-50 border-rose-200 text-rose-900"
-                : "bg-surface-elevated border-border-default text-text-primary"
-            }`}
+                  ? "bg-rose-50 border-rose-200 text-rose-900"
+                  : "bg-surface-elevated border-border-default text-text-primary"
+              }`}
           >
             <div className="flex items-center gap-2.5">
               {toastMessage.type === "success" ? (
@@ -474,29 +473,27 @@ function SettingsContent() {
         {/* SECTION 3: n8n Status indicator */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <div
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono border transition-colors ${
-              isN8nLoading
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono border transition-colors ${isN8nLoading
                 ? "bg-surface-subtle border-border-default text-text-muted"
                 : n8nStatus?.online
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : "bg-rose-50 border-rose-200 text-rose-800"
-            }`}
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                  : "bg-rose-50 border-rose-200 text-rose-800"
+              }`}
           >
             <span
-              className={`w-2 h-2 rounded-full ${
-                isN8nLoading
+              className={`w-2 h-2 rounded-full ${isN8nLoading
                   ? "bg-text-muted animate-pulse"
                   : n8nStatus?.online
-                  ? "bg-emerald-600 animate-pulse"
-                  : "bg-rose-600"
-              }`}
+                    ? "bg-emerald-600 animate-pulse"
+                    : "bg-rose-600"
+                }`}
             />
             <span>
               {isN8nLoading
                 ? "Checking n8n..."
                 : n8nStatus?.online
-                ? `n8n Online ${n8nStatus.version ? `(v${n8nStatus.version})` : ""}`
-                : "n8n Offline"}
+                  ? `n8n Online ${n8nStatus.version ? `(v${n8nStatus.version})` : ""}`
+                  : "n8n Offline"}
             </span>
           </div>
 
@@ -606,11 +603,10 @@ function SettingsContent() {
               onClick={() => {
                 window.location.href = "/api/gmail/auth";
               }}
-              className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-sans font-medium text-sm transition-all shadow-xs ${
-                maxAccountsReached
+              className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-sans font-medium text-sm transition-all shadow-xs ${maxAccountsReached
                   ? "bg-surface-subtle border border-border-default text-text-muted cursor-not-allowed"
                   : "bg-text-primary text-white hover:bg-text-primary/90"
-              }`}
+                }`}
             >
               <Plus className="w-4 h-4" />
               <span>
@@ -752,16 +748,14 @@ function SettingsContent() {
                       <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-border-subtle">
                         {/* Status Badge */}
                         <div
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium ${
-                            account.sync_enabled
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium ${account.sync_enabled
                               ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                               : "bg-surface-subtle text-text-muted border border-border-default"
-                          }`}
+                            }`}
                         >
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              account.sync_enabled ? "bg-emerald-600" : "bg-text-muted"
-                            }`}
+                            className={`w-1.5 h-1.5 rounded-full ${account.sync_enabled ? "bg-emerald-600" : "bg-text-muted"
+                              }`}
                           />
                           <span>{account.sync_enabled ? "Active" : "Paused"}</span>
                         </div>
@@ -777,16 +771,14 @@ function SettingsContent() {
                             aria-checked={account.sync_enabled}
                             disabled={isToggling}
                             onClick={() => handleToggleSync(account)}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
-                              account.sync_enabled ? "bg-text-primary" : "bg-border-strong"
-                            }`}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${account.sync_enabled ? "bg-text-primary" : "bg-border-strong"
+                              }`}
                           >
                             <span className="sr-only">Toggle Sync</span>
                             <span
                               aria-hidden="true"
-                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                                account.sync_enabled ? "translate-x-5" : "translate-x-0"
-                              }`}
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${account.sync_enabled ? "translate-x-5" : "translate-x-0"
+                                }`}
                             />
                           </button>
                         </div>
@@ -921,11 +913,10 @@ function SettingsContent() {
                         whileTap={isProcessing || isStarting ? undefined : { scale: 0.98 }}
                         disabled={isProcessing || isStarting}
                         onClick={() => handleStartImport(account)}
-                        className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-sans font-medium text-xs transition-all shadow-xs ${
-                          isProcessing
+                        className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-sans font-medium text-xs transition-all shadow-xs ${isProcessing
                             ? "bg-surface-subtle border border-border-default text-text-muted cursor-not-allowed"
                             : "bg-text-primary text-white hover:bg-text-primary/90"
-                        }`}
+                          }`}
                       >
                         {isStarting ? (
                           <>
@@ -955,8 +946,8 @@ function SettingsContent() {
                           {isCompleted
                             ? `Completed import of ${activeJob.processed_count} emails`
                             : activeJob.total_emails > 0
-                            ? `Processing ${activeJob.processed_count} of ${activeJob.total_emails} emails...`
-                            : `Processing ${activeJob.processed_count} emails...`}
+                              ? `Processing ${activeJob.processed_count} of ${activeJob.total_emails} emails...`
+                              : `Processing ${activeJob.processed_count} emails...`}
                         </span>
                         <span className="font-mono font-medium text-text-primary">
                           {activeJob.percent}%
@@ -968,11 +959,10 @@ function SettingsContent() {
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.min(100, Math.max(0, activeJob.percent))}%` }}
                           transition={{ duration: 0.5, ease: "easeOut" }}
-                          className={`h-full rounded-full ${
-                            isCompleted
+                          className={`h-full rounded-full ${isCompleted
                               ? "bg-emerald-600"
                               : "bg-text-primary"
-                          }`}
+                            }`}
                         />
                       </div>
                     </div>

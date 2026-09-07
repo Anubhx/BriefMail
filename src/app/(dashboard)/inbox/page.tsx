@@ -187,6 +187,7 @@ function InboxContent() {
 
   return (
     <div className="flex flex-col gap-3 max-w-7xl mx-auto h-full font-ui pb-8">
+      <h1 className="sr-only">Inbox</h1>
       {/* Category Tabs & Filter Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface rounded-lg border border-border p-1.5 sm:p-2">
         <div className="flex-1 overflow-x-auto min-w-0">

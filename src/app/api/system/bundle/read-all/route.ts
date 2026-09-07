@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 
-// POST /api/system/bundle/read-all — mark all bundled system notifications as read
+// POST /api/system/bundle/read-all - mark all bundled system notifications as read
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const { userId } = await auth();
   if (!userId) {

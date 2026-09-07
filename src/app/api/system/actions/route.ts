@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 
-// GET /api/system/actions — retrieve all pending action items for entity isolation
+// GET /api/system/actions - retrieve all pending action items for entity isolation
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { userId } = await auth();
   if (!userId) {

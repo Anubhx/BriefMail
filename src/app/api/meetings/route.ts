@@ -15,7 +15,7 @@ const createMeetingSchema = z.object({
   attendees: z.array(z.object({ name: z.string().optional(), email: z.string() })).optional(),
 });
 
-// GET /api/meetings — fetch upcoming & past meetings
+// GET /api/meetings - fetch upcoming & past meetings
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { userId } = await auth();
   if (!userId) {
@@ -91,14 +91,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .eq("user_id", appUser.id)
       .or("from_email.ilike.%futurense.com%,from_name.ilike.%ui ux manager cohort%,from_name.ilike.%iit madras pravartak%,subject.ilike.%ui ux manager cohort%")
       .neq("category", "meetings")
-  ).catch(() => {});
+  ).catch(() => { });
 
   void Promise.resolve(
     db.from("job_applications")
       .delete()
       .eq("user_id", appUser.id)
       .or("company_name.ilike.%futurense%,company_name.ilike.%ui ux manager cohort%,company_name.ilike.%iit madras pravartak%,role_title.ilike.%cohort%")
-  ).catch(() => {});
+  ).catch(() => { });
 
   const now = new Date();
   const upcoming = [];
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   });
 }
 
-// POST /api/meetings — create new meeting manually
+// POST /api/meetings - create new meeting manually
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const { userId } = await auth();
   if (!userId) {

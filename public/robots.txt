@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /sign-in
+Allow: /sign-up
+Allow: /privacy
+Allow: /terms
+Disallow: /inbox
+Disallow: /all-mail
+Disallow: /starred
+Disallow: /snoozed
+Disallow: /finance
+Disallow: /career
+Disallow: /meetings
+Disallow: /system
+Disallow: /settings
+Disallow: /api/
+
+Sitemap: https://briefmail.vercel.app/sitemap.xml

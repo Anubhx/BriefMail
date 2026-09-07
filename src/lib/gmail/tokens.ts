@@ -1,5 +1,5 @@
 /**
- * Gmail token helpers — encrypt/decrypt tokens and refresh access tokens.
+ * Gmail token helpers - encrypt/decrypt tokens and refresh access tokens.
  * Never logs or stores plaintext tokens.
  */
 

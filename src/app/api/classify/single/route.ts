@@ -162,7 +162,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   let messageIds: string[] = [];
   const rawId = ((queueItem.message_id || queueItem.history_id) as string || "").trim();
   const isNumericHistoryId = /^\d+$/.test(rawId);
-  console.log(`[classify/single] [Step 4] Resolving IDs — rawId: '${rawId}', isNumericHistoryId: ${isNumericHistoryId}`);
+  console.log(`[classify/single] [Step 4] Resolving IDs - rawId: '${rawId}', isNumericHistoryId: ${isNumericHistoryId}`);
 
   if (isNumericHistoryId) {
     try {

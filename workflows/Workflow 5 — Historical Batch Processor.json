@@ -1,17 +1,25 @@
 {
-  "name": "AdvancedMail — 05 Historical Batch Processor",
+  "name": "AdvancedMail - 05 Historical Batch Processor",
   "nodes": [
     {
       "parameters": {
         "rule": {
-          "interval": [{ "field": "hours", "hoursInterval": 1 }]
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
         }
       },
       "id": "hourly-trigger",
       "name": "Every Hour",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -20,7 +28,10 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }
+            {
+              "name": "x-n8n-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            }
           ]
         },
         "options": {}
@@ -29,7 +40,10 @@
       "name": "Get Active Batch Jobs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [220, 300]
+      "position": [
+        220,
+        300
+      ]
     },
     {
       "parameters": {
@@ -38,7 +52,10 @@
             {
               "leftValue": "={{ $json.jobs_count }}",
               "rightValue": 0,
-              "operator": { "type": "number", "operation": "gt" }
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
             }
           ]
         }
@@ -47,7 +64,10 @@
       "name": "Active Jobs?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [440, 300]
+      "position": [
+        440,
+        300
+      ]
     },
     {
       "parameters": {
@@ -58,7 +78,10 @@
       "name": "Split Per Job",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [660, 200]
+      "position": [
+        660,
+        200
+      ]
     },
     {
       "parameters": {
@@ -67,20 +90,31 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "x-n8n-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"job_id\": \"{{ $json.id }}\",\n  \"chunk_size\": 20\n}",
-        "options": { "timeout": 120000 }
+        "options": {
+          "timeout": 120000
+        }
       },
       "id": "process-chunk",
       "name": "Process Chunk (20 emails)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [880, 200]
+      "position": [
+        880,
+        200
+      ]
     },
     {
       "parameters": {
@@ -91,7 +125,10 @@
       "name": "Cooldown 5s",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [1100, 200]
+      "position": [
+        1100,
+        200
+      ]
     },
     {
       "parameters": {
@@ -100,8 +137,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "x-n8n-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -113,7 +156,10 @@
       "name": "Update Job Progress",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1320, 200]
+      "position": [
+        1320,
+        200
+      ]
     },
     {
       "parameters": {
@@ -123,23 +169,95 @@
       "name": "No Active Jobs",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [660, 420]
+      "position": [
+        660,
+        420
+      ]
     }
   ],
   "connections": {
-    "Every Hour": { "main": [[{ "node": "Get Active Batch Jobs", "type": "main", "index": 0 }]] },
-    "Get Active Batch Jobs": { "main": [[{ "node": "Active Jobs?", "type": "main", "index": 0 }]] },
-    "Active Jobs?": {
+    "Every Hour": {
       "main": [
-        [{ "node": "Split Per Job", "type": "main", "index": 0 }],
-        [{ "node": "No Active Jobs", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Get Active Batch Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Split Per Job": { "main": [[{ "node": "Process Chunk (20 emails)", "type": "main", "index": 0 }]] },
-    "Process Chunk (20 emails)": { "main": [[{ "node": "Cooldown 5s", "type": "main", "index": 0 }]] },
-    "Cooldown 5s": { "main": [[{ "node": "Update Job Progress", "type": "main", "index": 0 }]] }
+    "Get Active Batch Jobs": {
+      "main": [
+        [
+          {
+            "node": "Active Jobs?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Active Jobs?": {
+      "main": [
+        [
+          {
+            "node": "Split Per Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Active Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Per Job": {
+      "main": [
+        [
+          {
+            "node": "Process Chunk (20 emails)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Chunk (20 emails)": {
+      "main": [
+        [
+          {
+            "node": "Cooldown 5s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cooldown 5s": {
+      "main": [
+        [
+          {
+            "node": "Update Job Progress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
-  "settings": { "executionOrder": "v1", "saveExecutionProgress": true },
-  "tags": [{ "name": "advanced-mail" }],
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true
+  },
+  "tags": [
+    {
+      "name": "advanced-mail"
+    }
+  ],
   "active": true
 }

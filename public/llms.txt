@@ -1,0 +1,56 @@
+# BriefMail
+
+> AI-powered email copilot for power users — automated triage, finance tracking, career pipeline, and meeting digests.
+
+## What is BriefMail?
+
+BriefMail is a Next.js 15 web application that connects to your Gmail account via OAuth and automatically:
+
+- **Triages your inbox** into categories (newsletters, receipts, alerts, personal, work) using a multi-tier AI pipeline combining fast heuristic rules with precision language models (Gemini)
+- **Extracts financial data** from email receipts and bank statements — surfacing transactions, upcoming EMI payments, SIP investments, and active subscriptions
+- **Tracks your career pipeline** — automatically detects job applications, interview invites, and offer letters from email and organises them into a Kanban board
+- **Generates meeting digests** — parses calendar invites and meeting emails into structured digests with action items
+
+## Technology Stack
+
+- **Framework**: Next.js 15 (App Router, React 19)
+- **Auth**: Clerk (Google OAuth + email)
+- **Database**: Supabase (Postgres with Row Level Security)
+- **AI**: Google Gemini (multi-key load-balanced), Hugging Face models
+- **Queue**: Redis (Upstash in production) + custom batch processing
+- **Deployment**: Vercel (with cron jobs for keepalive and batch processing)
+- **Styling**: Tailwind CSS with a custom editorial design system
+
+## URL
+
+https://briefmail.vercel.app
+
+## What BriefMail does NOT do
+
+- It does not send emails on your behalf
+- It does not store email body content permanently — only structured metadata is persisted
+- It does not share your data with third parties
+- It does not support email clients other than Gmail at this time
+
+## Key Pages (public)
+
+- `/` — Landing page with feature overview and sign-up
+- `/sign-in` — Clerk-powered sign in (Google OAuth or email)
+- `/sign-up` — Account creation
+
+## Key Pages (authenticated, noindex)
+
+- `/inbox` — AI-triaged email inbox
+- `/finance` — Financial data dashboard
+- `/career` — Job application Kanban board
+- `/meetings` — Meeting digests and calendar
+- `/all-mail` — Full email archive
+- `/settings` — Account and sync configuration
+
+## API
+
+All API routes are under `/api/` and require Clerk authentication (except cron and webhook endpoints).
+
+## Contact
+
+For questions about BriefMail, see the repository README or open an issue on GitHub.

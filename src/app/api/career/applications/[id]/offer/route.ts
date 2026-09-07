@@ -53,7 +53,7 @@ export async function GET(
   return NextResponse.json({ offer: offer || null });
 }
 
-// POST / PATCH /api/career/applications/[id]/offer — save or update offer details
+// POST / PATCH /api/career/applications/[id]/offer - save or update offer details
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

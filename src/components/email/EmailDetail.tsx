@@ -79,9 +79,9 @@ export function EmailDetail({
   const displayDate = email.received_at
     ? isValid(typeof email.received_at === "string" ? parseISO(email.received_at) : email.received_at)
       ? format(
-          typeof email.received_at === "string" ? parseISO(email.received_at) : email.received_at,
-          "EEE, MMM d, yyyy • h:mm a"
-        )
+        typeof email.received_at === "string" ? parseISO(email.received_at) : email.received_at,
+        "EEE, MMM d, yyyy • h:mm a"
+      )
       : String(email.date || "")
     : email.date || "";
 
@@ -130,11 +130,10 @@ export function EmailDetail({
           {/* Star Button */}
           <button
             onClick={() => email && onStar?.(email.id, !email.is_starred)}
-            className={`p-2 rounded-md border transition-colors ${
-              email.is_starred
+            className={`p-2 rounded-md border transition-colors ${email.is_starred
                 ? "bg-amber-50 border-amber-300 text-amber-600 hover:bg-amber-100"
                 : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-            }`}
+              }`}
             title={email.is_starred ? "Unstar" : "Star"}
           >
             <Star className={`w-4 h-4 ${email.is_starred ? "fill-amber-500 text-amber-500" : ""}`} />
@@ -283,11 +282,10 @@ export function EmailDetail({
                   <div
                     key={idx}
                     onClick={() => toggleActionItem(idx)}
-                    className={`flex items-start gap-2.5 p-2 rounded cursor-pointer transition-colors ${
-                      isDone
+                    className={`flex items-start gap-2.5 p-2 rounded cursor-pointer transition-colors ${isDone
                         ? "text-gray-400 line-through"
                         : "text-gray-800 hover:bg-gray-100"
-                    }`}
+                      }`}
                   >
                     {isDone ? (
                       <CheckSquare className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
@@ -380,7 +378,7 @@ export function EmailDetail({
           className="hidden md:block absolute inset-0"
         />
 
-        {/* Panel Container — Full screen takeover on Mobile with solid background, slide-over on Desktop */}
+        {/* Panel Container - Full screen takeover on Mobile with solid background, slide-over on Desktop */}
         <motion.div
           initial={{ x: "100%" }}
           animate={{ x: 0 }}

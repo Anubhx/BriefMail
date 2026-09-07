@@ -52,13 +52,13 @@ async function getFreshAccessToken(
     try {
       const decrypted = decryptToken(account.access_token);
       if (decrypted) return decrypted;
-    } catch {}
+    } catch { }
   }
 
   return null;
 }
 
-// GET /api/emails/[id] — fetch full email details and mark as read
+// GET /api/emails/[id] - fetch full email details and mark as read
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

@@ -1,5 +1,5 @@
 export function compressHtml(html: string): string {
-  // Use Node.js built-in zlib — NO external packages
+  // Use Node.js built-in zlib - NO external packages
   const { gzipSync } = require("zlib");
   if (!html || html.length === 0) return "";
   try {

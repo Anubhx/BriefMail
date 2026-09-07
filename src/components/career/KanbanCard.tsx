@@ -86,7 +86,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       return;
     }
 
-    // Remove card from local state immediately (optimistic update — don't wait for refetch)
+    // Remove card from local state immediately (optimistic update - don't wait for refetch)
     onDelete?.(app.id);
 
     try {
@@ -105,11 +105,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group relative rounded-lg bg-surface p-3.5 border transition-all duration-150 ${
-        isOffered
+      className={`group relative rounded-lg bg-surface p-3.5 border transition-all duration-150 ${isOffered
           ? "border-[#2FA66A]/40 shadow-xs hover:border-[#2FA66A]"
           : "border-border-default hover:border-border-strong shadow-xs"
-      } ${isDragging ? "ring-2 ring-brand/50 shadow-md" : ""}`}
+        } ${isDragging ? "ring-2 ring-brand/50 shadow-md" : ""}`}
     >
       {/* Top row: Drag Handle & Source Badge */}
       <div className="flex items-center justify-between gap-2 mb-2">

@@ -1,17 +1,25 @@
 {
-  "name": "AdvancedMail — 01 Email Ingest Poll",
+  "name": "AdvancedMail - 01 Email Ingest Poll",
   "nodes": [
     {
       "parameters": {
         "rule": {
-          "interval": [{ "field": "minutes", "minutesInterval": 5 }]
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
         }
       },
       "id": "cron-trigger",
       "name": "Every 5 Minutes",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -25,7 +33,10 @@
       "name": "Get Active Gmail Accounts",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [220, 300]
+      "position": [
+        220,
+        300
+      ]
     },
     {
       "parameters": {
@@ -36,7 +47,10 @@
       "name": "Split Per Account",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [440, 300]
+      "position": [
+        440,
+        300
+      ]
     },
     {
       "parameters": {
@@ -45,8 +59,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "x-n8n-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -58,7 +78,10 @@
       "name": "Refresh Token",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [660, 300]
+      "position": [
+        660,
+        300
+      ]
     },
     {
       "parameters": {
@@ -67,8 +90,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "x-n8n-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -82,17 +111,25 @@
       "name": "Sync Gmail History",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [880, 300]
+      "position": [
+        880,
+        300
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true },
+          "options": {
+            "caseSensitive": true
+          },
           "conditions": [
             {
               "leftValue": "={{ $json.new_messages_count }}",
               "rightValue": 0,
-              "operator": { "type": "number", "operation": "gt" }
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
             }
           ]
         }
@@ -101,7 +138,10 @@
       "name": "Has New Emails?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1100, 300]
+      "position": [
+        1100,
+        300
+      ]
     },
     {
       "parameters": {
@@ -110,8 +150,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "x-n8n-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -125,34 +171,110 @@
       "name": "Classify New Emails",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1320, 200]
+      "position": [
+        1320,
+        200
+      ]
     },
     {
       "parameters": {
         "options": {}
       },
       "id": "no-new-emails",
-      "name": "No New Emails — Skip",
+      "name": "No New Emails - Skip",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1320, 420]
+      "position": [
+        1320,
+        420
+      ]
     }
   ],
   "connections": {
-    "Every 5 Minutes": { "main": [[{ "node": "Get Active Gmail Accounts", "type": "main", "index": 0 }]] },
-    "Get Active Gmail Accounts": { "main": [[{ "node": "Split Per Account", "type": "main", "index": 0 }]] },
-    "Split Per Account": { "main": [[{ "node": "Refresh Token", "type": "main", "index": 0 }]] },
-    "Refresh Token": { "main": [[{ "node": "Sync Gmail History", "type": "main", "index": 0 }]] },
-    "Sync Gmail History": { "main": [[{ "node": "Has New Emails?", "type": "main", "index": 0 }]] },
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Get Active Gmail Accounts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Gmail Accounts": {
+      "main": [
+        [
+          {
+            "node": "Split Per Account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Per Account": {
+      "main": [
+        [
+          {
+            "node": "Refresh Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refresh Token": {
+      "main": [
+        [
+          {
+            "node": "Sync Gmail History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync Gmail History": {
+      "main": [
+        [
+          {
+            "node": "Has New Emails?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Has New Emails?": {
       "main": [
-        [{ "node": "Classify New Emails", "type": "main", "index": 0 }],
-        [{ "node": "No New Emails — Skip", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Classify New Emails",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No New Emails - Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
-  "settings": { "executionOrder": "v1", "saveExecutionProgress": true, "callerPolicy": "any" },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "callerPolicy": "any"
+  },
   "staticData": null,
-  "tags": [{ "name": "advanced-mail" }],
+  "tags": [
+    {
+      "name": "advanced-mail"
+    }
+  ],
   "active": true
 }

@@ -172,7 +172,7 @@ export default function MeetingsPage() {
               <div className="flex items-center gap-2">
                 <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-600 animate-ping" />
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-800">
-                  Quick Join — Next Up
+                  Quick Join - Next Up
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-serif font-bold text-text-primary">
@@ -213,11 +213,10 @@ export default function MeetingsPage() {
         <div className="flex items-center gap-1 bg-surface-subtle p-1 rounded-xl border border-border-default">
           <button
             onClick={() => setActiveTab("upcoming")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              activeTab === "upcoming"
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${activeTab === "upcoming"
                 ? "bg-surface-elevated text-text-primary shadow-xs"
                 : "text-text-muted hover:text-text-primary"
-            }`}
+              }`}
           >
             <Clock className="h-3.5 w-3.5" />
             <span>Upcoming ({upcoming.length})</span>
@@ -225,11 +224,10 @@ export default function MeetingsPage() {
 
           <button
             onClick={() => setActiveTab("past")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              activeTab === "past"
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${activeTab === "past"
                 ? "bg-surface-elevated text-text-primary shadow-xs"
                 : "text-text-muted hover:text-text-primary"
-            }`}
+              }`}
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
             <span>Past ({past.length})</span>

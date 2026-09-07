@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 
-// GET /api/emails — fetch paginated emails with filtering & search
+// GET /api/emails - fetch paginated emails with filtering & search
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { userId } = await auth();
   if (!userId) {

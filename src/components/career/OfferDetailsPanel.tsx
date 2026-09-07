@@ -199,7 +199,7 @@ export const OfferDetailsPanel: React.FC<OfferPanelProps> = ({
                 Offer Letter Details
               </h2>
               <p className="text-xs text-text-muted">
-                {application.company_name} — {application.role_title || "Position"}
+                {application.company_name} - {application.role_title || "Position"}
               </p>
             </div>
           </div>
@@ -225,15 +225,14 @@ export const OfferDetailsPanel: React.FC<OfferPanelProps> = ({
                     key={st}
                     type="button"
                     onClick={() => setStatus(st)}
-                    className={`text-[11px] px-2.5 py-0.5 rounded capitalize font-medium transition-all ${
-                      status === st
+                    className={`text-[11px] px-2.5 py-0.5 rounded capitalize font-medium transition-all ${status === st
                         ? st === "accepted"
                           ? "bg-[#2FA66A] text-white font-semibold"
                           : st === "declined"
-                          ? "bg-[#CF421C] text-white font-semibold"
-                          : "bg-[#D58A00] text-white font-semibold"
+                            ? "bg-[#CF421C] text-white font-semibold"
+                            : "bg-[#D58A00] text-white font-semibold"
                         : "bg-surface text-text-muted hover:text-text-primary border border-border-default"
-                    }`}
+                      }`}
                   >
                     {st}
                   </button>

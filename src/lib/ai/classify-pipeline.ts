@@ -25,7 +25,7 @@ export interface ClassificationOutput {
 // ── Main pipeline ─────────────────────────────────────────────────────────────
 
 export async function classifyEmail(email: EmailInput): Promise<ClassificationOutput> {
-  // Tier 1: Regex rules — instant, no API calls
+  // Tier 1: Regex rules - instant, no API calls
   let t1: ReturnType<typeof classifyByRules> = null;
   try {
     t1 = classifyByRules(email);
@@ -88,12 +88,12 @@ export async function classifyEmail(email: EmailInput): Promise<ClassificationOu
         has_action_item: hasAction,
         action_items: actionType
           ? [
-              {
-                type: actionType,
-                description: gem.summary,
-                due_date: actionDue,
-              },
-            ]
+            {
+              type: actionType,
+              description: gem.summary,
+              due_date: actionDue,
+            },
+          ]
           : [],
       };
     }

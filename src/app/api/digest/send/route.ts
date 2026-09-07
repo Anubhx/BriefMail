@@ -46,7 +46,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     meetings_count: upcoming_meetings.length,
   });
 
-  // TODO: Phase 12 — integrate Resend/Nodemailer for actual email sending
+  // TODO: Phase 12 - integrate Resend/Nodemailer for actual email sending
   return NextResponse.json({
     sent: false,
     reason: "email_provider_not_configured",

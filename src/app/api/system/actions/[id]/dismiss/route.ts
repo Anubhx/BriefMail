@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 
-// PATCH /api/system/actions/[id]/dismiss — mark action item as completed
+// PATCH /api/system/actions/[id]/dismiss - mark action item as completed
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

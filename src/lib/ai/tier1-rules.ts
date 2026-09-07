@@ -1,6 +1,6 @@
 /**
  * Tier 1 rule-based email classifier.
- * Pure TypeScript — no imports, no async, executes in <1ms.
+ * Pure TypeScript - no imports, no async, executes in <1ms.
  * Returns FIRST matching rule or null.
  */
 

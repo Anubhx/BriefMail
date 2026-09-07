@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { Sidebar } from "@/components/ui/Sidebar";
@@ -22,9 +23,36 @@ export default function DashboardLayout({
     return segment.charAt(0).toUpperCase() + segment.slice(1);
   };
 
+  const pageTitle = getPageTitle();
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "BriefMail",
+        "item": "https://briefmail.vercel.app"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": pageTitle,
+        "item": `https://briefmail.vercel.app${pathname}`
+      }
+    ]
+  };
+
   return (
     <div className="flex h-screen bg-surface-canvas text-text-primary overflow-hidden font-ui">
-      {/* Desktop Left Sidebar (230px fixed) — hidden on mobile (<1024px) */}
+      {/* Breadcrumb Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
+      {/* Desktop Left Sidebar (230px fixed) - hidden on mobile (<1024px) */}
       <div className="hidden lg:block shrink-0 border-r border-border bg-surface">
         <Sidebar />
       </div>
@@ -33,16 +61,32 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-surface-canvas">
         {/* Quiet Editorial Header */}
         <header className="h-13 border-b border-border bg-surface flex items-center justify-between px-4 lg:px-6 shrink-0 z-10 select-none">
-          <div className="flex items-center gap-2.5">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2.5">
             <div className="lg:hidden flex items-center shrink-0">
               <Logo variant="square" width={22} height={20} href="/inbox" />
             </div>
-            <span className="hidden sm:inline text-xs font-mono uppercase tracking-widest text-text-muted">BriefMail</span>
-            <span className="hidden sm:inline text-border-strong text-xs font-mono">/</span>
-            <h1 className="text-sm font-medium text-text-primary tracking-tight">
-              {getPageTitle()}
-            </h1>
-          </div>
+            <ol className="flex items-center gap-2 text-xs font-mono">
+              <li>
+                <Link
+                  href="/inbox"
+                  className="hidden sm:inline uppercase tracking-widest text-text-muted hover:text-text-primary transition-colors"
+                >
+                  BriefMail
+                </Link>
+              </li>
+              <li aria-hidden="true" className="hidden sm:inline text-border-strong font-mono">
+                /
+              </li>
+              <li>
+                <span
+                  className="text-sm font-medium text-text-primary font-ui tracking-tight"
+                  aria-current="page"
+                >
+                  {pageTitle}
+                </span>
+              </li>
+            </ol>
+          </nav>
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono text-text-muted">
@@ -55,7 +99,7 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        {/* Main Page View Content — pb-20 on mobile (<1024px) to clear BottomNav */}
+        {/* Main Page View Content - pb-20 on mobile (<1024px) to clear BottomNav */}
         <main className="flex-1 overflow-y-auto p-2 sm:p-3 lg:p-4 pb-20 lg:pb-4 bg-surface-canvas">
           {children}
         </main>

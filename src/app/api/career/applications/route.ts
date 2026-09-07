@@ -14,7 +14,7 @@ const createApplicationSchema = z.object({
   salary_offered: z.number().optional(),
 });
 
-// GET /api/career/applications — fetch all applications for current user
+// GET /api/career/applications - fetch all applications for current user
 export async function GET(): Promise<NextResponse> {
   const { userId } = await auth();
 
@@ -170,7 +170,7 @@ export async function GET(): Promise<NextResponse> {
   return NextResponse.json({ applications: filteredApplications });
 }
 
-// POST /api/career/applications — create new application
+// POST /api/career/applications - create new application
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const { userId } = await auth();
 

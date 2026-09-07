@@ -1,5 +1,5 @@
 {
-  "name": "AdvancedMail — 04 Daily Digest",
+  "name": "AdvancedMail - 04 Daily Digest",
   "nodes": [
     {
       "parameters": {
@@ -16,7 +16,10 @@
       "name": "Daily at 7:00 AM IST",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
-      "position": [0, 300]
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
@@ -25,16 +28,24 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }
+            {
+              "name": "x-n8n-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            }
           ]
         },
-        "options": { "timeout": 30000 }
+        "options": {
+          "timeout": 30000
+        }
       },
       "id": "generate-digest",
       "name": "Generate Digest Data",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [220, 300]
+      "position": [
+        220,
+        300
+      ]
     },
     {
       "parameters": {
@@ -45,7 +56,10 @@
       "name": "Split Per User",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [440, 300]
+      "position": [
+        440,
+        300
+      ]
     },
     {
       "parameters": {
@@ -54,7 +68,10 @@
             {
               "leftValue": "={{ $json.digest_enabled }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true" }
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
             }
           ]
         }
@@ -63,7 +80,10 @@
       "name": "Digest Enabled?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [660, 300]
+      "position": [
+        660,
+        300
+      ]
     },
     {
       "parameters": {
@@ -72,8 +92,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-n8n-secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" },
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "x-n8n-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -85,21 +111,67 @@
       "name": "Send Digest Email",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [880, 200]
+      "position": [
+        880,
+        200
+      ]
     }
   ],
   "connections": {
-    "Daily at 7:00 AM IST": { "main": [[{ "node": "Generate Digest Data", "type": "main", "index": 0 }]] },
-    "Generate Digest Data": { "main": [[{ "node": "Split Per User", "type": "main", "index": 0 }]] },
-    "Split Per User": { "main": [[{ "node": "Digest Enabled?", "type": "main", "index": 0 }]] },
+    "Daily at 7:00 AM IST": {
+      "main": [
+        [
+          {
+            "node": "Generate Digest Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Digest Data": {
+      "main": [
+        [
+          {
+            "node": "Split Per User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Per User": {
+      "main": [
+        [
+          {
+            "node": "Digest Enabled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Digest Enabled?": {
       "main": [
-        [{ "node": "Send Digest Email", "type": "main", "index": 0 }],
+        [
+          {
+            "node": "Send Digest Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
         []
       ]
     }
   },
-  "settings": { "executionOrder": "v1", "saveExecutionProgress": true },
-  "tags": [{ "name": "advanced-mail" }],
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true
+  },
+  "tags": [
+    {
+      "name": "advanced-mail"
+    }
+  ],
   "active": true
 }

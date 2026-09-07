@@ -59,7 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   }
 
-  // Token is expired or expiring soon — refresh it
+  // Token is expired or expiring soon - refresh it
   try {
     const refreshed = await refreshAccessToken(account.refresh_token as string);
 

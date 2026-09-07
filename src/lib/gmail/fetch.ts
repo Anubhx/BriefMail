@@ -1,6 +1,6 @@
 /**
  * Gmail API fetch utilities.
- * All functions accept a raw (decrypted) access_token — never stored.
+ * All functions accept a raw (decrypted) access_token - never stored.
  * Throws 'gmail_auth_expired' on 401 so callers can refresh and retry.
  */
 

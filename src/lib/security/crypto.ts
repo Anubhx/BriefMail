@@ -71,7 +71,7 @@ export function decryptString(ciphertext: string): string {
     return decrypted.toString("utf8");
   } catch {
     throw new Error(
-      "decryptString: decryption failed — key mismatch or corrupted data"
+      "decryptString: decryption failed - key mismatch or corrupted data"
     );
   }
 }

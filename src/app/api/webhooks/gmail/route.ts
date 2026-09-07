@@ -55,7 +55,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     .single();
 
   if (!account) {
-    // Unknown or deactivated account — still return 200
+    // Unknown or deactivated account - still return 200
     return NextResponse.json({ ok: true });
   }
 

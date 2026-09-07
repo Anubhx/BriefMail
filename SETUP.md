@@ -10,7 +10,7 @@ This document provides a step-by-step operational setup guide for configuring **
 2. Click **New Project** and enter the following details:
    - **Project Name:** `advanced-mail-prod`
    - **Database Password:** Generate or specify a strong password (store this securely).
-   - **Region:** `ap-south-1` (Mumbai — closest region for optimal latency).
+   - **Region:** `ap-south-1` (Mumbai - closest region for optimal latency).
    - **Pricing Plan:** Free Tier.
 3. Click **Create new project** and allow ~2 minutes for provision.
 

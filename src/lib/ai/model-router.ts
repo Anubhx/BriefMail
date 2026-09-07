@@ -107,7 +107,7 @@ class ModelRouter {
   private inMemoryHfIdx = 0;
 
   constructor() {
-    // Load Gemini keys — skip if env var is empty
+    // Load Gemini keys - skip if env var is empty
     this.geminiKeys = [1, 2, 3, 4]
       .map((n) => ({
         key: process.env[`GEMINI_KEY_${n}`] ?? "",
@@ -115,7 +115,7 @@ class ModelRouter {
       }))
       .filter((k) => k.key.length > 0);
 
-    // Load HuggingFace keys — skip if env var is empty
+    // Load HuggingFace keys - skip if env var is empty
     this.hfKeys = [1, 2, 3, 4]
       .map((n) => ({
         key: process.env[`HF_KEY_${n}`] ?? "",
