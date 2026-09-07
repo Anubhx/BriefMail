@@ -809,123 +809,19 @@ export default function AllMailPage() {
         </div>
 
         {/* Desktop Reading Pane (Split on lg screens) */}
-        <div className="hidden lg:flex flex-1 bg-background bg-white dark:bg-gray-900 rounded-lg border border-border p-8 flex-col justify-start overflow-y-auto min-h-[600px]">
+        <div className="hidden lg:flex flex-1 bg-white rounded-lg border border-gray-200 flex-col overflow-hidden min-h-[600px] shadow-xs">
           {selectedEmail ? (
-            <div className="flex flex-col gap-6 max-w-prose">
-              {/* Header Details */}
-              <div className="border-b border-border pb-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-ui font-medium uppercase tracking-wider text-brand">
-                      {(selectedEmail.category || "General").replace("_", " ")}
-                    </span>
-                    {selectedEmail.subcategory && (
-                      <span className="text-[11px] font-mono text-text-muted uppercase">
-                        • {selectedEmail.subcategory}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => archiveMutation.mutate(selectedEmail.id)}
-                      className="px-3 py-1 rounded border border-border bg-surface hover:bg-surface-subtle text-xs font-ui text-text-secondary hover:text-text-primary transition-colors"
-                    >
-                      Archive
-                    </button>
-                    <button
-                      onClick={() => {
-                        const target = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-                        snoozeMutation.mutate({ id: selectedEmail.id, snoozeUntil: target });
-                      }}
-                      className="px-3 py-1 rounded border border-border bg-surface hover:bg-surface-subtle text-xs font-ui text-text-secondary hover:text-text-primary transition-colors"
-                    >
-                      Snooze 24h
-                    </button>
-                  </div>
-                </div>
-
-                <h1 className="font-serif text-2xl md:text-3xl text-text-primary font-normal leading-tight tracking-tight">
-                  {selectedEmail.subject || "(No subject)"}
-                </h1>
-
-                <div className="flex items-center justify-between text-xs text-text-muted pt-2 border-t border-border">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-full bg-surface-subtle border border-border text-text-secondary flex items-center justify-center font-semibold text-xs uppercase">
-                      {(selectedEmail.from_name || selectedEmail.from_email || "?").charAt(0)}
-                    </div>
-                    <div>
-                      <span className="text-text-primary font-medium">
-                        {selectedEmail.from_name || selectedEmail.from_email}
-                      </span>
-                      {selectedEmail.from_email && (
-                        <span className="font-mono text-text-muted text-[11px] ml-1.5">
-                          &lt;{selectedEmail.from_email}&gt;
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <span className="font-mono text-[11px] text-text-muted">
-                    {selectedEmail.received_at
-                      ? new Date(selectedEmail.received_at).toLocaleDateString()
-                      : ""}
-                  </span>
-                </div>
-              </div>
-
-              {/* AI Summary Banner - Restrained parchment note */}
-              {selectedEmail.ai_summary && (
-                <div className="p-4 rounded border-l-2 border-brand bg-surface-secondary space-y-1">
-                  <div className="flex items-center gap-1.5 text-[11px] font-ui font-semibold uppercase tracking-wider text-brand">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Summary</span>
-                  </div>
-                  <p className="font-serif italic text-sm text-text-secondary leading-relaxed">
-                    {selectedEmail.ai_summary}
-                  </p>
-                </div>
-              )}
-
-              {/* Action Items Box */}
-              {selectedEmail.has_action_item &&
-                selectedEmail.action_items &&
-                selectedEmail.action_items.length > 0 && (
-                  <div className="p-4 rounded border border-border bg-surface-secondary space-y-2">
-                    <span className="text-xs font-ui font-semibold uppercase tracking-wider text-text-primary flex items-center gap-1.5">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-                      Action Items Required
-                    </span>
-                    <div className="space-y-1.5 text-xs font-ui">
-                      {selectedEmail.action_items.map((action, idx) => (
-                        <div key={idx} className="flex items-start gap-2 text-text-secondary">
-                          <span className="text-emerald-700 font-bold">•</span>
-                          <span>{action.description}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              {/* Body Content with links opening in new tab */}
-              <div className="pt-2 text-text-primary leading-relaxed">
-                {selectedEmail.body_html ? (
-                  <div
-                    className="prose prose-neutral max-w-none text-[15px] sm:text-base leading-relaxed overflow-x-auto"
-                    dangerouslySetInnerHTML={{ __html: addTargetBlank(selectedEmail.body_html) }}
-                  />
-                ) : selectedEmail.body_text ? (
-                  <div className="font-ui text-[15px] sm:text-base whitespace-pre-wrap leading-relaxed text-text-primary">
-                    {selectedEmail.body_text}
-                  </div>
-                ) : (
-                  <div className="italic text-text-muted text-sm">{selectedEmail.snippet}</div>
-                )}
-              </div>
-            </div>
+            <EmailDetail
+              isInline={true}
+              email={selectedEmail}
+              onArchive={(id) => archiveMutation.mutate(id)}
+              onSnooze={(id, snoozeUntil) => snoozeMutation.mutate({ id, snoozeUntil })}
+              onStar={(id, isStarred) => starMutation.mutate({ id, isStarred })}
+            />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-text-muted text-sm font-ui gap-2">
-              <div className="w-10 h-10 rounded-full bg-surface-subtle border border-border flex items-center justify-center text-text-muted">
-                <Mail className="w-5 h-5 text-text-muted" />
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm font-ui gap-2 bg-white">
+              <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
+                <Mail className="w-5 h-5 text-gray-400" />
               </div>
               <span>Select an email to view full content</span>
             </div>
