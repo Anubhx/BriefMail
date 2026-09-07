@@ -2,7 +2,8 @@
 
 import React from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { Archive, Trash2, Star } from "lucide-react";
+import { Archive, Star, CheckSquare } from "lucide-react";
+import { clsx } from "clsx";
 
 export interface EmailListItemProps {
   id: string;
@@ -26,8 +27,24 @@ export interface EmailListItemProps {
   onClick?: (id: string) => void;
 }
 
-const SWIPE_THRESHOLD = 80;
-const SWIPE_FULL = 120;
+const SWIPE_THRESHOLD = 70;
+const SWIPE_FULL = 110;
+
+// Editorial soft category palette
+const CATEGORY_DOT_COLORS: Record<string, string> = {
+  finance: "#2FA66A",
+  finance_transaction: "#2FA66A",
+  career: "#4267D5",
+  jobs: "#4267D5",
+  meetings: "#8B5CC7",
+  investments: "#D58A00",
+  social: "#D64F7A",
+  newsletter: "#309BA8",
+  otp: "#E46C2E",
+  system: "#777A80",
+  ads: "#D64F7A",
+  misc: "#777A80",
+};
 
 export function EmailListItem({
   id,
@@ -38,13 +55,12 @@ export function EmailListItem({
   date,
   receivedAt,
   category,
+  subcategory,
   isRead = false,
   isUnread,
   hasActionItem = false,
   isSelected = false,
   onArchive,
-  onDelete,
-  onSnooze,
   onStar,
   onClick,
 }: EmailListItemProps) {
@@ -53,145 +69,154 @@ export function EmailListItem({
   const unreadState = isUnread !== undefined ? isUnread : !isRead;
   const x = useMotionValue(0);
 
-  // Left swipe → archive (negative x)
+  // Swipe transforms
   const archiveOpacity = useTransform(x, [-SWIPE_FULL, -SWIPE_THRESHOLD], [1, 0]);
-  const archiveScale = useTransform(x, [-SWIPE_FULL, -SWIPE_THRESHOLD], [1, 0.7]);
-
-  // Right swipe → star (positive x)
   const starOpacity = useTransform(x, [SWIPE_THRESHOLD, SWIPE_FULL], [0, 1]);
-  const starScale = useTransform(x, [SWIPE_THRESHOLD, SWIPE_FULL], [0.7, 1]);
 
   function handleDragEnd() {
     const current = x.get();
     if (current < -SWIPE_THRESHOLD) {
       onArchive?.(id);
-      animate(x, 0, { type: "spring", stiffness: 300, damping: 30 });
+      animate(x, 0, { type: "spring", stiffness: 350, damping: 30 });
     } else if (current > SWIPE_THRESHOLD) {
       onStar?.(id);
-      animate(x, 0, { type: "spring", stiffness: 300, damping: 30 });
+      animate(x, 0, { type: "spring", stiffness: 350, damping: 30 });
     } else {
-      animate(x, 0, { type: "spring", stiffness: 300, damping: 30 });
+      animate(x, 0, { type: "spring", stiffness: 350, damping: 30 });
     }
   }
 
-  const formattedTime = new Intl.DateTimeFormat("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).format(receivedAt);
+  const formattedTime = receivedAt
+    ? new Intl.DateTimeFormat("en-IN", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }).format(receivedAt)
+    : "";
 
-  const CATEGORY_COLORS: Record<string, string> = {
-    finance: "bg-emerald-500/20 text-emerald-400",
-    finance_transaction: "bg-emerald-500/20 text-emerald-400",
-    investments: "bg-blue-500/20 text-blue-400",
-    jobs: "bg-violet-500/20 text-violet-400",
-    career: "bg-purple-500/20 text-purple-400",
-    meetings: "bg-amber-500/20 text-amber-400",
-    system: "bg-slate-500/20 text-slate-400",
-    offers: "bg-pink-500/20 text-pink-400",
-    ads: "bg-rose-500/20 text-rose-400",
-    social: "bg-cyan-500/20 text-cyan-400",
-    newsletter: "bg-teal-500/20 text-teal-400",
-    otp: "bg-orange-500/20 text-orange-300",
-    misc: "bg-gray-500/20 text-gray-400",
-  };
-
-  const categoryColor = CATEGORY_COLORS[category] ?? CATEGORY_COLORS.misc;
+  const dotColor = CATEGORY_DOT_COLORS[category.toLowerCase()] || CATEGORY_DOT_COLORS.misc;
 
   return (
-    <div className="relative overflow-hidden rounded-xl">
-      {/* Background action layers */}
-      <div className="absolute inset-0 flex items-center justify-between px-6 pointer-events-none">
-        {/* Left: Archive */}
+    <div
+      className={clsx(
+        "briefmail-list-item relative overflow-hidden border-b border-border transition-colors duration-150 select-none group",
+        isSelected
+          ? "bg-surface-secondary"
+          : "bg-surface hover:bg-surface-subtle"
+      )}
+    >
+      {/* 3px Orange Left Indicator when Selected */}
+      {isSelected && (
+        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-brand z-20" />
+      )}
+
+      {/* Swipe reveal background actions */}
+      <div className="absolute inset-0 flex items-center justify-between px-5 pointer-events-none z-0">
+        {/* Left swipe → Star */}
         <motion.div
-          style={{ opacity: archiveOpacity, scale: archiveScale }}
-          className="flex items-center gap-2 text-blue-400"
+          style={{ opacity: starOpacity }}
+          className="flex items-center gap-1.5 text-amber-600"
         >
-          <Archive className="w-5 h-5" />
-          <span className="text-xs font-ui font-semibold">Archive</span>
+          <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+          <span className="text-xs font-ui font-medium">Star</span>
         </motion.div>
 
-        {/* Right: Star */}
+        {/* Right swipe → Archive */}
         <motion.div
-          style={{ opacity: starOpacity, scale: starScale }}
-          className="flex items-center gap-2 text-amber-400"
+          style={{ opacity: archiveOpacity }}
+          className="flex items-center gap-1.5 text-text-muted"
         >
-          <span className="text-xs font-ui font-semibold">Star</span>
-          <Star className="w-5 h-5" />
+          <span className="text-xs font-ui font-medium">Archive</span>
+          <Archive className="w-4 h-4 text-text-muted" />
         </motion.div>
       </div>
 
-      {/* Draggable row */}
+      {/* Draggable Row Body */}
       <motion.div
         drag="x"
         dragConstraints={{ left: -SWIPE_FULL, right: SWIPE_FULL }}
-        dragElastic={0.15}
+        dragElastic={0.12}
         style={{ x }}
         onDragEnd={handleDragEnd}
         onClick={() => onClick?.(id)}
-        className="relative z-10 flex items-start gap-3 px-4 py-3.5 bg-surface hover:bg-surface-elevated cursor-pointer select-none transition-colors"
-        whileTap={{ scale: 0.99 }}
+        className="relative z-10 flex items-start gap-3 px-4 py-3.5 cursor-pointer bg-inherit"
       >
-        {/* Unread indicator */}
-        <div className="mt-1.5 shrink-0">
+        {/* Unread dot or placeholder */}
+        <div className="pt-1 shrink-0 w-2 flex items-center justify-center">
           {unreadState ? (
-            <span className="w-2 h-2 rounded-full bg-brand block" />
+            <span
+              className="w-2 h-2 rounded-full bg-brand shrink-0"
+              title="Unread"
+            />
           ) : (
-            <span className="w-2 h-2 rounded-full bg-transparent block" />
+            <span className="w-2 h-2 rounded-full bg-transparent shrink-0" />
           )}
         </div>
 
-        {/* Content */}
+        {/* Row Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-0.5">
+          {/* Sender & Timestamp */}
+          <div className="flex items-baseline justify-between gap-2 mb-0.5">
             <span
-              className={`text-sm font-ui truncate ${
-                !unreadState ? "text-text-secondary font-normal" : "text-text-primary font-semibold"
-              }`}
+              className={clsx(
+                "text-sm font-ui truncate",
+                unreadState
+                  ? "text-text-primary font-semibold"
+                  : "text-text-secondary font-normal"
+              )}
             >
               {displayName}
             </span>
-            <span className="text-xs text-text-muted font-mono shrink-0">{displayDate || formattedTime}</span>
+            <span className="text-[11px] font-mono text-text-muted shrink-0">
+              {displayDate || formattedTime}
+            </span>
           </div>
 
-          <p
-            className={`text-sm truncate mb-1 ${
-              !unreadState ? "text-text-muted" : "text-text-secondary font-medium"
-            }`}
+          {/* Subject */}
+          <h4
+            className={clsx(
+              "text-sm truncate mb-0.5 font-ui",
+              unreadState
+                ? "text-text-primary font-medium"
+                : "text-text-secondary font-normal"
+            )}
           >
-            {subject}
+            {subject || "(No subject)"}
+          </h4>
+
+          {/* Preview Snippet */}
+          <p className="text-xs text-text-muted truncate leading-relaxed">
+            {snippet || ""}
           </p>
 
-          <p className="text-xs text-text-muted truncate">{snippet}</p>
+          {/* Metadata Footer: Quiet Category Dot & Action items */}
+          <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-1.5">
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ backgroundColor: dotColor }}
+              />
+              <span className="text-[11px] font-ui text-text-muted capitalize">
+                {category.replace("_", " ")}
+              </span>
+            </div>
 
-          {/* Metadata chips */}
-          <div className="flex items-center gap-1.5 mt-2">
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-ui font-medium ${categoryColor}`}
-            >
-              {category}
-            </span>
+            {subcategory && (
+              <span className="text-[10px] font-mono text-text-muted uppercase">
+                • {subcategory}
+              </span>
+            )}
 
             {hasActionItem && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-ui font-medium bg-red-500/15 text-red-400 border border-red-500/20">
-                Action needed
+              <span className="inline-flex items-center gap-1 text-[10px] font-ui font-medium text-brand bg-brand/10 px-1.5 py-0.5 rounded">
+                <CheckSquare className="w-3 h-3" />
+                Action
               </span>
             )}
           </div>
         </div>
-
-        {/* Delete button (long-press area — Phase 6 will wire context menu) */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete?.(id);
-          }}
-          className="shrink-0 mt-1 p-1 rounded-md text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
-          aria-label="Delete email"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
       </motion.div>
     </div>
   );
 }
+

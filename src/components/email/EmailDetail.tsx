@@ -3,18 +3,16 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X,
+  ArrowLeft,
   Archive,
   Star,
   Clock,
-  Sparkles,
   ExternalLink,
   Paperclip,
   CheckCircle2,
-  Calendar,
   CheckSquare,
   Square,
-  Tag,
+  Sparkles,
 } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 
@@ -106,8 +104,8 @@ export function EmailDetail({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs">
-        {/* Backdrop click to dismiss */}
+      <div className="fixed inset-0 z-50 flex justify-end bg-black/30 backdrop-blur-xs">
+        {/* Backdrop dismiss */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -116,29 +114,48 @@ export function EmailDetail({
           className="absolute inset-0"
         />
 
-        {/* Panel Container — Bottom Sheet on Mobile, Right Panel on Desktop */}
+        {/* Panel Container — Full screen on Mobile, clean slide-over on Tablet/Desktop */}
         <motion.div
-          initial={{ y: "100%", x: 0 }}
-          animate={{ y: 0, x: 0 }}
-          exit={{ y: "100%", x: 0 }}
-          transition={{ type: "spring", stiffness: 350, damping: 30 }}
-          className="relative w-full md:w-[640px] h-[90vh] md:h-full bg-surface border-t md:border-l border-border-subtle rounded-t-2xl md:rounded-none flex flex-col z-10 shadow-2xl overflow-hidden mt-auto md:mt-0 font-ui"
+          initial={{ x: "100%" }}
+          animate={{ x: 0 }}
+          exit={{ x: "100%" }}
+          transition={{ type: "spring", stiffness: 320, damping: 32 }}
+          className="relative w-full md:max-w-2xl lg:max-w-3xl h-full bg-surface-primary flex flex-col z-10 shadow-elevation-3 overflow-hidden"
+          style={{
+            paddingTop: "env(safe-area-inset-top, 0px)",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
         >
-          {/* Header Action Bar */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle bg-surface/90 backdrop-blur-md">
+          {/* Top Sticky Header Actions */}
+          <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-border bg-surface shrink-0">
             <div className="flex items-center gap-2">
               <button
-                onClick={() => email && onArchive?.(email.id)}
-                className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-elevated transition-colors"
-                title="Archive Email"
+                onClick={onClose}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-surface-subtle transition-colors"
+                aria-label="Back to inbox"
               >
-                <Archive className="w-4 h-4" />
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-xs font-ui font-medium">Back</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => email && onStar?.(email.id, !email.is_starred)}
+                className={`p-2 rounded-md transition-colors ${
+                  email.is_starred
+                    ? "text-amber-600 hover:text-amber-700"
+                    : "text-text-muted hover:text-text-primary hover:bg-surface-subtle"
+                }`}
+                title={email.is_starred ? "Unstar" : "Star"}
+              >
+                <Star className={`w-4 h-4 ${email.is_starred ? "fill-amber-500 text-amber-500" : ""}`} />
               </button>
 
               <div className="relative">
                 <button
                   onClick={() => setShowSnoozePicker(!showSnoozePicker)}
-                  className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-elevated transition-colors"
+                  className="p-2 rounded-md text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
                   title="Snooze"
                 >
                   <Clock className="w-4 h-4" />
@@ -146,43 +163,43 @@ export function EmailDetail({
 
                 {/* Snooze Dropdown */}
                 {showSnoozePicker && (
-                  <div className="absolute left-0 top-full mt-2 w-64 p-3 rounded-xl bg-surface-elevated border border-white/10 shadow-2xl z-30 space-y-2 animate-in fade-in zoom-in-95">
-                    <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider block">
+                  <div className="absolute right-0 top-full mt-2 w-64 p-3 rounded-lg bg-surface border border-border-strong shadow-elevation-2 z-30 space-y-2">
+                    <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider block font-ui">
                       Snooze Until
                     </span>
-                    <div className="grid grid-cols-2 gap-1.5 text-xs">
+                    <div className="grid grid-cols-2 gap-1.5 text-xs font-ui">
                       <button
                         onClick={() => handleQuickSnooze(3)}
-                        className="p-1.5 rounded-lg bg-surface hover:bg-surface-overlay text-text-secondary text-left"
+                        className="p-2 rounded bg-surface-subtle hover:bg-surface-secondary text-text-secondary text-left transition-colors"
                       >
                         In 3 hours
                       </button>
                       <button
                         onClick={() => handleQuickSnooze(24)}
-                        className="p-1.5 rounded-lg bg-surface hover:bg-surface-overlay text-text-secondary text-left"
+                        className="p-2 rounded bg-surface-subtle hover:bg-surface-secondary text-text-secondary text-left transition-colors"
                       >
                         Tomorrow
                       </button>
                       <button
                         onClick={() => handleQuickSnooze(72)}
-                        className="p-1.5 rounded-lg bg-surface hover:bg-surface-overlay text-text-secondary text-left col-span-2"
+                        className="p-2 rounded bg-surface-subtle hover:bg-surface-secondary text-text-secondary text-left col-span-2 transition-colors"
                       >
                         This Weekend
                       </button>
                     </div>
 
-                    <form onSubmit={handleSnoozeSubmit} className="pt-2 border-t border-white/5 space-y-2">
+                    <form onSubmit={handleSnoozeSubmit} className="pt-2 border-t border-border space-y-2 font-ui">
                       <label className="text-[10px] text-text-muted block">Custom date & time</label>
                       <input
                         type="datetime-local"
                         required
                         value={snoozeDate}
                         onChange={(e) => setSnoozeDate(e.target.value)}
-                        className="w-full rounded-md bg-surface border border-white/10 p-1.5 text-xs text-text-primary focus:outline-none focus:border-brand"
+                        className="w-full rounded border border-border bg-surface p-1.5 text-xs text-text-primary focus:outline-none focus:border-brand"
                       />
                       <button
                         type="submit"
-                        className="w-full py-1.5 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-semibold"
+                        className="w-full py-1.5 rounded bg-brand hover:bg-brand-hover text-white text-xs font-semibold transition-colors"
                       >
                         Snooze
                       </button>
@@ -192,115 +209,107 @@ export function EmailDetail({
               </div>
 
               <button
-                onClick={() => email && onStar?.(email.id, !email.is_starred)}
-                className={`p-2 rounded-lg transition-colors ${
-                  email.is_starred
-                    ? "text-amber-400 hover:text-amber-300"
-                    : "text-text-muted hover:text-text-primary hover:bg-surface-elevated"
-                }`}
-                title={email.is_starred ? "Unstar" : "Star"}
+                onClick={() => email && onArchive?.(email.id)}
+                className="p-2 rounded-md text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
+                title="Archive Email"
               >
-                <Star className={`w-4 h-4 ${email.is_starred ? "fill-amber-400" : ""}`} />
+                <Archive className="w-4 h-4" />
               </button>
             </div>
-
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-elevated transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
           </div>
 
-          {/* Email Body Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Subject */}
-            <div className="space-y-2">
+          {/* Reading Canvas */}
+          <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-8 space-y-7 bg-surface-primary">
+            {/* Subject - Editorial Headline */}
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
                 {email.category && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-brand-subtle text-brand border border-brand/20">
-                    <Tag className="h-3 w-3" />
-                    {email.category}
+                  <span className="text-[11px] font-ui font-medium uppercase tracking-wider text-brand">
+                    {email.category.replace("_", " ")}
                   </span>
                 )}
                 {email.subcategory && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-surface-elevated text-text-muted border border-white/5 uppercase">
-                    {email.subcategory}
+                  <span className="text-[11px] font-mono text-text-muted uppercase">
+                    • {email.subcategory}
                   </span>
                 )}
               </div>
 
-              <h1 className="text-xl font-bold font-ui text-text-primary leading-tight">
-                {email.subject}
+              <h1 className="font-serif text-2xl sm:text-3xl text-text-primary font-normal leading-tight tracking-tight">
+                {email.subject || "(No subject)"}
               </h1>
             </div>
 
-            {/* Sender Metadata */}
-            <div className="flex items-center justify-between py-3 border-y border-border-subtle">
+            {/* Sender & Recipient Metadata */}
+            <div className="flex items-start justify-between gap-4 py-4 border-y border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-brand-subtle text-brand border border-brand/20 flex items-center justify-center font-bold font-ui text-sm uppercase">
+                <div className="w-9 h-9 rounded-full bg-surface-subtle border border-border text-text-secondary flex items-center justify-center font-ui font-semibold text-xs uppercase shrink-0">
                   {displayName.charAt(0)}
                 </div>
                 <div>
-                  <div className="font-semibold text-sm text-text-primary">{displayName}</div>
-                  {displayEmail && <div className="text-xs text-text-muted">{displayEmail}</div>}
+                  <div className="font-ui font-semibold text-sm text-text-primary">
+                    {displayName}
+                  </div>
+                  {displayEmail && (
+                    <div className="font-mono text-xs text-text-muted">{displayEmail}</div>
+                  )}
                 </div>
               </div>
-              <div className="text-xs text-text-muted font-mono">{displayDate}</div>
+              <div className="font-mono text-xs text-text-muted shrink-0 pt-1">
+                {displayDate}
+              </div>
             </div>
 
-            {/* AI Summary Banner (Amber / Brand card) */}
+            {/* AI Summary - Restrained parchment note */}
             {email.ai_summary && (
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 shadow-sm">
-                <Sparkles className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">
-                    AI Summary
-                  </div>
-                  <p className="text-sm text-text-primary italic leading-relaxed">
-                    {email.ai_summary}
-                  </p>
+              <div className="p-4 rounded border-l-2 border-brand bg-surface-secondary space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[11px] font-ui font-semibold uppercase tracking-wider text-brand">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Summary</span>
                 </div>
+                <p className="font-serif italic text-sm text-text-secondary leading-relaxed">
+                  {email.ai_summary}
+                </p>
               </div>
             )}
 
             {/* Action Items Checklist */}
             {(email.has_action_item || actionItems.length > 0) && (
-              <div className="rounded-xl bg-surface-elevated/40 border border-white/10 p-4 space-y-3">
+              <div className="rounded border border-border bg-surface-secondary p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-text-primary flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                    Action Items Required
+                  <span className="text-xs font-ui font-semibold uppercase tracking-wider text-text-primary flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                    Action Items
                   </span>
                   <span className="text-[10px] text-text-muted font-mono">
                     {actionItems.length} item{actionItems.length === 1 ? "" : "s"}
                   </span>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {actionItems.map((item, idx) => {
                     const isDone = !!completedItems[idx];
                     return (
                       <div
                         key={idx}
                         onClick={() => toggleActionItem(idx)}
-                        className={`flex items-start gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                        className={`flex items-start gap-2.5 p-2 rounded cursor-pointer transition-colors ${
                           isDone
-                            ? "bg-emerald-500/10 border-emerald-500/20 text-text-muted line-through"
-                            : "bg-surface-base border-white/5 text-text-secondary hover:border-white/15"
+                            ? "text-text-muted line-through"
+                            : "text-text-secondary hover:bg-surface-subtle"
                         }`}
                       >
                         {isDone ? (
-                          <CheckSquare className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                          <CheckSquare className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
                         ) : (
                           <Square className="h-4 w-4 text-text-muted shrink-0 mt-0.5" />
                         )}
-                        <div className="text-xs flex-1">
+                        <div className="text-xs font-ui flex-1">
                           <p className={isDone ? "line-through text-text-muted" : "text-text-primary font-medium"}>
                             {item.description}
                           </p>
                           {item.due_date && (
-                            <span className="text-[10px] text-amber-400 block mt-0.5">
+                            <span className="text-[10px] font-mono text-amber-700 block mt-0.5">
                               Due: {item.due_date}
                             </span>
                           )}
@@ -312,15 +321,15 @@ export function EmailDetail({
               </div>
             )}
 
-            {/* Email Body text / HTML */}
-            <div className="pt-2">
+            {/* Long-form Email Body */}
+            <div className="pt-2 text-text-primary leading-relaxed max-w-prose">
               {email.body_html ? (
                 <div
-                  className="prose prose-invert max-w-none text-sm text-text-secondary leading-relaxed overflow-x-auto"
+                  className="prose prose-neutral max-w-none text-[15px] sm:text-base leading-relaxed overflow-x-auto"
                   dangerouslySetInnerHTML={{ __html: addTargetBlank(email.body_html) }}
                 />
               ) : email.body_text ? (
-                <div className="prose prose-invert max-w-none text-sm text-text-secondary leading-relaxed font-sans whitespace-pre-wrap">
+                <div className="font-ui text-[15px] sm:text-base whitespace-pre-wrap leading-relaxed text-text-primary">
                   {email.body_text}
                 </div>
               ) : (
@@ -330,10 +339,10 @@ export function EmailDetail({
               )}
             </div>
 
-            {/* Attachments Section */}
+            {/* Attachments */}
             {email.attachments && email.attachments.length > 0 && (
-              <div className="pt-4 border-t border-border-subtle">
-                <div className="text-xs font-semibold text-text-muted uppercase mb-3 flex items-center gap-1.5">
+              <div className="pt-6 border-t border-border space-y-3">
+                <div className="text-xs font-ui font-semibold text-text-muted uppercase tracking-wider flex items-center gap-1.5">
                   <Paperclip className="w-3.5 h-3.5" />
                   <span>Attachments ({email.attachments.length})</span>
                 </div>
@@ -343,9 +352,9 @@ export function EmailDetail({
                     return (
                       <div
                         key={idx}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-elevated border border-border-subtle text-xs text-text-primary"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded border border-border bg-surface text-xs font-ui text-text-primary hover:border-border-strong transition-colors"
                       >
-                        <span className="truncate max-w-[200px]">{name}</span>
+                        <span className="truncate max-w-[220px]">{name}</span>
                         <ExternalLink className="w-3.5 h-3.5 text-text-muted" />
                       </div>
                     );
@@ -359,3 +368,4 @@ export function EmailDetail({
     </AnimatePresence>
   );
 }
+

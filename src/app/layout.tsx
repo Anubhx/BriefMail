@@ -1,7 +1,27 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Inter, Newsreader, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-newsreader",
+  display: "swap",
+  style: ["normal", "italic"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "BriefMail - Intelligent Email Copilot",
@@ -14,8 +34,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="antialiased bg-surface-base text-text-primary">
+    <html lang="en" className={`${inter.variable} ${newsreader.variable} ${jetbrainsMono.variable}`}>
+      <body className="antialiased bg-surface-canvas text-text-primary font-ui selection:bg-brand/10 selection:text-brand">
         <ClerkProvider>
           <Providers>{children}</Providers>
         </ClerkProvider>

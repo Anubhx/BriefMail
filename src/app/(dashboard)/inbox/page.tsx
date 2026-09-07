@@ -183,10 +183,10 @@ function InboxContent() {
   };
 
   return (
-    <div className="flex flex-col gap-4 max-w-7xl mx-auto h-full font-ui pb-8">
-      {/* Category Tabs Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex-1 overflow-x-auto">
+    <div className="flex flex-col gap-3 max-w-7xl mx-auto h-full font-ui pb-8">
+      {/* Category Tabs & Filter Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface rounded-lg border border-border p-1.5 sm:p-2">
+        <div className="flex-1 overflow-x-auto min-w-0">
           <CategoryTabs
             activeCategory={activeCategory}
             onCategoryChange={handleCategoryChange}
@@ -195,8 +195,8 @@ function InboxContent() {
         </div>
 
         {/* Search & Refresh Controls */}
-        <div className="flex items-center gap-2 px-1">
-          <div className="relative w-48 sm:w-64">
+        <div className="flex items-center gap-2 px-2 shrink-0">
+          <div className="relative w-full sm:w-60">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
             <input
               type="text"
@@ -206,75 +206,75 @@ function InboxContent() {
                 setSearchQuery(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-surface border border-white/10 text-xs text-text-primary placeholder:text-text-disabled focus:border-brand focus:outline-none"
+              className="w-full pl-8 pr-3 py-1.5 rounded border border-border bg-surface-primary text-xs text-text-primary placeholder:text-text-muted focus:border-brand focus:outline-none transition-colors"
             />
           </div>
 
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated border border-white/10 text-xs text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-border bg-surface hover:bg-surface-subtle text-xs text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
             title="Refresh Inbox"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin text-brand" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
+            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin text-brand" : "text-text-muted"}`} />
+            <span className="hidden sm:inline font-medium">Refresh</span>
           </button>
         </div>
       </div>
 
-      {/* Main Content Pane (Split on Desktop) */}
-      <div className="flex gap-6 flex-1 min-h-0">
+      {/* Main Split-Pane Content (Desktop master-detail) */}
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Email List Column */}
-        <div className="flex-1 lg:w-[420px] lg:flex-initial flex flex-col gap-2 min-w-0">
-          <div className="flex items-center justify-between px-2 mb-1">
-            <h2 className="font-ui text-xs font-semibold text-text-muted uppercase tracking-wider">
-              {activeCategory === "all" ? "All Messages" : activeCategory}
+        <div className="flex-1 lg:w-[420px] lg:flex-initial flex flex-col bg-surface rounded-lg border border-border overflow-hidden min-w-0">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-surface-secondary">
+            <h2 className="text-xs font-ui font-semibold text-text-primary uppercase tracking-wider">
+              {activeCategory === "all" ? "All Messages" : activeCategory.replace("_", " ")}
             </h2>
-            <span className="text-xs font-mono text-text-muted">
-              {data?.total ?? allFetchedEmails.length} items
+            <span className="text-[11px] font-mono text-text-muted">
+              {data?.total ?? allFetchedEmails.length} messages
             </span>
           </div>
 
           {/* Loading Skeleton */}
           {isLoading && page === 1 ? (
-            <div className="space-y-2.5">
+            <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="h-20 rounded-xl bg-surface/60 border border-white/5 animate-pulse p-4 space-y-2"
+                  className="p-4 space-y-2.5 animate-pulse bg-surface"
                 >
                   <div className="flex justify-between">
-                    <div className="h-3 w-28 bg-surface-elevated rounded" />
-                    <div className="h-3 w-12 bg-surface-elevated rounded" />
+                    <div className="h-3.5 w-32 bg-surface-subtle rounded" />
+                    <div className="h-3 w-12 bg-surface-subtle rounded" />
                   </div>
-                  <div className="h-3 w-48 bg-surface-elevated/70 rounded" />
-                  <div className="h-2.5 w-full bg-surface-elevated/40 rounded" />
+                  <div className="h-3.5 w-52 bg-surface-secondary rounded" />
+                  <div className="h-3 w-full bg-surface-subtle rounded" />
                 </div>
               ))}
             </div>
           ) : allFetchedEmails.length === 0 ? (
             /* Empty State */
-            <div className="p-12 text-center border border-dashed border-border-subtle rounded-2xl flex flex-col items-center justify-center bg-surface/20">
-              <div className="h-12 w-12 rounded-2xl bg-surface-elevated text-brand flex items-center justify-center mb-3 shadow-brand-glow">
-                <InboxIcon className="h-6 w-6" />
+            <div className="p-12 text-center flex flex-col items-center justify-center bg-surface">
+              <div className="h-11 w-11 rounded-full bg-surface-subtle border border-border text-text-muted flex items-center justify-center mb-3">
+                <InboxIcon className="h-5 w-5" />
               </div>
-              <h3 className="text-sm font-bold text-text-primary font-ui">
+              <h3 className="text-sm font-semibold text-text-primary font-ui">
                 No emails yet
               </h3>
-              <p className="text-xs text-text-muted mt-1 max-w-xs">
+              <p className="text-xs text-text-muted mt-1 max-w-xs leading-relaxed">
                 Your inbox will populate automatically as incoming emails are ingested and classified by BriefMail.
               </p>
               <button
                 onClick={() => refetch()}
-                className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-elevated hover:bg-surface-overlay text-xs text-text-secondary border border-white/10 transition-colors"
+                className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-border bg-surface hover:bg-surface-subtle text-xs text-text-secondary transition-colors"
               >
                 <RefreshCw className="h-3 w-3 text-brand" />
                 <span>Check for new emails</span>
               </button>
             </div>
           ) : (
-            /* Email List Items */
-            <div className="space-y-2">
+            /* Continuous Email List Rows */
+            <div className="flex-1 overflow-y-auto">
               {allFetchedEmails.map((email) => (
                 <EmailListItem
                   key={email.id}
@@ -303,13 +303,13 @@ function InboxContent() {
 
               {/* Load More Pagination Button */}
               {data?.hasMore && (
-                <div className="pt-2 text-center">
+                <div className="p-3 text-center border-t border-border bg-surface-secondary">
                   <button
                     onClick={() => setPage((p) => p + 1)}
                     disabled={isFetching}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface hover:bg-surface-elevated border border-white/10 text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded border border-border bg-surface hover:bg-surface-subtle text-xs font-medium text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
                   >
-                    <span>{isFetching ? "Loading..." : "Load more emails"}</span>
+                    <span>{isFetching ? "Loading..." : "Load more messages"}</span>
                     <ChevronDown className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -319,19 +319,26 @@ function InboxContent() {
         </div>
 
         {/* Desktop Reading Pane (Split on lg screens) */}
-        <div className="hidden lg:flex flex-1 bg-surface rounded-2xl border border-border-subtle p-6 flex-col justify-between overflow-y-auto shadow-sm min-h-[600px]">
+        <div className="hidden lg:flex flex-1 bg-surface rounded-lg border border-border p-8 flex-col justify-start overflow-y-auto min-h-[600px]">
           {selectedEmail ? (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-6 max-w-prose">
               {/* Header Details */}
-              <div className="border-b border-border-subtle pb-4 space-y-3">
+              <div className="border-b border-border pb-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-subtle text-brand border border-brand/20">
-                    {selectedEmail.category || "General"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-ui font-medium uppercase tracking-wider text-brand">
+                      {(selectedEmail.category || "General").replace("_", " ")}
+                    </span>
+                    {selectedEmail.subcategory && (
+                      <span className="text-[11px] font-mono text-text-muted uppercase">
+                        • {selectedEmail.subcategory}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => archiveMutation.mutate(selectedEmail.id)}
-                      className="px-2.5 py-1 rounded-lg bg-surface-elevated hover:bg-surface-overlay text-xs text-text-secondary transition-colors border border-white/5"
+                      className="px-3 py-1 rounded border border-border bg-surface hover:bg-surface-subtle text-xs font-ui text-text-secondary hover:text-text-primary transition-colors"
                     >
                       Archive
                     </button>
@@ -340,31 +347,35 @@ function InboxContent() {
                         const target = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
                         snoozeMutation.mutate({ id: selectedEmail.id, snoozeUntil: target });
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-surface-elevated hover:bg-surface-overlay text-xs text-text-secondary transition-colors border border-white/5"
+                      className="px-3 py-1 rounded border border-border bg-surface hover:bg-surface-subtle text-xs font-ui text-text-secondary hover:text-text-primary transition-colors"
                     >
                       Snooze 24h
                     </button>
                   </div>
                 </div>
 
-                <h1 className="font-ui text-xl font-bold text-text-primary leading-snug">
-                  {selectedEmail.subject}
+                <h1 className="font-serif text-2xl md:text-3xl text-text-primary font-normal leading-tight tracking-tight">
+                  {selectedEmail.subject || "(No subject)"}
                 </h1>
 
-                <div className="flex items-center justify-between text-xs text-text-muted">
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-full bg-brand-subtle text-brand flex items-center justify-center font-bold text-xs uppercase">
+                <div className="flex items-center justify-between text-xs text-text-muted pt-2 border-t border-border">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-full bg-surface-subtle border border-border text-text-secondary flex items-center justify-center font-semibold text-xs uppercase">
                       {(selectedEmail.from_name || selectedEmail.from_email || "?").charAt(0)}
                     </div>
-                    <span>
-                      <strong className="text-text-primary font-medium">
+                    <div>
+                      <span className="text-text-primary font-medium">
                         {selectedEmail.from_name || selectedEmail.from_email}
-                      </strong>{" "}
-                      {selectedEmail.from_email ? `(${selectedEmail.from_email})` : ""}
-                    </span>
+                      </span>
+                      {selectedEmail.from_email && (
+                        <span className="font-mono text-text-muted text-[11px] ml-1.5">
+                          &lt;{selectedEmail.from_email}&gt;
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <span className="font-mono text-[11px]">
+                  <span className="font-mono text-[11px] text-text-muted">
                     {selectedEmail.received_at
                       ? new Date(selectedEmail.received_at).toLocaleDateString()
                       : ""}
@@ -372,32 +383,30 @@ function InboxContent() {
                 </div>
               </div>
 
-              {/* AI Summary Banner */}
+              {/* AI Summary Banner - Restrained parchment note */}
               {selectedEmail.ai_summary && (
-                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-3 shadow-sm">
-                  <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold uppercase tracking-wider text-[10px] text-amber-400 block mb-1">
-                      AI Summary
-                    </span>
-                    <p className="italic text-text-primary leading-relaxed">
-                      {selectedEmail.ai_summary}
-                    </p>
+                <div className="p-4 rounded border-l-2 border-brand bg-surface-secondary space-y-1">
+                  <div className="flex items-center gap-1.5 text-[11px] font-ui font-semibold uppercase tracking-wider text-brand">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Summary</span>
                   </div>
+                  <p className="font-serif italic text-sm text-text-secondary leading-relaxed">
+                    {selectedEmail.ai_summary}
+                  </p>
                 </div>
               )}
 
               {/* Action Items Box */}
               {selectedEmail.has_action_item && selectedEmail.action_items && selectedEmail.action_items.length > 0 && (
-                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4" />
+                <div className="p-4 rounded border border-border bg-surface-secondary space-y-2">
+                  <span className="text-xs font-ui font-semibold uppercase tracking-wider text-text-primary flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-700" />
                     Action Items Required
                   </span>
-                  <div className="space-y-1 text-xs">
+                  <div className="space-y-1.5 text-xs font-ui">
                     {selectedEmail.action_items.map((action, idx) => (
                       <div key={idx} className="flex items-start gap-2 text-text-secondary">
-                        <span className="text-emerald-400 font-bold">•</span>
+                        <span className="text-emerald-700 font-bold">•</span>
                         <span>{action.description}</span>
                       </div>
                     ))}
@@ -406,26 +415,32 @@ function InboxContent() {
               )}
 
               {/* Body Content */}
-              <div className="pt-2 text-sm text-text-secondary leading-relaxed font-sans overflow-x-auto">
+              <div className="pt-2 text-text-primary leading-relaxed">
                 {selectedEmail.body_html ? (
-                  <div dangerouslySetInnerHTML={{ __html: selectedEmail.body_html }} />
+                  <div
+                    className="prose prose-neutral max-w-none text-[15px] sm:text-base leading-relaxed overflow-x-auto"
+                    dangerouslySetInnerHTML={{ __html: selectedEmail.body_html }}
+                  />
                 ) : selectedEmail.body_text ? (
-                  <div className="whitespace-pre-wrap">{selectedEmail.body_text}</div>
+                  <div className="font-ui text-[15px] sm:text-base whitespace-pre-wrap leading-relaxed text-text-primary">
+                    {selectedEmail.body_text}
+                  </div>
                 ) : (
-                  <div className="italic text-text-muted">{selectedEmail.snippet}</div>
+                  <div className="italic text-text-muted text-sm">{selectedEmail.snippet}</div>
                 )}
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-text-muted text-sm font-ui gap-2">
-              <div className="w-12 h-12 rounded-full bg-surface-elevated flex items-center justify-center text-text-muted">
-                ✉️
+              <div className="w-10 h-10 rounded-full bg-surface-subtle border border-border flex items-center justify-center text-text-muted">
+                <InboxIcon className="w-5 h-5 text-text-muted" />
               </div>
               <span>Select an email to view full content</span>
             </div>
           )}
         </div>
       </div>
+
 
       {/* Mobile Detail Modal Sheet (<1024px) */}
       {activeEmailModal && (

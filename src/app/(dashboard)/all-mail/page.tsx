@@ -327,7 +327,7 @@ export default function AllMailPage() {
 
         {/* Search & Refresh Controls */}
         <div className="flex items-center gap-2 px-1">
-          <div className="relative w-48 sm:w-64">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
             <input
               type="text"
@@ -337,27 +337,27 @@ export default function AllMailPage() {
                 setSearchQuery(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-surface border border-white/10 text-xs text-text-primary placeholder:text-text-disabled focus:border-brand focus:outline-none"
+              className="w-full pl-8 pr-3 py-1.5 rounded border border-border bg-surface-primary text-xs text-text-primary placeholder:text-text-muted focus:border-brand focus:outline-none transition-colors"
             />
           </div>
 
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated border border-white/10 text-xs text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-border bg-surface hover:bg-surface-subtle text-xs text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
             title="Refresh All Mail"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin text-brand" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
+            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin text-brand" : "text-text-muted"}`} />
+            <span className="hidden sm:inline font-medium">Refresh</span>
           </button>
         </div>
       </div>
 
       {/* Sort & Filter Action Bar (Always Visible) */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 p-2 rounded-xl bg-surface border border-white/10 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 p-2 rounded-lg bg-surface border border-border shadow-xs">
         {/* Left: Sort Bar */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-text-muted font-medium flex items-center gap-1 pl-1">
+          <span className="text-text-muted font-medium flex items-center gap-1 pl-1 font-ui">
             <SlidersHorizontal className="h-3.5 w-3.5 text-brand" />
             <span className="hidden sm:inline">Sort by:</span>
           </span>
@@ -369,7 +369,7 @@ export default function AllMailPage() {
               setSortOrder(o);
               setPage(1);
             }}
-            className="bg-surface-elevated border border-white/10 text-text-primary rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-brand cursor-pointer"
+            className="bg-surface border border-border text-text-primary rounded px-2.5 py-1 text-xs focus:outline-none focus:border-brand cursor-pointer font-ui"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={`${opt.sort}:${opt.order}`} value={`${opt.sort}:${opt.order}`}>
@@ -383,10 +383,10 @@ export default function AllMailPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsFilterPanelOpen((prev) => !prev)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg border text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded border text-xs font-medium font-ui transition-all ${
               isFilterPanelOpen || activeFiltersCount > 0
                 ? "bg-brand/10 border-brand text-brand shadow-xs"
-                : "bg-surface-elevated hover:bg-surface-overlay border-white/10 text-text-secondary hover:text-text-primary"
+                : "bg-surface hover:bg-surface-subtle border-border text-text-secondary hover:text-text-primary"
             }`}
           >
             <Filter className="h-3.5 w-3.5" />
@@ -407,18 +407,18 @@ export default function AllMailPage() {
 
       {/* Collapsible Filter Panel */}
       {isFilterPanelOpen && (
-        <div className="p-4 rounded-xl bg-surface border border-brand/20 shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div className="p-4 rounded-lg bg-surface border border-border shadow-elevation-1 space-y-4">
+          <div className="flex items-center justify-between border-b border-border pb-2.5">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-brand" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary font-ui">
                 Filter Mail
               </h3>
             </div>
             {activeFiltersCount > 0 && (
               <button
                 onClick={handleClearAllFilters}
-                className="text-[11px] text-brand hover:underline flex items-center gap-1"
+                className="text-[11px] text-brand hover:underline flex items-center gap-1 font-ui font-medium"
               >
                 <RotateCcw className="h-3 w-3" />
                 Reset all filters
@@ -428,14 +428,14 @@ export default function AllMailPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             {/* 1. Date Range Section */}
-            <div className="space-y-2 p-3 rounded-lg bg-surface-elevated/40 border border-white/5">
-              <label className="font-semibold text-text-primary flex items-center gap-1.5">
+            <div className="space-y-2 p-3 rounded-lg bg-surface-secondary border border-border">
+              <label className="font-semibold text-text-primary flex items-center gap-1.5 font-ui">
                 <Calendar className="h-3.5 w-3.5 text-brand" />
                 Date Range
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-[10px] text-text-muted block mb-1">From</span>
+                  <span className="text-[10px] text-text-muted block mb-1 font-ui">From</span>
                   <input
                     type="date"
                     value={dateFrom}
@@ -443,11 +443,11 @@ export default function AllMailPage() {
                       setDateFrom(e.target.value);
                       handleFilterChange();
                     }}
-                    className="w-full bg-surface border border-white/10 rounded-md p-1.5 text-xs text-text-primary focus:outline-none focus:border-brand"
+                    className="w-full bg-surface border border-border rounded p-1.5 text-xs text-text-primary focus:outline-none focus:border-brand"
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-text-muted block mb-1">To</span>
+                  <span className="text-[10px] text-text-muted block mb-1 font-ui">To</span>
                   <input
                     type="date"
                     value={dateTo}
@@ -455,20 +455,20 @@ export default function AllMailPage() {
                       setDateTo(e.target.value);
                       handleFilterChange();
                     }}
-                    className="w-full bg-surface border border-white/10 rounded-md p-1.5 text-xs text-text-primary focus:outline-none focus:border-brand"
+                    className="w-full bg-surface border border-border rounded p-1.5 text-xs text-text-primary focus:outline-none focus:border-brand"
                   />
                 </div>
               </div>
               <div className="flex items-center gap-1.5 pt-1">
                 <button
                   onClick={() => setPresetDateRange(7)}
-                  className="px-2 py-0.5 rounded bg-surface hover:bg-surface-overlay text-[11px] text-text-secondary border border-white/5"
+                  className="px-2 py-0.5 rounded bg-surface hover:bg-surface-subtle text-[11px] text-text-secondary border border-border"
                 >
                   Last 7 days
                 </button>
                 <button
                   onClick={() => setPresetDateRange(30)}
-                  className="px-2 py-0.5 rounded bg-surface hover:bg-surface-overlay text-[11px] text-text-secondary border border-white/5"
+                  className="px-2 py-0.5 rounded bg-surface hover:bg-surface-subtle text-[11px] text-text-secondary border border-border"
                 >
                   Last 30 days
                 </button>
@@ -479,7 +479,7 @@ export default function AllMailPage() {
                       setDateTo("");
                       handleFilterChange();
                     }}
-                    className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-[11px]"
+                    className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 text-[11px] font-medium"
                   >
                     Clear dates
                   </button>
@@ -488,8 +488,8 @@ export default function AllMailPage() {
             </div>
 
             {/* 2. Status Selector */}
-            <div className="space-y-2 p-3 rounded-lg bg-surface-elevated/40 border border-white/5">
-              <label className="font-semibold text-text-primary flex items-center gap-1.5">
+            <div className="space-y-2 p-3 rounded-lg bg-surface-secondary border border-border">
+              <label className="font-semibold text-text-primary flex items-center gap-1.5 font-ui">
                 <Layers className="h-3.5 w-3.5 text-brand" />
                 Status
               </label>
@@ -503,10 +503,10 @@ export default function AllMailPage() {
                         setStatusFilter(st.id);
                         handleFilterChange();
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                      className={`px-2.5 py-1 rounded text-xs font-medium border transition-all font-ui ${
                         isSelected
                           ? "bg-brand text-white border-brand shadow-xs"
-                          : "bg-surface hover:bg-surface-overlay text-text-secondary border-white/10"
+                          : "bg-surface hover:bg-surface-subtle text-text-secondary border-border"
                       }`}
                     >
                       {st.label}
@@ -517,8 +517,8 @@ export default function AllMailPage() {
             </div>
 
             {/* 3. Connected Gmail Account */}
-            <div className="space-y-2 p-3 rounded-lg bg-surface-elevated/40 border border-white/5">
-              <label className="font-semibold text-text-primary flex items-center gap-1.5">
+            <div className="space-y-2 p-3 rounded-lg bg-surface-secondary border border-border">
+              <label className="font-semibold text-text-primary flex items-center gap-1.5 font-ui">
                 <User className="h-3.5 w-3.5 text-brand" />
                 Gmail Account
               </label>
@@ -528,7 +528,7 @@ export default function AllMailPage() {
                   setSelectedAccountId(e.target.value);
                   handleFilterChange();
                 }}
-                className="w-full bg-surface border border-white/10 text-text-primary rounded-md p-1.5 text-xs focus:outline-none focus:border-brand cursor-pointer"
+                className="w-full bg-surface border border-border text-text-primary rounded p-1.5 text-xs focus:outline-none focus:border-brand cursor-pointer font-ui"
               >
                 <option value="all">All Connected Accounts</option>
                 {accounts.map((acc) => (
@@ -544,22 +544,22 @@ export default function AllMailPage() {
           </div>
 
           {/* 4. Multi-select Categories */}
-          <div className="space-y-2 p-3 rounded-lg bg-surface-elevated/40 border border-white/5">
+          <div className="space-y-2 p-3 rounded-lg bg-surface-secondary border border-border">
             <div className="flex items-center justify-between">
-              <label className="font-semibold text-text-primary text-xs">
+              <label className="font-semibold text-text-primary text-xs font-ui">
                 Categories (Multi-Select)
               </label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 font-ui">
                 <button
                   onClick={() => {
                     setSelectedCategories(CATEGORY_OPTIONS.map((c) => c.id));
                     handleFilterChange();
                   }}
-                  className="text-[10px] text-brand hover:underline"
+                  className="text-[10px] text-brand hover:underline font-medium"
                 >
                   Select All
                 </button>
-                <span className="text-white/20">•</span>
+                <span className="text-border-strong">•</span>
                 <button
                   onClick={() => {
                     setSelectedCategories([]);
@@ -572,21 +572,21 @@ export default function AllMailPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 pt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 pt-1 font-ui">
               {CATEGORY_OPTIONS.map((cat) => {
                 const isSelected = selectedCategories.includes(cat.id);
                 return (
                   <button
                     key={cat.id}
                     onClick={() => toggleCategory(cat.id)}
-                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs transition-all text-left ${
+                    className={`flex items-center justify-between px-2.5 py-1.5 rounded border text-xs transition-all text-left ${
                       isSelected
-                        ? `${cat.color} font-semibold shadow-xs`
-                        : "bg-surface hover:bg-surface-overlay text-text-muted border-white/10"
+                        ? "bg-surface-primary border-brand text-brand font-semibold shadow-xs"
+                        : "bg-surface hover:bg-surface-subtle text-text-muted border-border"
                     }`}
                   >
                     <span>{cat.label}</span>
-                    {isSelected && <Check className="h-3 w-3 shrink-0" />}
+                    {isSelected && <Check className="h-3 w-3 shrink-0 text-brand" />}
                   </button>
                 );
               })}
@@ -594,6 +594,7 @@ export default function AllMailPage() {
           </div>
         </div>
       )}
+
 
       {/* Active Filter Chips (Always visible if any filter applied) */}
       {activeFiltersCount > 0 && (
@@ -697,45 +698,45 @@ export default function AllMailPage() {
       )}
 
       {/* Main Content Pane (Split on Desktop) */}
-      <div className="flex gap-6 flex-1 min-h-0">
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Email List Column */}
-        <div className="flex-1 lg:w-[420px] lg:flex-initial flex flex-col gap-2 min-w-0">
-          <div className="flex items-center justify-between px-2 mb-1">
-            <h2 className="font-ui text-xs font-semibold text-text-muted uppercase tracking-wider">
+        <div className="flex-1 lg:w-[420px] lg:flex-initial flex flex-col bg-surface rounded-lg border border-border overflow-hidden min-w-0">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-surface-secondary">
+            <h2 className="text-xs font-ui font-semibold text-text-primary uppercase tracking-wider">
               Messages
             </h2>
-            <span className="text-xs font-mono text-text-muted">
-              {data?.total ?? allFetchedEmails.length} items
+            <span className="text-[11px] font-mono text-text-muted">
+              {data?.total ?? allFetchedEmails.length} messages
             </span>
           </div>
 
           {/* Loading Skeleton */}
           {isLoading && page === 1 ? (
-            <div className="space-y-2.5">
+            <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="h-20 rounded-xl bg-surface/60 border border-white/5 animate-pulse p-4 space-y-2"
+                  className="p-4 space-y-2.5 animate-pulse bg-surface"
                 >
                   <div className="flex justify-between">
-                    <div className="h-3 w-28 bg-surface-elevated rounded" />
-                    <div className="h-3 w-12 bg-surface-elevated rounded" />
+                    <div className="h-3.5 w-32 bg-surface-subtle rounded" />
+                    <div className="h-3 w-12 bg-surface-subtle rounded" />
                   </div>
-                  <div className="h-3 w-48 bg-surface-elevated/70 rounded" />
-                  <div className="h-2.5 w-full bg-surface-elevated/40 rounded" />
+                  <div className="h-3.5 w-52 bg-surface-secondary rounded" />
+                  <div className="h-3 w-full bg-surface-subtle rounded" />
                 </div>
               ))}
             </div>
           ) : allFetchedEmails.length === 0 ? (
             /* Empty State */
-            <div className="p-12 text-center border border-dashed border-border-subtle rounded-2xl flex flex-col items-center justify-center bg-surface/20">
-              <div className="h-12 w-12 rounded-2xl bg-surface-elevated text-brand flex items-center justify-center mb-3 shadow-brand-glow">
-                <Mail className="h-6 w-6" />
+            <div className="p-12 text-center flex flex-col items-center justify-center bg-surface">
+              <div className="h-11 w-11 rounded-full bg-surface-subtle border border-border text-text-muted flex items-center justify-center mb-3">
+                <Mail className="h-5 w-5 text-text-muted" />
               </div>
-              <h3 className="text-sm font-bold text-text-primary font-ui">
+              <h3 className="text-sm font-semibold text-text-primary font-ui">
                 No mail found
               </h3>
-              <p className="text-xs text-text-muted mt-1 max-w-xs">
+              <p className="text-xs text-text-muted mt-1 max-w-xs leading-relaxed">
                 {searchQuery || activeFiltersCount > 0
                   ? "No messages match your active filters or search query."
                   : "All your ingested and classified emails will appear here."}
@@ -744,7 +745,7 @@ export default function AllMailPage() {
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={handleClearAllFilters}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated text-xs text-text-secondary border border-white/10 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-border bg-surface hover:bg-surface-subtle text-xs text-text-secondary transition-colors"
                   >
                     <RotateCcw className="h-3 w-3 text-brand" />
                     <span>Reset filters</span>
@@ -752,7 +753,7 @@ export default function AllMailPage() {
                 )}
                 <button
                   onClick={() => refetch()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-elevated hover:bg-surface-overlay text-xs text-text-secondary border border-white/10 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-border bg-surface hover:bg-surface-subtle text-xs text-text-secondary transition-colors"
                 >
                   <RefreshCw className="h-3 w-3 text-brand" />
                   <span>Check for emails</span>
@@ -760,8 +761,8 @@ export default function AllMailPage() {
               </div>
             </div>
           ) : (
-            /* Email List Items */
-            <div className="space-y-2">
+            /* Continuous Email List Items */
+            <div className="flex-1 overflow-y-auto">
               {allFetchedEmails.map((email) => (
                 <EmailListItem
                   key={email.id}
@@ -790,13 +791,13 @@ export default function AllMailPage() {
 
               {/* Load More Pagination Button */}
               {data?.hasMore && (
-                <div className="pt-2 text-center">
+                <div className="p-3 text-center border-t border-border bg-surface-secondary">
                   <button
                     onClick={() => setPage((p) => p + 1)}
                     disabled={isFetching}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface hover:bg-surface-elevated border border-white/10 text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded border border-border bg-surface hover:bg-surface-subtle text-xs font-medium text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
                   >
-                    <span>{isFetching ? "Loading..." : "Load more emails"}</span>
+                    <span>{isFetching ? "Loading..." : "Load more messages"}</span>
                     <ChevronDown className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -806,26 +807,26 @@ export default function AllMailPage() {
         </div>
 
         {/* Desktop Reading Pane (Split on lg screens) */}
-        <div className="hidden lg:flex flex-1 bg-surface rounded-2xl border border-border-subtle p-6 flex-col justify-between overflow-y-auto shadow-sm min-h-[600px]">
+        <div className="hidden lg:flex flex-1 bg-surface rounded-lg border border-border p-8 flex-col justify-start overflow-y-auto min-h-[600px]">
           {selectedEmail ? (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-6 max-w-prose">
               {/* Header Details */}
-              <div className="border-b border-border-subtle pb-4 space-y-3">
+              <div className="border-b border-border pb-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-subtle text-brand border border-brand/20">
-                      {selectedEmail.category || "General"}
+                    <span className="text-[11px] font-ui font-medium uppercase tracking-wider text-brand">
+                      {(selectedEmail.category || "General").replace("_", " ")}
                     </span>
                     {selectedEmail.subcategory && (
-                      <span className="text-[10px] uppercase font-medium px-2 py-0.5 rounded-full bg-surface-elevated text-text-muted border border-white/5">
-                        {selectedEmail.subcategory}
+                      <span className="text-[11px] font-mono text-text-muted uppercase">
+                        • {selectedEmail.subcategory}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => archiveMutation.mutate(selectedEmail.id)}
-                      className="px-2.5 py-1 rounded-lg bg-surface-elevated hover:bg-surface-overlay text-xs text-text-secondary transition-colors border border-white/5"
+                      className="px-3 py-1 rounded border border-border bg-surface hover:bg-surface-subtle text-xs font-ui text-text-secondary hover:text-text-primary transition-colors"
                     >
                       Archive
                     </button>
@@ -834,31 +835,35 @@ export default function AllMailPage() {
                         const target = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
                         snoozeMutation.mutate({ id: selectedEmail.id, snoozeUntil: target });
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-surface-elevated hover:bg-surface-overlay text-xs text-text-secondary transition-colors border border-white/5"
+                      className="px-3 py-1 rounded border border-border bg-surface hover:bg-surface-subtle text-xs font-ui text-text-secondary hover:text-text-primary transition-colors"
                     >
                       Snooze 24h
                     </button>
                   </div>
                 </div>
 
-                <h1 className="font-ui text-xl font-bold text-text-primary leading-snug">
-                  {selectedEmail.subject}
+                <h1 className="font-serif text-2xl md:text-3xl text-text-primary font-normal leading-tight tracking-tight">
+                  {selectedEmail.subject || "(No subject)"}
                 </h1>
 
-                <div className="flex items-center justify-between text-xs text-text-muted">
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-full bg-brand-subtle text-brand flex items-center justify-center font-bold text-xs uppercase">
+                <div className="flex items-center justify-between text-xs text-text-muted pt-2 border-t border-border">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-full bg-surface-subtle border border-border text-text-secondary flex items-center justify-center font-semibold text-xs uppercase">
                       {(selectedEmail.from_name || selectedEmail.from_email || "?").charAt(0)}
                     </div>
-                    <span>
-                      <strong className="text-text-primary font-medium">
+                    <div>
+                      <span className="text-text-primary font-medium">
                         {selectedEmail.from_name || selectedEmail.from_email}
-                      </strong>{" "}
-                      {selectedEmail.from_email ? `(${selectedEmail.from_email})` : ""}
-                    </span>
+                      </span>
+                      {selectedEmail.from_email && (
+                        <span className="font-mono text-text-muted text-[11px] ml-1.5">
+                          &lt;{selectedEmail.from_email}&gt;
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <span className="font-mono text-[11px]">
+                  <span className="font-mono text-[11px] text-text-muted">
                     {selectedEmail.received_at
                       ? new Date(selectedEmail.received_at).toLocaleDateString()
                       : ""}
@@ -866,18 +871,16 @@ export default function AllMailPage() {
                 </div>
               </div>
 
-              {/* AI Summary Banner */}
+              {/* AI Summary Banner - Restrained parchment note */}
               {selectedEmail.ai_summary && (
-                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-3 shadow-sm">
-                  <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold uppercase tracking-wider text-[10px] text-amber-400 block mb-1">
-                      AI Summary
-                    </span>
-                    <p className="italic text-text-primary leading-relaxed">
-                      {selectedEmail.ai_summary}
-                    </p>
+                <div className="p-4 rounded border-l-2 border-brand bg-surface-secondary space-y-1">
+                  <div className="flex items-center gap-1.5 text-[11px] font-ui font-semibold uppercase tracking-wider text-brand">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Summary</span>
                   </div>
+                  <p className="font-serif italic text-sm text-text-secondary leading-relaxed">
+                    {selectedEmail.ai_summary}
+                  </p>
                 </div>
               )}
 
@@ -885,15 +888,15 @@ export default function AllMailPage() {
               {selectedEmail.has_action_item &&
                 selectedEmail.action_items &&
                 selectedEmail.action_items.length > 0 && (
-                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                      <CheckCircle2 className="h-4 w-4" />
+                  <div className="p-4 rounded border border-border bg-surface-secondary space-y-2">
+                    <span className="text-xs font-ui font-semibold uppercase tracking-wider text-text-primary flex items-center gap-1.5">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-700" />
                       Action Items Required
                     </span>
-                    <div className="space-y-1 text-xs">
+                    <div className="space-y-1.5 text-xs font-ui">
                       {selectedEmail.action_items.map((action, idx) => (
                         <div key={idx} className="flex items-start gap-2 text-text-secondary">
-                          <span className="text-emerald-400 font-bold">•</span>
+                          <span className="text-emerald-700 font-bold">•</span>
                           <span>{action.description}</span>
                         </div>
                       ))}
@@ -902,20 +905,25 @@ export default function AllMailPage() {
                 )}
 
               {/* Body Content with links opening in new tab */}
-              <div className="pt-2 text-sm text-text-secondary leading-relaxed font-sans overflow-x-auto">
+              <div className="pt-2 text-text-primary leading-relaxed">
                 {selectedEmail.body_html ? (
-                  <div dangerouslySetInnerHTML={{ __html: addTargetBlank(selectedEmail.body_html) }} />
+                  <div
+                    className="prose prose-neutral max-w-none text-[15px] sm:text-base leading-relaxed overflow-x-auto"
+                    dangerouslySetInnerHTML={{ __html: addTargetBlank(selectedEmail.body_html) }}
+                  />
                 ) : selectedEmail.body_text ? (
-                  <div className="whitespace-pre-wrap">{selectedEmail.body_text}</div>
+                  <div className="font-ui text-[15px] sm:text-base whitespace-pre-wrap leading-relaxed text-text-primary">
+                    {selectedEmail.body_text}
+                  </div>
                 ) : (
-                  <div className="italic text-text-muted">{selectedEmail.snippet}</div>
+                  <div className="italic text-text-muted text-sm">{selectedEmail.snippet}</div>
                 )}
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-text-muted text-sm font-ui gap-2">
-              <div className="w-12 h-12 rounded-full bg-surface-elevated flex items-center justify-center text-text-muted">
-                <Mail className="w-6 h-6 text-text-muted" />
+              <div className="w-10 h-10 rounded-full bg-surface-subtle border border-border flex items-center justify-center text-text-muted">
+                <Mail className="w-5 h-5 text-text-muted" />
               </div>
               <span>Select an email to view full content</span>
             </div>

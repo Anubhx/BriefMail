@@ -9,20 +9,11 @@ import {
   Mail,
   Star,
   Clock,
-  DollarSign,
-  Briefcase,
-  Calendar,
-  TrendingUp,
   Settings,
   Plus,
   CheckCircle2,
-  Shield,
-  Users,
 } from "lucide-react";
-
 import { clsx } from "clsx";
-import gsap from "gsap";
-import { useGSAP } from "@/hooks/useGSAP";
 
 const mainNavItems = [
   { href: "/inbox", label: "Inbox", icon: Inbox, badge: 5 },
@@ -32,18 +23,18 @@ const mainNavItems = [
 ];
 
 const categoryNavItems = [
-  { href: "/finance", label: "Finance", icon: DollarSign, color: "bg-emerald-500" },
-  { href: "/career", label: "Career", icon: Briefcase, color: "bg-blue-500" },
-  { href: "/meetings", label: "Meetings", icon: Calendar, color: "bg-purple-500" },
-  { href: "/investments", label: "Investments", icon: TrendingUp, color: "bg-cyan-500" },
-  { href: "/inbox?category=social", label: "Social", icon: Users, color: "bg-pink-500" },
-  { href: "/inbox?category=newsletter", label: "Newsletter", icon: Mail, color: "bg-teal-500" },
-  { href: "/system", label: "OTP", icon: Shield, color: "bg-amber-500" },
+  { href: "/finance", label: "Finance", color: "#2FA66A" },
+  { href: "/career", label: "Career", color: "#4267D5" },
+  { href: "/meetings", label: "Meetings", color: "#8B5CC7" },
+  { href: "/investments", label: "Investments", color: "#D58A00" },
+  { href: "/inbox?category=social", label: "Social", color: "#D64F7A" },
+  { href: "/inbox?category=newsletter", label: "Newsletter", color: "#309BA8" },
+  { href: "/system", label: "OTP & Codes", color: "#E46C2E" },
 ];
 
 const connectedAccounts = [
-  { email: "anubhav@gmail.com", active: true, color: "bg-emerald-400" },
-  { email: "work@briefmail.ai", active: false, color: "bg-blue-400" },
+  { email: "anubhav@gmail.com", active: true },
+  { email: "work@briefmail.ai", active: false },
 ];
 
 function SidebarContent() {
@@ -51,46 +42,28 @@ function SidebarContent() {
   const searchParams = useSearchParams();
   const currentCategory = searchParams?.get("category");
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeUnderlineRef = useRef<HTMLDivElement>(null);
-
-  // GSAP subtle load animation for sidebar items
-  useGSAP(
-    () => {
-      gsap.from(".sidebar-item", {
-        x: -12,
-        opacity: 0,
-        stagger: 0.02,
-        duration: 0.3,
-        ease: "power2.out",
-      });
-    },
-    { scope: sidebarRef }
-  );
 
   return (
     <aside
       ref={sidebarRef}
       aria-label="Sidebar navigation"
-      className="w-[240px] h-screen border-r border-border-subtle bg-surface flex flex-col justify-between p-4 shrink-0 overflow-y-auto select-none font-ui"
+      className="w-[230px] h-screen bg-surface border-r border-border flex flex-col justify-between p-3.5 shrink-0 overflow-y-auto select-none font-ui"
     >
-      <div className="flex flex-col gap-6">
-        {/* Logo & Brand Header */}
-        <Link href="/inbox" className="flex items-center gap-3 px-2 py-1 group">
-          <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-white shadow-brand-glow transition-transform duration-200 group-hover:scale-105">
-            <Mail className="w-4 h-4" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-ui text-base font-bold tracking-tight text-text-primary flex items-center gap-1">
-              Brief<span className="text-brand">Mail</span>
+      <div className="flex flex-col gap-5">
+        {/* Brand Header */}
+        <Link href="/inbox" className="flex items-center gap-2 px-2 py-1.5 group">
+          <div className="flex items-center gap-1.5">
+            <span className="font-ui text-base font-semibold tracking-tight text-text-primary">
+              BriefMail
             </span>
-            <span className="text-[10px] font-mono text-text-muted">Pro Edition</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-brand" />
           </div>
         </Link>
 
         {/* Section 1: Main Navigation */}
-        <div className="flex flex-col gap-1">
-          <span className="px-2 text-[10px] font-mono font-semibold uppercase tracking-wider text-text-muted mb-1">
-            Main
+        <div className="flex flex-col gap-0.5">
+          <span className="px-2 text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted mb-1">
+            Mail
           </span>
           {mainNavItems.map((item) => {
             const Icon = item.icon;
@@ -102,62 +75,76 @@ function SidebarContent() {
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  "sidebar-item relative flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150 group",
+                  "relative flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors duration-150 group",
                   isActive
-                    ? "bg-brand-subtle text-brand font-semibold border border-brand/20"
-                    : "text-text-secondary hover:text-text-primary hover:bg-surface-elevated/60"
+                    ? "bg-surface-secondary text-text-primary font-medium"
+                    : "text-text-secondary hover:text-text-primary hover:bg-surface-secondary/70"
                 )}
               >
-                <div className="flex items-center gap-2.5">
-                  <Icon className={clsx("w-4 h-4 transition-transform duration-150 group-hover:scale-110", isActive ? "text-brand" : "text-text-muted")} />
+                {/* Quiet 2px orange left indicator for active row */}
+                {isActive && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-[2.5px] bg-brand rounded-r" />
+                )}
+
+                <div className="flex items-center gap-2 pl-0.5">
+                  <Icon
+                    className={clsx(
+                      "w-4 h-4 stroke-[1.75]",
+                      isActive ? "text-brand" : "text-text-muted group-hover:text-text-secondary"
+                    )}
+                  />
                   <span>{item.label}</span>
                 </div>
 
                 {item.badge && item.badge > 0 ? (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-brand text-white font-bold leading-none">
+                  <span
+                    className={clsx(
+                      "px-1.5 py-0.2 rounded font-mono text-[10px] leading-none",
+                      isActive
+                        ? "bg-brand/10 text-brand font-semibold"
+                        : "bg-surface-subtle text-text-muted"
+                    )}
+                  >
                     {item.badge}
                   </span>
                 ) : null}
-
-                {/* Animated active indicator bar (GSAP feel) */}
-                {isActive && (
-                  <div
-                    ref={activeUnderlineRef}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-brand rounded-r-full"
-                  />
-                )}
               </Link>
             );
           })}
         </div>
 
-        {/* Section 2: Smart Categories */}
-        <div className="flex flex-col gap-1">
-          <span className="px-2 text-[10px] font-mono font-semibold uppercase tracking-wider text-text-muted mb-1">
+        {/* Section 2: Categories */}
+        <div className="flex flex-col gap-0.5">
+          <span className="px-2 text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted mb-1">
             Categories
           </span>
           {categoryNavItems.map((item) => {
-            const Icon = item.icon;
             const [itemPath, itemQuery] = item.href.split("?");
             const itemCat = itemQuery ? new URLSearchParams(itemQuery).get("category") : null;
             const isActive = itemCat
               ? pathname === itemPath && currentCategory === itemCat
-              : !currentCategory && pathname.startsWith(item.href);
+              : pathname.startsWith(item.href);
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  "sidebar-item relative flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150 group",
+                  "relative flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors duration-150 group",
                   isActive
-                    ? "bg-brand-subtle text-brand font-semibold border border-brand/20"
-                    : "text-text-secondary hover:text-text-primary hover:bg-surface-elevated/60"
+                    ? "bg-surface-secondary text-text-primary font-medium"
+                    : "text-text-secondary hover:text-text-primary hover:bg-surface-secondary/70"
                 )}
               >
-                <div className="flex items-center gap-2.5">
-                  <span className={clsx("w-2 h-2 rounded-full", item.color)} />
-                  <Icon className="w-3.5 h-3.5 text-text-muted group-hover:text-text-secondary transition-colors" />
+                {isActive && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-[2.5px] bg-brand rounded-r" />
+                )}
+
+                <div className="flex items-center gap-2 pl-0.5">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{ backgroundColor: item.color }}
+                  />
                   <span>{item.label}</span>
                 </div>
               </Link>
@@ -165,44 +152,42 @@ function SidebarContent() {
           })}
         </div>
 
-        {/* Section 3: Connected Accounts */}
-        <div className="flex flex-col gap-1">
+        {/* Section 3: Accounts */}
+        <div className="flex flex-col gap-0.5">
           <div className="flex items-center justify-between px-2 mb-1">
-            <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-text-muted">
+            <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted">
               Accounts
             </span>
-            <button
-              title="Connect Account"
-              className="text-text-muted hover:text-text-primary transition-colors p-0.5 rounded"
+            <Link
+              href="/settings"
+              title="Add Account"
+              className="text-text-muted hover:text-text-primary transition-colors p-0.5"
             >
               <Plus className="w-3 h-3" />
-            </button>
+            </Link>
           </div>
           {connectedAccounts.map((account) => (
             <div
               key={account.email}
-              className="sidebar-item flex items-center justify-between px-3 py-1.5 rounded-lg text-xs text-text-secondary hover:bg-surface-elevated/40 transition-colors"
+              className="flex items-center justify-between px-2.5 py-1 rounded-md text-xs text-text-muted hover:text-text-secondary transition-colors"
             >
-              <div className="flex items-center gap-2 truncate">
-                <span className={clsx("w-1.5 h-1.5 rounded-full shrink-0", account.color)} />
-                <span className="truncate text-[11px] font-mono">{account.email}</span>
-              </div>
-              {account.active && <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />}
+              <span className="truncate text-[11px] font-mono">{account.email}</span>
+              {account.active && <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />}
             </div>
           ))}
         </div>
       </div>
 
       {/* Footer / User & Settings */}
-      <div className="border-t border-border-subtle pt-3 flex items-center justify-between px-2">
+      <div className="border-t border-border pt-3 flex items-center justify-between px-1">
         <Link
           href="/settings"
           className="flex items-center gap-2 text-xs text-text-secondary hover:text-text-primary transition-colors"
         >
-          <Settings className="w-4 h-4 text-text-muted" />
+          <Settings className="w-3.5 h-3.5 text-text-muted" />
           <span>Settings</span>
         </Link>
-        <div className="scale-90">
+        <div className="scale-85 origin-right">
           <UserButton />
         </div>
       </div>
@@ -212,7 +197,7 @@ function SidebarContent() {
 
 export function Sidebar() {
   return (
-    <Suspense fallback={<aside className="w-[240px] h-screen border-r border-border-subtle bg-surface" />}>
+    <Suspense fallback={<aside className="w-[230px] h-screen bg-surface border-r border-border" />}>
       <SidebarContent />
     </Suspense>
   );

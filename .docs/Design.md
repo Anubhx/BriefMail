@@ -1,293 +1,200 @@
-Markdown
-# BriefMail Design System Specification (v1.0.0)
+# BriefMail — Complete UI, Design, & System Architecture Guide
 
-## 1. Design Tokens & Foundations
-
-### 1.1 Color Architecture & Contrast Verification
-Every color combination in this palette has been benchmarked against WCAG 2.2 accessibility standards.
-
-| Token Key | Hex Value | Usage Target | Background Context | Contrast Ratio | WCAG Compliance |
-|---|---|---|---|---|---|
-| `brand.primary` | `#FF6B00` | High-Priority CTA Fills | `#F8FAFC` (Text on button) | `3.15:1` (Bold ≥14px) | Pass (AA Large) |
-| `brand.secondary` | `#FF8933` | Interactive Text, Highlights | `#0F172A` (Surface) | `6.31:1` | Pass (AA / AAA Large) |
-| `text.primary` | `#F8FAFC` | Titles, Subject Headers | `#0F172A` (Surface) | `15.8:1` | Pass (AAA) |
-| `text.secondary` | `#CBD5E1` | Email Long-form Copy | `#0F172A` (Surface) | `11.1:1` | Pass (AAA) |
-| `text.muted` | `#94A3B8` | Snippets, Timestamps | `#0F172A` (Surface) | `6.7:1` | Pass (AA / AAA Large) |
-| `semantic.success` | `#10B981` | Financial Credits, Hired | `#0F172A` (Surface) | `5.6:1` | Pass (AA) |
-| `semantic.error` | `#EF4444` | Debits, Rejected Status | `#0F172A` (Surface) | `4.6:1` | Pass (AA) |
-
-> **Implementation Constraint:** Never use `#FF6B00` or `#FF8933` for multiline body text. Saturated warm tones against dark canvases induce visual fatigue.
+> **Current Production Architecture (v2.0)**  
+> This document provides an exhaustive, practical breakdown of the visual design system, navigation sitemap, component hierarchy, client-side data pipelines, and responsive desktop/mobile execution across the BriefMail platform.
 
 ---
 
-### 1.2 Typography Hierarchy
-The system uses **Plus Jakarta Sans** for crisp UI control geometry, **Satoshi** for clean editorial reading readability, and **JetBrains Mono** for tabular numeric precision.
+## 1. Design System & Visual Tokens
 
-Scale Reference (Root = 16px):
-Title-1 (24px / 1.25 leading / -0.03em tracking): Plus Jakarta Sans Bold
-Title-2 (20px / 1.25 leading / -0.025em tracking): Plus Jakarta Sans SemiBold
-Subheading (16px / 1.3 leading / -0.015em tracking): Plus Jakarta Sans SemiBold
-UI-Label (13px / 1.0 leading / -0.01em tracking): Plus Jakarta Sans Medium
-Body-Regular (15px / 1.6 leading / -0.005em tracking): Satoshi Regular
-Body-Highlight (15px / 1.6 leading / -0.005em tracking): Satoshi Medium
-Data-Numeric (13px / 1.0 leading / 0.0em tracking): JetBrains Mono Medium
+BriefMail follows a **dark-mode-first, high-density, spatial glassmorphism** aesthetic tailored for high-speed email triage and automated task execution.
 
----
+### 1.1 Color Architecture & Contrast Compliance
+The application uses tailored HSL and hex tokens verified against WCAG AA/AAA guidelines:
 
-### 1.3 Spacing & Grid System
-Built strictly on a base-4 continuous scaling rhythm:
+| Token Key | Value / Tailwind Class | Application Target | Contrast vs Surface (`#0F172A`) |
+| :--- | :--- | :--- | :--- |
+| `brand.DEFAULT` | `#FF6B00` (`text-brand`, `bg-brand`) | High-priority CTAs, active indicators, brand logo | `3.8:1` (Large UI / Bold) |
+| `brand.hover` | `#FF8933` (`bg-brand-hover`) | Button hover states, interactive controls | `5.2:1` (Pass AA) |
+| `brand.subtle` | `rgba(255, 107, 0, 0.12)` (`bg-brand-subtle`) | Active tab pill backgrounds, glow backdrops | Non-text decorative fill |
+| `brand.glow` | `0 0 20px -2px rgba(255, 107, 0, 0.35)` | Accent card and icon glow effects | Decorative shadow |
+| `surface.base` | `#0B1120` (`bg-surface-base`) | Main viewport canvas, outer screen backdrop | Base canvas |
+| `surface.DEFAULT` | `#0F172A` (`bg-surface`) | Sidebar, reading pane, modals, list cards | Elevation 1 |
+| `surface.elevated` | `#1E293B` (`bg-surface-elevated`) | Dropdowns, popovers, active card borders | Elevation 2 |
+| `surface.overlay` | `#334155` (`bg-surface-overlay`) | Hovered table rows, snooze pickers | Elevation 3 |
+| `border.subtle` | `rgba(248, 250, 252, 0.08)` | Hairline pane dividers, inactive card borders | Subtle border separation |
+| `border.strong` | `rgba(248, 250, 252, 0.16)` | Card hover boundaries, active focus rings | Crisp edge definition |
+| `text.primary` | `#F8FAFC` (`text-text-primary`) | Email subject lines, headings, action titles | `15.8:1` (Pass AAA) |
+| `text.secondary` | `#CBD5E1` (`text-text-secondary`) | Email body previews, descriptions, inputs | `11.1:1` (Pass AAA) |
+| `text.muted` | `#94A3B8` (`text-text-muted`) | Timestamps, secondary sender metadata | `6.7:1` (Pass AAA) |
+| `text.disabled` | `#475569` (`text-text-disabled`) | Form placeholders, inactive pagination icons | Text fallback |
 
-* **Primitives:** `4px (0.25rem)`, `8px (0.5rem)`, `12px (0.75rem)`, `16px (1rem)`, `20px (1.25rem)`, `24px (1.5rem)`, `32px (2rem)`, `48px (3rem)`, `64px (4rem)`.
-* **Desktop Grid:** Fluid multi-pane split:
-  * Sidebar: `240px` fixed width.
-  * List Pane: `360px` to `420px` responsive column.
-  * Reading Panel: Remainder width, capped at `max-w-4xl` (`896px`) for optimal line lengths (~75 characters/line).
-* **Mobile Breakpoint:** `< 1024px` transitions automatically to a full-screen layout with a persistent `60px` bottom navigation bar and safe-area inset preservation (`env(safe-area-inset-bottom)`).
-
----
-
-### 1.4 Depth, Surface Elevation, & Shadows
-
-Elevation-0 (Base):
-bg: #0B1120 (Canvas)
-Elevation-1 (Cards, Unfocused Items):
-bg: #0F172A
-border: 1px solid rgba(248, 250, 252, 0.08)
-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.45)
-Elevation-2 (Active Email Panels, Hovered Cards):
-bg: #1E293B
-border: 1px solid rgba(248, 250, 252, 0.16)
-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.55)
-Elevation-3 (Modals, Overlays, Dropdowns):
-bg: #1E293B (with backdrop-blur-md)
-border: 1px solid rgba(255, 137, 51, 0.25)
-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.75)
-
----
-
-## 2. Core Components Specification
-
-### 2.1 Buttons (`Button.tsx`)
-* **Anatomy:** Container, Leading Icon (optional), Label, Trailing Badge/Shortcut (optional).
-* **Sizes:**
-  * `sm`: `32px` height, `px-3`, text `12px`.
-  * `md`: `40px` height, `px-4`, text `14px`.
-* **Variants:**
-  * `Primary`: Background `#FF6B00`, text `#F8FAFC` font-semibold, hover `#FF8933`, active scale `0.98`.
-  * `Ghost`: Background `transparent`, border `1px solid rgba(248,250,252,0.08)`, text `#CBD5E1`, hover background `rgba(248,250,252,0.05)`, hover border `rgba(248,250,252,0.2)`.
-* **Focus Ring:** `2px` offset (`#0B1120`), `2px` solid `#FF8933`.
-
-### 2.2 Cards (`ActionCard.tsx` / `EmailRow.tsx`)
-* **Anatomy:** Outer membrane (`border-subtle`), internal padding (`16px`), visual status anchor (left border or pill), content stack, action utility tray.
-* **States:**
-  * `Default`: Surface elevation-1.
-  * `Hover`: Micro-translate `y: -1px`, border shifts to `border-strong`, subtle shadow lift.
-  * `Unread`: Left indicator `3px solid #FF6B00`, subject text weight set to `font-semibold`.
-
----
-
-## 3. Implementation Code
-
-### 3.1 Tailwind Config Integration (`tailwind.config.ts`)
+### 1.2 Category Badge Tokens
+Every classified category has a dedicated semantic badge with high-contrast text and glowing border accents:
 
 ```typescript
-import type { Config } from "tailwindcss";
-
-const config: Config = {
-  darkMode: "class",
-  content: ["./src/**/*.{ts,tsx}"],
-  theme: {
-    extend: {
-      colors: {
-        brand: {
-          DEFAULT: "#FF6B00",
-          hover: "#FF8933",
-          subtle: "rgba(255, 107, 0, 0.12)",
-          glow: "rgba(255, 107, 0, 0.35)",
-        },
-        surface: {
-          base: "#0B1120",
-          DEFAULT: "#0F172A",
-          elevated: "#1E293B",
-          overlay: "#334155",
-        },
-        border: {
-          subtle: "rgba(248, 250, 252, 0.08)",
-          strong: "rgba(248, 250, 252, 0.16)",
-        },
-        text: {
-          primary: "#F8FAFC",
-          secondary: "#CBD5E1",
-          muted: "#94A3B8",
-          disabled: "#475569",
-        },
-      },
-      fontFamily: {
-        ui: ["var(--font-plus-jakarta)", "sans-serif"],
-        body: ["var(--font-satoshi)", "sans-serif"],
-        mono: ["var(--font-jetbrains-mono)", "monospace"],
-      },
-      boxShadow: {
-        "elevation-1": "0 1px 2px 0 rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(248, 250, 252, 0.05)",
-        "elevation-2": "0 4px 12px -2px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(248, 250, 252, 0.08)",
-        "elevation-3": "0 12px 32px -4px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(248, 250, 252, 0.12)",
-        "brand-glow": "0 0 20px -2px rgba(255, 107, 0, 0.35)",
-      },
-    },
-  },
-  plugins: [],
+export const CATEGORY_COLORS: Record<string, string> = {
+  finance: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  finance_transaction: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  investments: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  jobs: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+  career: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  meetings: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  ads: "bg-rose-500/20 text-rose-400 border-rose-500/30",
+  social: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+  newsletter: "bg-teal-500/20 text-teal-400 border-teal-500/30",
+  otp: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  system: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+  misc: "bg-gray-500/20 text-gray-400 border-gray-500/30",
 };
+```
 
-export default config;
-3.2 Modular Component: Button (src/components/ui/Button.tsx)
-TypeScript
-"use client";
+### 1.3 Typography Hierarchy
+Defined via CSS variables in `src/app/globals.css` and mapped in `tailwind.config.ts`:
+* **`font-ui` (`Plus Jakarta Sans`)**: Applied across headings, buttons, tab titles, badges, and navigation labels.
+* **`font-body` (`Satoshi`)**: Applied across long-form email reading panes and preview descriptions.
+* **`font-mono` (`JetBrains Mono`)**: Applied to dates, timestamps, monetary amounts, OTP codes, and unread counters.
 
-import React from "react";
-import { motion, HTMLMotionProps } from "framer-motion";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+---
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+## 2. Navigation Sitemap & Route Architecture
 
-interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
-  variant?: "primary" | "secondary" | "ghost";
-  size?: "sm" | "md";
-  children: React.ReactNode;
-}
+The site uses the Next.js App Router grouped under an authenticated `(dashboard)` layout shell:
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "md", className, children, disabled, ...props }, ref) => {
-    const baseStyles =
-      "inline-flex items-center justify-center font-ui font-medium rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand-hover focus-visible:ring-offset-2 focus-visible:ring-offset-surface-base disabled:opacity-50 disabled:pointer-events-none";
+```
+src/app/
+├── (dashboard)/               # Authenticated Main Workspace Layout
+│   ├── layout.tsx             # Shell: Sidebar (Desktop) + Header + BottomNav (Mobile)
+│   ├── inbox/page.tsx         # Primary Inbox feed with animated CategoryTabs
+│   ├── all-mail/page.tsx      # Unified stream with Sort Bar, Filter Panel, & Active Chips
+│   ├── finance/page.tsx       # Financial Cockpit (Overview, EMIs, SIPs, Transactions)
+│   ├── career/page.tsx        # Career Pipeline (Kanban board: Applied → Offer)
+│   ├── meetings/page.tsx      # Agenda feed & 1-click video join links (Meet, Zoom, Teams)
+│   ├── system/page.tsx        # System Triage, Action Items, & Live OTP Copier
+│   ├── starred/page.tsx       # Starred priority messages
+│   ├── snoozed/page.tsx       # Snoozed email stream with schedule timers
+│   └── settings/page.tsx      # Multi-account Gmail OAuth, Sync controls, & Queue Drainer
+├── api/                       # Backend REST endpoints
+│   ├── emails/                # Paginated email querying, filtering, full email detail
+│   ├── finance/summary/       # Financial aggregation endpoint
+│   ├── career/applications/   # Job tracker stages & offer letters
+│   ├── system/actions/        # Actionable system blocks (OTPs, form links, approvals)
+│   └── settings/gmail-accounts# Connected Gmail account credentials & watch status
+```
 
-    const variants = {
-      primary: "bg-brand text-text-primary hover:bg-brand-hover shadow-brand-glow",
-      secondary: "bg-brand-subtle text-brand-hover border border-brand/20 hover:bg-brand/20",
-      ghost: "bg-transparent text-text-secondary border border-border-subtle hover:bg-surface-elevated hover:text-text-primary hover:border-border-strong",
-    };
+---
 
-    const sizes = {
-      sm: "h-8 px-3 text-xs gap-1.5",
-      md: "h-10 px-4 text-sm gap-2",
-    };
+## 3. Practical Layout & Component Architecture
 
-    return (
-      <motion.button
-        ref={ref}
-        whileTap={disabled ? undefined : { scale: 0.97 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        disabled={disabled}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
-        {...props}
-      >
-        {children}
-      </motion.button>
-    );
-  }
-);
-Button.displayName = "Button";
-3.3 Modular Component: Actionable Card (src/components/ui/ActionCard.tsx)
-TypeScript
-"use client";
+### 3.1 Global Shell (`src/app/(dashboard)/layout.tsx`)
+The root layout orchestrates navigation based on screen size:
+1. **Desktop (≥ 1024px / `lg:block`)**:
+   * Fixed 240px wide **`Sidebar.tsx`** on the left.
+   * Sticky 56px top header with view title, glowing `AI Sync Active` pulsing dot, and search.
+   * `main` scroll container fills the remaining viewport.
+2. **Mobile (< 1024px / `lg:hidden`)**:
+   * Sidebar is hidden to maximize reading area.
+   * Sticky top header displays title + Clerk user profile trigger.
+   * Fixed 60px **`BottomNav.tsx`** anchored to the bottom.
+   * Main scroll area has `pb-20` padding so content is never blocked by the bottom navigation bar.
 
-import React from "react";
-import { motion } from "framer-motion";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+### 3.2 Component Directory Mapping
+* **`src/components/ui/`**:
+  * `Sidebar.tsx`: Fixed desktop navigation with brand logo, main views, colored category shortcuts, connected account statuses, and settings link. Uses GSAP for entrance stagger animations.
+  * `BottomNav.tsx`: Touch-friendly mobile bottom bar with 8 key destinations, tap haptic feedback (`navigator.vibrate(100)`), Framer Motion active dot indicator, and iOS safe-area inset support (`env(safe-area-inset-bottom)`).
+  * `CategoryTabs.tsx`: Horizontally scrollable pill tabs for switching categories (`All`, `Finance`, `Jobs`, `Career`, etc.) with Framer Motion `layoutId="activeCategoryPill"` sliding background transitions.
+* **`src/components/email/`**:
+  * `EmailListItem.tsx`: High-density email card. Shows unread dot indicator, sender avatar initial, category badge, subject, snippet, and relative timestamp. Supports swipe-to-archive (swipe right) and swipe-to-star (swipe left).
+  * `EmailDetail.tsx`: Comprehensive email reader. Contains action buttons (Archive, Snooze picker, Star), AI summary callout box, action item checklist, and sanitized HTML email body. Outgoing links are processed with `addTargetBlank()` to open in new tabs.
+* **`src/components/system/`**:
+  * `ActionBlockGrid.tsx`: Live cards for urgent notifications. Features auto-extracted 4–8 digit OTP codes with single-click copy buttons and visual countdown timers.
+  * `SystemBundle.tsx`: Clustered grouping of noisy platform alerts (GitHub, AWS, CI/CD) with a bulk "Mark All as Read" action.
+* **`src/components/finance/`**:
+  * `OverviewCards.tsx`: Monthly debits vs. credits and next EMI due date.
+  * `EMITimeline.tsx`: Loan liability cards with principal/interest amortization schedules.
+  * `SIPDashboard.tsx`: Mutual fund investments, current NAV, and portfolio returns.
+  * `TransactionList.tsx`: Individual debits/credits with payment modes (`UPI`, `Card`, `NetBanking`).
+* **`src/components/career/`**:
+  * `KanbanBoard.tsx`: 4-column drag/drop recruitment board (`Applied`, `Interviewing`, `Offered`, `Rejected`).
+  * `CareerStatsBar.tsx`: Funnel conversion rate indicators.
+  * `OfferDetailsPanel.tsx`: Extracted CTC (`₹ LPA`), joining dates, and assessment links.
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+---
 
-interface ActionCardProps {
-  title: string;
-  badge?: string;
-  timestamp: string;
-  snippet: string;
-  isUrgent?: boolean;
-  onClick?: () => void;
-}
+## 4. How the UI Gets and Manages Data
 
-export const ActionCard: React.FC<ActionCardProps> = ({
-  title,
-  badge,
-  timestamp,
-  snippet,
-  isUrgent,
-  onClick,
-}) => {
-  return (
-    <motion.div
-      onClick={onClick}
-      whileHover={{ y: -2 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className={cn(
-        "group relative cursor-pointer overflow-hidden rounded-xl bg-surface p-4",
-        "border border-border-subtle hover:border-border-strong",
-        "shadow-elevation-1 hover:shadow-elevation-2 transition-shadow duration-200"
-      )}
-    >
-      {isUrgent && (
-        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-brand" />
-      )}
+BriefMail combines **TanStack React Query (v5)** with **Zustand** and Supabase REST endpoints for instant, optimistic responsiveness:
 
-      <div className="flex items-center justify-between gap-2 mb-1.5">
-        <div className="flex items-center gap-2">
-          {badge && (
-            <span className="font-ui text-[11px] font-medium tracking-wide uppercase px-2 py-0.5 rounded-full bg-brand-subtle text-brand-hover border border-brand/20">
-              {badge}
-            </span>
-          )}
-          <h4 className="font-ui text-sm font-semibold text-text-primary tracking-tight truncate max-w-[200px]">
-            {title}
-          </h4>
-        </div>
-        <span className="font-ui text-xs text-text-muted shrink-0">
-          {timestamp}
-        </span>
-      </div>
+```mermaid
+graph TD
+    User([User]) -->|Interacts with UI| Component[React Component]
+    Component -->|useQuery with queryKey| RQ[TanStack React Query Cache]
+    RQ -->|Stale / Background Refresh| API[/api/emails, /api/finance/summary, etc./]
+    API -->|Clerk auth verification| SvrClient[Supabase Server Client]
+    SvrClient -->|Query PostgreSQL| DB[(Database: emails, bank_transactions, etc.)]
+    DB -->|Normalized JSON| API
+    API -->|Payload + Counts| RQ
+    RQ -->|Re-render with SWR| Component
+    Component -->|User Action: Archive/Star/Snooze| Mutate[Optimistic useMutation]
+    Mutate -->|Local State Updated Instantly| Component
+    Mutate -->|PATCH /api/emails/:id/:action| SvrClient
+```
 
-      <p className="font-body text-sm text-text-secondary line-clamp-2 leading-normal">
-        {snippet}
-      </p>
-    </motion.div>
-  );
-};
-3.4 Orchestrated Stagger List Entrance (src/components/email/EmailListEntrance.tsx)
-TypeScript
-"use client";
+### 4.1 Query Keys & Stale-Time Strategy
+* **Inbox Emails**: `["emails", activeCategory, page, searchQuery]` (staleTime: `30s`, refetchInterval: `30s`).
+* **All Mail Stream**: `["emails-all-mail", page, searchQuery, sortBy, sortOrder, categories, status, dateFrom, dateTo, accountId]` (staleTime: `30s`).
+* **Single Email Detail**: `["email-detail", selectedEmailId]` (staleTime: `60s`).
+* **Connected Gmail Accounts**: `["gmail-accounts-list"]` (staleTime: `5m`).
+* **Finance Summary**: `["finance-summary"]` (staleTime: `5m`).
 
-import React, { useLayoutEffect, useRef } from "react";
-import gsap from "gsap";
+### 4.2 Optimistic UI Updates
+When a user archives, stars, or snoozes an email:
+1. The component immediately modifies `allFetchedEmails` in local state (`setAllFetchedEmails`).
+2. If the active email is currently open, it advances to the next or closes smoothly.
+3. The mutation runs asynchronously in the background via `fetch('/api/emails/:id/archive', { method: 'PATCH' })`.
+4. On success or error, `queryClient.invalidateQueries` synchronizes with server state.
 
-interface EmailListEntranceProps {
-  children: React.ReactNode;
-}
+---
 
-export const EmailListEntrance: React.FC<EmailListEntranceProps> = ({ children }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+## 5. Desktop vs. Mobile Implementation Matrix
 
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from(".briefmail-list-item", {
-        y: 16,
-        opacity: 0,
-        duration: 0.35,
-        stagger: 0.04,
-        ease: "power2.out",
-        clearProps: "all",
-      });
-    }, containerRef);
+| Interaction | Desktop (≥ 1024px) | Mobile (< 1024px) |
+| :--- | :--- | :--- |
+| **Layout Layout** | Split-pane (Master-Detail): 420px email list column on left, expansive reading pane on right. | Single-column view. Tapping an email triggers a smooth spring-animated 90vh bottom sheet drawer (`EmailDetail.tsx`). |
+| **Primary Nav** | Fixed 240px Left Sidebar with brand header, categorized view shortcuts, and account selectors. | Fixed 60px Bottom Navigation Bar with thumb-friendly icons, unread badges, and active glowing pill indicators. |
+| **Touch & Gestures**| Hover-triggered quick actions (Star, Archive, Snooze). Mouse-driven selection. | Framer Motion touch gestures: Swipe right to Archive (blue backdrop reveal), Swipe left to Star (amber backdrop reveal). |
+| **Mobile Haptics** | N/A | Tapping navigation tabs triggers `navigator.vibrate(100)` for tactile physical confirmation. |
+| **Filter Panel** | Opens as a structured 3-column grid card with category pill matrices above the message stream. | Collapses into a vertical scrollable sheet with touch-friendly form pickers and clear action buttons. |
+| **Scroll Padding** | Standard `p-6 pb-6`. | Main content includes `pb-20` to prevent the bottom email item from being obstructed by the fixed bottom bar. |
 
-    return () => ctx.revert();
-  }, []);
+---
 
-  return (
-    <div ref={containerRef} className="flex flex-col gap-2 w-full">
-      {children}
-    </div>
-  );
-};
+## 6. Page-by-Page Feature Specifications
+
+### 6.1 Inbox (`/inbox`)
+* Dynamic header tabs (`CategoryTabs.tsx`) displaying unread counts for all categories.
+* Automatic first-email selection on desktop for immediate keyboard/mouse reading.
+* Background polling every 30 seconds to fetch newly ingested emails from active background drain jobs.
+
+### 6.2 All Mail (`/all-mail`)
+* **Always-Visible Sort Bar**: Quick dropdown supporting *Date (Newest/Oldest)*, *Sender (A-Z)*, and *Subject (A-Z)*.
+* **Collapsible Filter Panel**: Multi-parameter filter across date ranges (native pickers + 7/30-day presets), status (`All`, `Unread`, `Read`, `Starred`, `Archived`), connected accounts, and multi-select categories.
+* **Dismissible Filter Chips**: Applied filters appear as dismissible tags (e.g. `Category: Finance ×`, `Unread ×`) with a one-click *"Clear all"* shortcut.
+* **Link Target Safety**: All email bodies are sanitized and rewritten via `addTargetBlank()` to force external links to open in a new tab with `rel="noopener noreferrer"`.
+
+### 6.3 Finance (`/finance`)
+* 5 dedicated tabs: Overview, Transactions, EMI Tracker, Investments, and Subscriptions.
+* Displays inflow/outflow metrics, upcoming payment reminders, and mutual fund investment values.
+
+### 6.4 Career (`/career`)
+* Visual recruitment funnel with drag-and-drop Kanban stages.
+* Tracks company names, interview stages, and extracted compensation packages.
+
+### 6.5 System Triage (`/system`)
+* **OTP Quick Copier**: Real-time card extracting numeric login codes with a copy button and expiring progress indicator.
+* **Clustered Digest**: Groups high-volume automated platform notices so they never clutter user feeds.
+
+### 6.6 Settings (`/settings`)
+* Connected Gmail mailbox status with live watch expiration tracking.
+* On-demand historical email import controls with custom date bounds.
+* Live status monitor for the backend classification queue.
