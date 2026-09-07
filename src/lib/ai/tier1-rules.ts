@@ -245,17 +245,17 @@ const INVESTMENT_SUBJECT_PATTERNS: [RegExp, string][] = [
   [/portfolio\s*(update|statement|summary)/i, "portfolio_update"],
 ];
 
-// ── Job Subject Patterns (Split: job_application vs job_alert) ─────────────
+// ── Job Subject Patterns (Split: application_confirmed vs job_alert) ───────
 
-const JOB_APPLICATION_PATTERNS: RegExp[] = [
+const APPLICATION_CONFIRMED_PATTERNS: RegExp[] = [
   /application\s*submitted/i,
   /you\s*applied/i,
   /application\s*received/i,
   /thank\s*you\s*for\s*applying/i,
-  /application\s*confirmation/i,
-  /we\s*received\s*your\s*application/i,
+  /applied\s*for/i,
   /application\s*for/i,
-  /your\s*application\s*to/i,
+  /we\s*received\s*your\s*application/i,
+  /application\s*confirmation/i,
   /applied\s*successfully/i,
 ];
 
@@ -289,10 +289,8 @@ function isJobAlertSender(fromEmail: string, subject: string): boolean {
 // ── Career Subject Patterns ───────────────────────────────────────────────────
 
 const CAREER_SUBJECT_PATTERNS: [RegExp, string][] = [
-  [/offer\s*letter|pleased\s*to\s*offer|job\s*offer/i, "offer_letter"],
-  [/congratulations.*offer|we.?d\s*like\s*to\s*offer/i, "offer_letter"],
-  [/interview\s*(invite|invitation|scheduled|schedule|confirmed|confirmation)/i, "interview_invite"],
-  [/technical\s*(round|interview)|hr\s*(round|interview)/i, "interview_invite"],
+  [/offer\s*letter|job\s*offer|pleased\s*to\s*offer|congratulations/i, "offer_received"],
+  [/interview\s*(invite|invitation|request)?|schedule\s*interview|technical\s*(round|interview)|hr\s*(round|interview)/i, "interview_invite"],
   [/assessment|coding\s*(test|challenge|round)|hackerrank|technical\s*task/i, "assessment_link"],
   [/portfolio\s*(review|submission|request)/i, "portfolio_request"],
   [/unfortunately|not\s*moving\s*forward|regret\s*to\s*inform|not\s*selected/i, "rejection"],
@@ -477,13 +475,13 @@ export function classifyByRules(email: EmailInput): ClassificationResult | null 
     };
   }
 
-  // ── RULE SET 8: Jobs (split into job_application and job_alert) ─────────────
-  // 1. Check if user actually applied (job_application)
-  const isJobApplication = JOB_APPLICATION_PATTERNS.some((re) => re.test(subject));
-  if (isJobApplication) {
+  // ── RULE SET 8: Jobs (split into application_confirmed and job_alert) ──────
+  // 1. Check if user actually applied (application_confirmed)
+  const isAppConfirmed = APPLICATION_CONFIRMED_PATTERNS.some((re) => re.test(subject));
+  if (isAppConfirmed) {
     return {
       category: "jobs",
-      subcategory: "job_application",
+      subcategory: "application_confirmed",
       confidence: 0.95,
       tier: "regex",
     };

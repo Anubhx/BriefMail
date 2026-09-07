@@ -38,7 +38,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (targetCategory === "jobs") {
       selectQuery = selectQuery
         .eq("category", "jobs")
-        .not("subcategory", "in", '("job_application","job_alert")');
+        .not("subcategory", "in", '("application_confirmed","job_alert","interview_invite","offer_received","application_status")');
     } else {
       selectQuery = selectQuery.eq("category", targetCategory);
     }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   } else {
     // Select emails where category is null, or where category = 'jobs' needing subcategories assigned
     selectQuery = selectQuery.or(
-      "category.is.null,and(category.eq.jobs,subcategory.not.in.(job_application,job_alert))"
+      "category.is.null,and(category.eq.jobs,subcategory.not.in.(application_confirmed,job_alert,interview_invite,offer_received,application_status))"
     );
   }
 
@@ -73,13 +73,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       if (targetCategory === "jobs") {
         countQuery = countQuery
           .eq("category", "jobs")
-          .not("subcategory", "in", '("job_application","job_alert")');
+          .not("subcategory", "in", '("application_confirmed","job_alert","interview_invite","offer_received","application_status")');
       } else {
         countQuery = countQuery.eq("category", targetCategory);
       }
     } else {
       countQuery = countQuery.or(
-        "category.is.null,and(category.eq.jobs,subcategory.not.in.(job_application,job_alert))"
+        "category.is.null,and(category.eq.jobs,subcategory.not.in.(application_confirmed,job_alert,interview_invite,offer_received,application_status))"
       );
     }
 

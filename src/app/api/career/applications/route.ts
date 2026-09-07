@@ -43,7 +43,9 @@ export async function GET(): Promise<NextResponse> {
       emails (
         id,
         category,
-        subcategory
+        subcategory,
+        subject,
+        from_email
       ),
       offer_letters (
         id,
@@ -69,23 +71,85 @@ export async function GET(): Promise<NextResponse> {
     );
   }
 
-  // Only return emails WHERE subcategory = 'job_application'
-  // OR subcategory IN ('interview_invite', 'offer_letter')
-  // NOT job_alert emails.
+  // TASK 1 & TASK 3:
+  // WHERE subcategory IN ('application_confirmed', 'interview_invite', 'offer_received', 'application_status')
+  // OR subject contains application confirmation signals.
+  // Do NOT show job_alert_digest.
+  // For role listings: exclude if job board alert, otherwise include.
   const validSubcategories = new Set([
-    "job_application",
+    "application_confirmed",
     "interview_invite",
+    "offer_received",
+    "application_status",
+    "job_application",
     "offer_letter",
   ]);
+
+  const confirmationSignals = [
+    "application submitted",
+    "you applied",
+    "application received",
+    "thank you for applying",
+    "we received your application",
+    "applied for",
+    "application for",
+  ];
+
+  const roleSubcategories = new Set([
+    "uiux_role",
+    "design_role",
+    "product_role",
+    "engineering_role",
+  ]);
+
+  const jobBoardDomains = [
+    "indeed.com",
+    "linkedin.com",
+    "naukri.com",
+    "internshala.com",
+  ];
+
+  const alertKeywords = ["alert", "new", "vacancy", "opening", "hiring"];
 
   const filteredApplications = (applications || []).filter((app: any) => {
     // Retain manually added applications that have no linked email_id
     if (!app.email_id) return true;
 
-    const emailSubcat = app.emails?.subcategory;
-    if (!emailSubcat) return false;
-    if (emailSubcat === "job_alert" || emailSubcat === "job_alert_digest") return false;
-    return validSubcategories.has(emailSubcat);
+    const email = app.emails;
+    if (!email) return false;
+
+    const subcat = (email.subcategory || "").toLowerCase();
+    const subject = (email.subject || "").toLowerCase();
+    const fromEmail = (email.from_email || "").toLowerCase();
+
+    // 1. Do NOT show job_alert_digest or job_alert in career kanban
+    if (subcat === "job_alert_digest" || subcat === "job_alert") {
+      return false;
+    }
+
+    // 2. WHERE subcategory IN ('application_confirmed', 'interview_invite', 'offer_received', 'application_status', ...)
+    if (validSubcategories.has(subcat)) {
+      return true;
+    }
+
+    // 3. Subject contains application confirmation signals
+    if (confirmationSignals.some((sig) => subject.includes(sig))) {
+      return true;
+    }
+
+    // 4. For uiux_role, design_role, product_role, engineering_role:
+    // Check if from_email contains job board domains AND subject contains alert keywords -> exclude.
+    // Otherwise include (might be direct company email).
+    if (roleSubcategories.has(subcat)) {
+      const isJobBoard = jobBoardDomains.some((domain) => fromEmail.includes(domain));
+      const hasAlertWord = alertKeywords.some((word) => subject.includes(word));
+      if (isJobBoard && hasAlertWord) {
+        return false;
+      }
+      return true;
+    }
+
+    return false;
   });
 
   return NextResponse.json({ applications: filteredApplications });

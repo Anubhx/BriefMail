@@ -147,8 +147,8 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
 
     // 2B. Career & Jobs (Only real job applications and career milestones; NOT job alerts)
     const isJobApp =
-      subcat === "job_application" ||
-      ["offer_letter", "interview_invite", "application_status", "rejection"].includes(subcat);
+      ["job_application", "application_confirmed", "application_status"].includes(subcat) ||
+      ["offer_received", "offer_letter", "interview_invite", "rejection"].includes(subcat);
 
     if (isJobApp) {
       const company = (ext.company as string) || (ext.company_name as string) || fromName || "Unknown Company";
@@ -157,11 +157,11 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
       const assessmentLinks = Array.isArray(ext.assessment_links) ? ext.assessment_links : [];
 
       let stage: "applied" | "interviewing" | "offered" | "rejected" = "applied";
-      if (subcat === "offer_letter") stage = "offered";
+      if (subcat === "offer_received" || subcat === "offer_letter") stage = "offered";
       else if (subcat === "interview_invite") stage = "interviewing";
       else if (subcat === "rejection") stage = "rejected";
 
-      if (subcat === "offer_letter") {
+      if (subcat === "offer_received" || subcat === "offer_letter") {
         const ctcLpa = typeof ext.salary_lpa === "number" ? ext.salary_lpa : typeof ext.ctc_lpa === "number" ? ext.ctc_lpa : null;
         await db.from("offer_letters").insert({
           tenant_id: tenantId,
