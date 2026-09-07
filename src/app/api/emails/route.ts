@@ -120,6 +120,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         query = query.or(
           "category.eq.system,subcategory.in.(workspace_notification,platform_digest,system_alert,newsletter)"
         );
+      } else if (singleCat === "otp") {
+        query = query.or("category.eq.otp,subcategory.eq.otp_verification");
+      } else if (singleCat === "finance_transaction") {
+        query = query.or("category.eq.finance_transaction,category.eq.finance");
       } else {
         query = query.eq("category", singleCat);
       }
@@ -210,7 +214,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       if (cat === "ads") categoryCounts.ads++;
       if (cat === "social") categoryCounts.social++;
       if (cat === "newsletter") categoryCounts.newsletter++;
-      if (cat === "otp") categoryCounts.otp++;
+      if (cat === "otp" || sub === "otp_verification") categoryCounts.otp++;
       if (
         cat === "system" ||
         ["workspace_notification", "platform_digest", "system_alert", "newsletter"].includes(sub)

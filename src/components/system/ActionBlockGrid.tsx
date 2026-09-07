@@ -17,7 +17,7 @@ import {
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
-import { format, parseISO, isValid, differenceInSeconds } from "date-fns";
+import { format, parseISO, isValid, differenceInSeconds, formatDistanceToNow } from "date-fns";
 
 export interface ActionItem {
   id: string;
@@ -37,15 +37,231 @@ export interface ActionItem {
   } | null;
 }
 
+export interface OtpEmailItem {
+  id: string;
+  subject: string;
+  from_name?: string | null;
+  from_email?: string | null;
+  snippet?: string | null;
+  received_at?: string;
+  category?: string;
+  subcategory?: string;
+}
+
+/**
+ * Parses OTP code from subject using regex: /\b(\d{4,8})\b/ or /code[:\s]+(\w+)/i
+ * with fallback to snippet extraction.
+ */
+export function parseOtpCode(subject: string, snippet?: string | null): string {
+  if (!subject) return "••••••";
+
+  // 1. Primary check on subject: /\b(\d{4,8})\b/ or /code[:\s]+(\w+)/i
+  const subDigits = subject.match(/\b(\d{4,8})\b/);
+  if (subDigits) return subDigits[1];
+
+  const subCode = subject.match(/code[:\s]+([A-Za-z0-9]{4,8})/i) || subject.match(/code[:\s]+(\w+)/i);
+  if (subCode && !["with", "from", "your", "this", "that", "is", "for"].includes(subCode[1].toLowerCase())) {
+    return subCode[1];
+  }
+
+  // 2. Fallback to snippet digits or code
+  const snipDigits = (snippet || "").match(/\b(\d{4,8})\b/);
+  if (snipDigits) return snipDigits[1];
+
+  const snipCode = (snippet || "").match(/code[:\s]+(?:is[:\s]*)?([A-Za-z0-9]{4,8})/i);
+  if (snipCode) return snipCode[1];
+
+  return "••••••";
+}
+
+// ── OtpEmailBlockCard Component ───────────────────────────────────────────────
+
+export const OtpEmailBlockCard: React.FC<{
+  email: OtpEmailItem;
+  onDismiss: () => void;
+}> = ({ email, onDismiss }) => {
+  const [copied, setCopied] = useState(false);
+  const otpCode = parseOtpCode(email.subject, email.snippet);
+
+  // Auto-expire visual: if received > 10 min ago show "Expired"
+  const receivedDate = email.received_at ? parseISO(email.received_at) : new Date();
+  const isExpired = Date.now() - receivedDate.getTime() > 10 * 60 * 1000;
+
+  const relativeTime = email.received_at
+    ? formatDistanceToNow(receivedDate, { addSuffix: true })
+    : "";
+
+  const handleCopy = () => {
+    if (!otpCode || otpCode === "••••••") return;
+    navigator.clipboard.writeText(otpCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const fromLabel = email.from_name || email.from_email || "Unknown Sender";
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.95, y: 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
+      transition={{ type: "spring", stiffness: 350, damping: 25 }}
+      className={`group relative rounded-2xl p-5 border flex flex-col justify-between transition-all duration-200 ${
+        isExpired
+          ? "bg-surface-DEFAULT/50 border-white/5 opacity-80"
+          : "bg-surface-DEFAULT/95 backdrop-blur-md border-amber-500/30 shadow-elevation-1 hover:shadow-elevation-2 hover:border-amber-500/50"
+      }`}
+    >
+      {/* Top Header: Badge + Dismiss Button */}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+              isExpired
+                ? "bg-white/5 text-text-disabled border border-white/10"
+                : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+            }`}
+          >
+            <KeyRound className="h-3 w-3" />
+            OTP Verification
+          </span>
+
+          {/* Auto-expire visual */}
+          {isExpired ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+              Expired
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              Active
+            </span>
+          )}
+        </div>
+
+        <button
+          onClick={onDismiss}
+          className="text-text-disabled hover:text-text-primary p-1 rounded-lg hover:bg-surface-elevated transition-colors"
+          title="Dismiss OTP Block"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* From label and subject */}
+      <div className="space-y-1 mb-3">
+        <div className="text-xs font-medium text-text-muted">
+          From: <span className="text-text-primary font-semibold">{fromLabel}</span>
+        </div>
+        <p className="text-xs text-text-secondary line-clamp-1" title={email.subject}>
+          {email.subject}
+        </p>
+      </div>
+
+      {/* Large Monospace OTP Display */}
+      <div
+        className={`rounded-xl border p-3 flex items-center justify-between gap-3 mb-3 ${
+          isExpired
+            ? "bg-surface-base/40 border-white/5"
+            : "bg-surface-base border-amber-500/20"
+        }`}
+      >
+        <span
+          className={`font-mono text-2xl sm:text-3xl font-bold tracking-widest select-all ${
+            isExpired
+              ? "text-text-disabled line-through"
+              : "text-amber-400 drop-shadow-sm"
+          }`}
+        >
+          {otpCode}
+        </span>
+
+        <button
+          onClick={handleCopy}
+          disabled={isExpired && otpCode === "••••••"}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border shadow-sm ${
+            copied
+              ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+              : isExpired
+              ? "bg-surface-elevated border-white/5 text-text-disabled hover:text-text-secondary"
+              : "bg-surface-elevated hover:bg-surface-overlay text-text-primary border-white/10 hover:border-amber-500/30"
+          }`}
+        >
+          {copied ? (
+            <>
+              <Check className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy className="h-3.5 w-3.5 text-text-muted" />
+              <span>Copy</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Footer: Received Time */}
+      <div className="flex items-center justify-between text-xs text-text-muted pt-1 border-t border-white/5">
+        <span className="flex items-center gap-1 font-mono text-[11px]">
+          <Clock className="h-3 w-3" />
+          {relativeTime || "Just now"}
+        </span>
+
+        {isExpired ? (
+          <span className="text-[11px] text-rose-400/80 font-medium">Valid for 10m</span>
+        ) : (
+          <span className="text-[11px] text-amber-400/90 font-medium">Valid &bull; 10m window</span>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+// ── Main ActionBlockGrid ──────────────────────────────────────────────────────
+
 interface ActionBlockGridProps {
-  actions: ActionItem[];
-  onDismiss: (id: string) => void;
+  actions?: ActionItem[];
+  onDismiss?: (id: string) => void;
 }
 
 export const ActionBlockGrid: React.FC<ActionBlockGridProps> = ({
-  actions,
+  actions = [],
   onDismiss,
 }) => {
+  const [otpEmails, setOtpEmails] = useState<OtpEmailItem[]>([]);
+  const [loadingOtp, setLoadingOtp] = useState<boolean>(true);
+  const [dismissedOtpIds, setDismissedOtpIds] = useState<Set<string>>(new Set());
+
+  // Query /api/emails?category=otp&limit=20 on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchOtps() {
+      try {
+        setLoadingOtp(true);
+        const res = await fetch("/api/emails?category=otp&limit=20");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            setOtpEmails(data.emails || []);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch OTP emails:", err);
+      } finally {
+        if (isMounted) setLoadingOtp(false);
+      }
+    }
+    fetchOtps();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const visibleOtps = otpEmails.filter((e) => !dismissedOtpIds.has(e.id));
+  const totalItems = visibleOtps.length + actions.length;
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -55,15 +271,24 @@ export const ActionBlockGrid: React.FC<ActionBlockGridProps> = ({
             Entity Isolation: Extracted Action Blocks
           </h2>
           <p className="text-xs text-text-muted">
-            High-intent items isolated directly from raw emails into interactive cards.
+            High-intent OTPs and items isolated directly from raw emails into interactive cards.
           </p>
         </div>
         <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-subtle text-brand border border-brand/20">
-          {actions.length} Pending
+          {totalItems} Available
         </span>
       </div>
 
-      {actions.length === 0 ? (
+      {loadingOtp && totalItems === 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-44 rounded-2xl bg-surface-DEFAULT/50 border border-white/5 animate-pulse p-5"
+            />
+          ))}
+        </div>
+      ) : totalItems === 0 ? (
         <div className="rounded-2xl border border-white/5 bg-surface-DEFAULT/50 p-8 text-center flex flex-col items-center justify-center">
           <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-2">
             <Check className="h-5 w-5" />
@@ -79,11 +304,23 @@ export const ActionBlockGrid: React.FC<ActionBlockGridProps> = ({
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           <AnimatePresence mode="popLayout">
+            {/* Render OTP Email Blocks */}
+            {visibleOtps.map((email) => (
+              <OtpEmailBlockCard
+                key={email.id}
+                email={email}
+                onDismiss={() =>
+                  setDismissedOtpIds((prev) => new Set([...prev, email.id]))
+                }
+              />
+            ))}
+
+            {/* Render Standard Action Blocks */}
             {actions.map((item) => (
               <ActionBlockCard
                 key={item.id}
                 item={item}
-                onDismiss={() => onDismiss(item.id)}
+                onDismiss={() => onDismiss?.(item.id)}
               />
             ))}
           </AnimatePresence>

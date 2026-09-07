@@ -17,6 +17,10 @@ const CATEGORIES: CategoryTabItem[] = [
   { id: "career", label: "Career" },
   { id: "investments", label: "Investments" },
   { id: "meetings", label: "Meetings" },
+  { id: "social", label: "Social" },
+  { id: "newsletter", label: "Newsletter" },
+  { id: "otp", label: "OTP" },
+  { id: "finance_transaction", label: "Transactions" },
   { id: "system", label: "System" },
 ];
 

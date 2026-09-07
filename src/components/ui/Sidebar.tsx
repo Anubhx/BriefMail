@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, Suspense } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import {
   Inbox,
@@ -14,26 +14,15 @@ import {
   Calendar,
   TrendingUp,
   Settings,
-  User,
   Plus,
   CheckCircle2,
-  ShieldCheck,
+  Shield,
+  Users,
 } from "lucide-react";
 
 import { clsx } from "clsx";
 import gsap from "gsap";
 import { useGSAP } from "@/hooks/useGSAP";
-
-interface NavSection {
-  title: string;
-  items: {
-    href: string;
-    label: string;
-    icon: React.ElementType;
-    badge?: number;
-    color?: string;
-  }[];
-}
 
 const mainNavItems = [
   { href: "/inbox", label: "Inbox", icon: Inbox, badge: 5 },
@@ -46,18 +35,21 @@ const categoryNavItems = [
   { href: "/finance", label: "Finance", icon: DollarSign, color: "bg-emerald-500" },
   { href: "/career", label: "Career", icon: Briefcase, color: "bg-blue-500" },
   { href: "/meetings", label: "Meetings", icon: Calendar, color: "bg-purple-500" },
-  { href: "/system", label: "System Triage", icon: ShieldCheck, color: "bg-amber-500" },
   { href: "/investments", label: "Investments", icon: TrendingUp, color: "bg-cyan-500" },
+  { href: "/inbox?category=social", label: "Social", icon: Users, color: "bg-pink-500" },
+  { href: "/inbox?category=newsletter", label: "Newsletter", icon: Mail, color: "bg-teal-500" },
+  { href: "/system", label: "OTP", icon: Shield, color: "bg-amber-500" },
 ];
-
 
 const connectedAccounts = [
   { email: "anubhav@gmail.com", active: true, color: "bg-emerald-400" },
   { email: "work@briefmail.ai", active: false, color: "bg-blue-400" },
 ];
 
-export function Sidebar() {
+function SidebarContent() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentCategory = searchParams?.get("category");
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeUnderlineRef = useRef<HTMLDivElement>(null);
 
@@ -102,7 +94,8 @@ export function Sidebar() {
           </span>
           {mainNavItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href === "/inbox" && pathname.startsWith("/inbox"));
+            const isExactInbox = item.href === "/inbox" && pathname === "/inbox" && !currentCategory;
+            const isActive = isExactInbox || (item.href !== "/inbox" && pathname.startsWith(item.href));
 
             return (
               <Link
@@ -145,7 +138,11 @@ export function Sidebar() {
           </span>
           {categoryNavItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname.startsWith(item.href);
+            const [itemPath, itemQuery] = item.href.split("?");
+            const itemCat = itemQuery ? new URLSearchParams(itemQuery).get("category") : null;
+            const isActive = itemCat
+              ? pathname === itemPath && currentCategory === itemCat
+              : !currentCategory && pathname.startsWith(item.href);
 
             return (
               <Link
@@ -210,5 +207,13 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+  );
+}
+
+export function Sidebar() {
+  return (
+    <Suspense fallback={<aside className="w-[240px] h-screen border-r border-border-subtle bg-surface" />}>
+      <SidebarContent />
+    </Suspense>
   );
 }

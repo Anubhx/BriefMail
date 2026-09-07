@@ -1,9 +1,18 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, Suspense } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Inbox, DollarSign, Briefcase, Calendar, MoreHorizontal } from "lucide-react";
+import { usePathname, useSearchParams } from "next/navigation";
+import {
+  Inbox,
+  DollarSign,
+  Briefcase,
+  Calendar,
+  MoreHorizontal,
+  Users,
+  Mail,
+  Shield,
+} from "lucide-react";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import gsap from "gsap";
@@ -21,11 +30,16 @@ const navItems: BottomNavItem[] = [
   { href: "/finance", label: "Finance", icon: DollarSign },
   { href: "/career", label: "Career", icon: Briefcase },
   { href: "/meetings", label: "Meetings", icon: Calendar },
+  { href: "/inbox?category=social", label: "Social", icon: Users },
+  { href: "/inbox?category=newsletter", label: "Newsletter", icon: Mail },
+  { href: "/system", label: "OTP", icon: Shield },
   { href: "/settings", label: "More", icon: MoreHorizontal },
 ];
 
-export function BottomNav() {
+function BottomNavContent() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentCategory = searchParams?.get("category");
   const navRef = useRef<HTMLElement>(null);
 
   // GSAP initial mount entrance animation
@@ -55,13 +69,18 @@ export function BottomNav() {
     <nav
       ref={navRef}
       aria-label="Mobile navigation"
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] border-t border-border-subtle bg-surface/90 backdrop-blur-xl shadow-lg"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] border-t border-border-subtle bg-surface/95 backdrop-blur-xl shadow-lg"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="flex items-center justify-around h-full px-2">
+      <div className="flex items-center justify-between sm:justify-around h-full px-2 overflow-x-auto no-scrollbar gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname.startsWith(item.href);
+          const [itemPath, itemQuery] = item.href.split("?");
+          const itemCat = itemQuery ? new URLSearchParams(itemQuery).get("category") : null;
+          const isExactInbox = item.href === "/inbox" && pathname === "/inbox" && !currentCategory;
+          const isActive = itemCat
+            ? pathname === itemPath && currentCategory === itemCat
+            : isExactInbox || (!currentCategory && item.href !== "/inbox" && pathname.startsWith(item.href));
 
           return (
             <Link
@@ -69,7 +88,7 @@ export function BottomNav() {
               href={item.href}
               onClick={handleTap}
               className={clsx(
-                "relative flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200 min-w-[56px] select-none",
+                "relative flex flex-col items-center justify-center gap-0.5 px-2.5 py-1 rounded-xl transition-all duration-200 min-w-[52px] shrink-0 select-none",
                 isActive
                   ? "text-brand font-semibold"
                   : "text-text-muted hover:text-text-secondary"
@@ -83,20 +102,20 @@ export function BottomNav() {
               >
                 <Icon
                   className={clsx(
-                    "w-5 h-5 transition-all duration-200",
+                    "w-4 h-4 transition-all duration-200",
                     isActive ? "stroke-[2.5]" : "stroke-[1.75]"
                   )}
                 />
 
                 {/* Badge for unread count */}
                 {item.badge && item.badge > 0 ? (
-                  <span className="absolute -top-1 -right-2 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-brand text-white font-mono text-[9px] font-bold leading-none shadow-sm">
+                  <span className="absolute -top-1 -right-2 flex h-3.5 min-w-[14px] px-0.5 items-center justify-center rounded-full bg-brand text-white font-mono text-[8px] font-bold leading-none shadow-sm">
                     {item.badge > 99 ? "99+" : item.badge}
                   </span>
                 ) : null}
               </motion.div>
 
-              <span className="text-[10px] font-ui tracking-tight leading-tight">
+              <span className="text-[10px] font-ui tracking-tight leading-tight whitespace-nowrap">
                 {item.label}
               </span>
 
@@ -104,7 +123,7 @@ export function BottomNav() {
               {isActive && (
                 <motion.div
                   layoutId="bottomNavIndicator"
-                  className="absolute bottom-1 w-1 h-1 rounded-full bg-brand"
+                  className="absolute bottom-0.5 w-1 h-1 rounded-full bg-brand"
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
@@ -113,5 +132,13 @@ export function BottomNav() {
         })}
       </div>
     </nav>
+  );
+}
+
+export function BottomNav() {
+  return (
+    <Suspense fallback={<nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] bg-surface/95 border-t border-border-subtle" />}>
+      <BottomNavContent />
+    </Suspense>
   );
 }

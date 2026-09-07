@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { EmailListItem } from "@/components/email/EmailListItem";
@@ -24,14 +25,26 @@ interface EmailsApiResponse {
   category_counts: Record<string, number>;
 }
 
-export default function InboxPage() {
+function InboxContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams?.get("category") || "all";
+
   const queryClient = useQueryClient();
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState(urlCategory);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [activeEmailModal, setActiveEmailModal] = useState<LiveEmailDetail | null>(null);
   const [allFetchedEmails, setAllFetchedEmails] = useState<LiveEmailDetail[]>([]);
+
+  useEffect(() => {
+    if (urlCategory && urlCategory !== activeCategory) {
+      setActiveCategory(urlCategory);
+      setPage(1);
+      setSelectedEmailId(null);
+    }
+  }, [urlCategory, activeCategory]);
 
   // 1. Fetch live emails with React Query
   const { data, isLoading, isFetching, refetch } = useQuery<EmailsApiResponse>({
@@ -79,6 +92,11 @@ export default function InboxPage() {
     setActiveCategory(cat);
     setPage(1);
     setSelectedEmailId(null);
+    if (cat === "all") {
+      router.push("/inbox");
+    } else {
+      router.push(`/inbox?category=${cat}`);
+    }
   };
 
   // 2. Fetch Single Full Email on click/select
@@ -153,10 +171,14 @@ export default function InboxPage() {
   const categoryCounts = data?.category_counts || {
     all: 0,
     finance: 0,
+    finance_transaction: 0,
     jobs: 0,
     career: 0,
     investments: 0,
     meetings: 0,
+    social: 0,
+    newsletter: 0,
+    otp: 0,
     system: 0,
   };
 
@@ -418,5 +440,13 @@ export default function InboxPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function InboxPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-sm text-text-muted">Loading inbox...</div>}>
+      <InboxContent />
+    </Suspense>
   );
 }
