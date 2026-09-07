@@ -124,7 +124,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       } else if (singleCat === "otp") {
         query = query.or("category.eq.otp,subcategory.eq.otp_verification");
       } else if (singleCat === "finance_transaction" || singleCat === "finance") {
-        query = query.or("category.eq.finance_transaction,category.eq.finance");
+        // Explicitly exclude "HDFC Sky" from finance emails (other HDFC such as HDFC Bank, cards, loans remain)
+        query = query
+          .or("category.eq.finance_transaction,category.eq.finance")
+          .not("from_name", "ilike", "%hdfc sky%")
+          .not("from_name", "ilike", "%hdfcsky%")
+          .not("from_email", "ilike", "%hdfcsky%")
+          .not("subject", "ilike", "%hdfc sky%")
+          .not("subject", "ilike", "%hdfcsky%");
       } else {
         query = query.eq("category", singleCat);
       }

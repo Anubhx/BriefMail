@@ -115,6 +115,24 @@ function parseDueDate(subject?: string | null, snippet?: string | null, received
   return { dueDateStr, daysLeft };
 }
 
+// Helper to explicitly detect HDFC Sky emails (trading/demat platform, not payments/transactions)
+// Other HDFC entities (HDFC Bank, HDFC Cards, HDFC Home Loan, HDFC Mutual Fund) remain in finance.
+function isHdfcSky(item?: { subject?: string | null; snippet?: string | null; from_name?: string | null; from_email?: string | null } | null): boolean {
+  if (!item) return false;
+  const name = (item.from_name || "").toLowerCase();
+  const email = (item.from_email || "").toLowerCase();
+  const subj = (item.subject || "").toLowerCase();
+
+  return (
+    name.includes("hdfc sky") ||
+    name.includes("hdfcsky") ||
+    email.includes("hdfcsky") ||
+    email.includes("hdfc-sky") ||
+    subj.includes("hdfc sky") ||
+    subj.includes("hdfcsky")
+  );
+}
+
 const FALLBACK_ERROR_RESPONSE = {
   overview: {
     total_debits: 0,
@@ -204,7 +222,7 @@ export async function GET() {
     // 3. Prepare queries with optional user scoping
     let qMonthDebits = db
       .from("emails")
-      .select("id, subject, snippet, extracted_data, subcategory, received_at")
+      .select("id, subject, snippet, from_name, from_email, extracted_data, subcategory, received_at")
       .eq("category", "finance_transaction")
       .gte("received_at", startOfMonth)
       .or("subcategory.in.(bank_debit,upi_neft),subject.ilike.%debited%");
@@ -212,7 +230,7 @@ export async function GET() {
 
     let qMonthCredits = db
       .from("emails")
-      .select("id, subject, snippet, extracted_data, subcategory, received_at")
+      .select("id, subject, snippet, from_name, from_email, extracted_data, subcategory, received_at")
       .eq("category", "finance_transaction")
       .gte("received_at", startOfMonth)
       .or("subcategory.eq.bank_credit,subject.ilike.%credited%");
@@ -220,7 +238,7 @@ export async function GET() {
 
     let qFallback = db
       .from("emails")
-      .select("id, subject, snippet, extracted_data, subcategory, received_at")
+      .select("id, subject, snippet, from_name, from_email, extracted_data, subcategory, received_at")
       .eq("category", "finance_transaction")
       .gte("received_at", thirtyDaysAgo);
     if (dbUserId) qFallback = qFallback.eq("user_id", dbUserId);
@@ -302,8 +320,10 @@ export async function GET() {
     let totalDebitsThisMonth = 0;
     let totalCreditsThisMonth = 0;
 
-    const monthDebits = (monthDebitsRes.data || []) as EmailRow[];
-    const monthCredits = (monthCreditsRes.data || []) as EmailRow[];
+    // Explicitly exclude HDFC Sky from banking/payment calculations (other HDFC remains)
+    const monthDebits = ((monthDebitsRes.data || []) as EmailRow[]).filter((d) => !isHdfcSky(d));
+    const monthCredits = ((monthCreditsRes.data || []) as EmailRow[]).filter((c) => !isHdfcSky(c));
+    const fallbackList = ((fallbackDebitsRes.data || []) as EmailRow[]).filter((f) => !isHdfcSky(f));
 
     if (monthDebits.length > 0 || monthCredits.length > 0) {
       for (const d of monthDebits) {
@@ -314,7 +334,6 @@ export async function GET() {
       }
     } else {
       // Graceful fallback to 30-day window if calendar month is empty
-      const fallbackList = (fallbackDebitsRes.data || []) as EmailRow[];
       for (const item of fallbackList) {
         const amt = parseAmount(item.subject, item.extracted_data, item.snippet);
         const text = `${item.subject} ${item.snippet || ""}`.toLowerCase();
@@ -334,7 +353,7 @@ export async function GET() {
       days_left: number;
     } | null = null;
 
-    const nextEmiRows = (nextEmiRes.data || []) as EmailRow[];
+    const nextEmiRows = ((nextEmiRes.data || []) as EmailRow[]).filter((e) => !isHdfcSky(e));
     const emiCandidates = nextEmiRows.filter((e: EmailRow) => {
       if (e.subcategory === "emi_payment") return true;
       return /\bemi\b|smartemi|\bloan\b|due\s*date/i.test(e.subject);
@@ -392,7 +411,7 @@ export async function GET() {
     };
 
     // ── 5. Calculate Transactions Section ─────────────────────────────────────
-    const rawTransactions = (transactionsRes.data || []) as EmailRow[];
+    const rawTransactions = ((transactionsRes.data || []) as EmailRow[]).filter((t) => !isHdfcSky(t));
     const transactions = rawTransactions.map((email: EmailRow) => {
       const text = `${email.subject || ""} ${email.snippet || ""}`.toLowerCase();
       const isCredit = text.includes("credited") || email.subcategory === "bank_credit";
@@ -413,6 +432,7 @@ export async function GET() {
 
     // ── 6. Calculate EMI Tracker Section ──────────────────────────────────────
     const rawEmiItems = ((emiTrackerRes.data || []) as EmailRow[]).filter((e: EmailRow) => {
+      if (isHdfcSky(e)) return false;
       if (e.subcategory === "emi_payment") return true;
       return /\bemi\b|smartemi|\bloan\b/i.test(e.subject);
     });

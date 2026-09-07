@@ -78,6 +78,7 @@ Schema:
 }
 
 Rules: return valid JSON only. Numbers without currency symbols. null for missing fields. confidence below 0.6 means uncertain but still return best guess.
+CRITICAL: Emails from "HDFC SKY" (or HDFC Securities trading platform) are stock trading/demat/market/newsletter emails. NEVER classify "HDFC Sky" as finance or payment transactions. Classify as "investments" (e.g. demat_statement, stock_purchase, portfolio_update) or "newsletter". Other HDFC entities (HDFC Bank, HDFC Cards, HDFC Home Loans) CAN be finance.
 
 Email data:
 `;
@@ -333,6 +334,7 @@ class ModelRouter {
 
   async classifyWithGemini(
     email: Pick<EmailInput, "from_email" | "subject" | "snippet"> & {
+      from_name?: string;
       body_preview?: string;
     }
   ): Promise<GeminiResult | null> {
@@ -392,7 +394,26 @@ class ModelRouter {
           const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (!text) return null;
 
-          return JSON.parse(text) as GeminiResult;
+          const parsed = JSON.parse(text) as GeminiResult;
+
+          // Explicit safeguard: HDFC Sky is trading/investments/newsletter, NOT finance/payment transactions
+          const fromNameLower = (email.from_name || "").toLowerCase();
+          const fromEmailLower = (email.from_email || "").toLowerCase();
+          const subjectLower = (email.subject || "").toLowerCase();
+          const isSky =
+            fromNameLower.includes("hdfc sky") ||
+            fromNameLower.includes("hdfcsky") ||
+            fromEmailLower.includes("hdfcsky") ||
+            fromEmailLower.includes("hdfc-sky") ||
+            subjectLower.includes("hdfc sky") ||
+            subjectLower.includes("hdfcsky");
+
+          if (isSky && (parsed.category === "finance" || parsed.category === "finance_transaction")) {
+            parsed.category = "investments";
+            parsed.subcategory = "demat_alert";
+          }
+
+          return parsed;
         }
       } catch (err) {
         console.warn("[ModelRouter] Gemini attempt failed:", err);

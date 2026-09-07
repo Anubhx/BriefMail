@@ -41,6 +41,19 @@ export function TransactionList({ transactions }: TransactionListProps) {
       const desc = item.description ?? "";
       const merch = item.merchant ?? "";
       const cat = item.category ?? "";
+
+      // Explicitly remove "HDFC Sky" from transaction list (other HDFC such as HDFC Bank, cards, etc. remain)
+      const descLower = desc.toLowerCase();
+      const merchLower = merch.toLowerCase();
+      if (
+        merchLower.includes("hdfc sky") ||
+        merchLower.includes("hdfcsky") ||
+        descLower.includes("hdfc sky") ||
+        descLower.includes("hdfcsky")
+      ) {
+        return false;
+      }
+
       const query = (searchQuery ?? "").toLowerCase();
       const matchesSearch =
         desc.toLowerCase().includes(query) ||

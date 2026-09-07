@@ -90,10 +90,19 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
   const subcat = (classification.subcategory || "").toLowerCase();
   const ext = classification.extracted_data || {};
 
+  // Check if email is from HDFC Sky (never a payment or bank transaction)
+  const isHdfcSky =
+    (fromName || "").toLowerCase().includes("hdfc sky") ||
+    (fromName || "").toLowerCase().includes("hdfcsky") ||
+    (fromEmail || "").toLowerCase().includes("hdfcsky") ||
+    (fromEmail || "").toLowerCase().includes("hdfc-sky") ||
+    (subject || "").toLowerCase().includes("hdfc sky") ||
+    (subject || "").toLowerCase().includes("hdfcsky");
+
   // 2. Insert into specialized domain tables
   try {
     // 2A. Finance & Investments
-    if (subcat === "emi_payment") {
+    if (subcat === "emi_payment" && !isHdfcSky) {
       const lender = (ext.lender as string) || (ext.merchant as string) || "Unknown Lender";
       const emiAmount = (ext.emi_amount as number) || (ext.amount as number) || null;
       const dueDate = (ext.due_date as string) || (ext.action_due as string) || null;
@@ -108,8 +117,9 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
         status: "active",
       });
     } else if (
-      ["upi_neft", "bank_alert", "credit_card_bill", "bank_statement", "finance", "finance_transaction"].includes(cat) ||
-      ["upi_neft", "bank_alert", "credit_card_bill", "bank_statement"].includes(subcat)
+      !isHdfcSky &&
+      (["upi_neft", "bank_alert", "credit_card_bill", "bank_statement", "finance", "finance_transaction"].includes(cat) ||
+      ["upi_neft", "bank_alert", "credit_card_bill", "bank_statement"].includes(subcat))
     ) {
       const amount = typeof ext.amount === "number" ? Math.abs(ext.amount) : 0;
       const txnType = (ext.transaction_type as string) || (amount < 0 ? "debit" : "debit");

@@ -310,6 +310,7 @@ const MEETING_SUBJECT_PATTERNS: RegExp[] = [
 export function classifyByRules(email: EmailInput): ClassificationResult | null {
   const subject = email.subject ?? "";
   const fromEmail = email.from_email ?? "";
+  const fromName = email.from_name ?? "";
   const labels = email.labels ?? [];
 
   const hasPromotionsLabel = labels.some((l) => l.toUpperCase().includes("CATEGORY_PROMOTIONS"));
@@ -408,6 +409,40 @@ export function classifyByRules(email: EmailInput): ClassificationResult | null 
       category: "newsletter",
       subcategory: newsletterSubMatch ?? "newsletter_digest",
       confidence: 0.9,
+      tier: "regex",
+    };
+  }
+
+  // ── RULE SET 4.5: Explicit exclusion for HDFC Sky ──────────────────────────
+  // Emails from "HDFC Sky" are stock trading/market updates or newsletters and are
+  // in no way related to payments, bank debits/credits, or financial transactions.
+  // Other HDFC emails (HDFC Bank, cards, EMIs, SIPs) remain in finance.
+  const fromNameLower = fromName.toLowerCase();
+  const fromEmailLower = fromEmail.toLowerCase();
+  const subjectLower = subject.toLowerCase();
+
+  const isHdfcSky =
+    fromNameLower.includes("hdfc sky") ||
+    fromNameLower.includes("hdfcsky") ||
+    fromEmailLower.includes("hdfcsky") ||
+    fromEmailLower.includes("hdfc-sky") ||
+    subjectLower.includes("hdfc sky") ||
+    subjectLower.includes("hdfcsky");
+
+  if (isHdfcSky) {
+    const isInvestment = /(demat|stock|equity|portfolio|trading|trade|ipo|mutual\s*fund|dividend|nav|holding|market)/i.test(subject);
+    if (isInvestment) {
+      return {
+        category: "investments",
+        subcategory: "demat_alert",
+        confidence: 0.95,
+        tier: "regex",
+      };
+    }
+    return {
+      category: "newsletter",
+      subcategory: "market_digest",
+      confidence: 0.92,
       tier: "regex",
     };
   }

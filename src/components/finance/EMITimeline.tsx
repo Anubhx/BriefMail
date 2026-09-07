@@ -54,7 +54,11 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
     );
   }
 
-  const list = items ?? [];
+  const list = (items ?? []).filter((item) => {
+    if (!item) return false;
+    const lender = (item.lender || "").toLowerCase();
+    return !lender.includes("hdfc sky") && !lender.includes("hdfcsky");
+  });
   const grandTotal =
     totalOutstanding != null
       ? (totalOutstanding ?? 0)
