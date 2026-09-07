@@ -37,18 +37,18 @@ interface GmailAccount {
 }
 
 const CATEGORY_OPTIONS = [
-  { id: "finance", label: "Finance", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
-  { id: "finance_transaction", label: "Transactions", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
-  { id: "investments", label: "Investments", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-  { id: "career", label: "Career", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
-  { id: "jobs", label: "Jobs", color: "bg-violet-500/20 text-violet-400 border-violet-500/30" },
-  { id: "meetings", label: "Meetings", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
-  { id: "otp", label: "OTP & Codes", color: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
-  { id: "social", label: "Social", color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
-  { id: "newsletter", label: "Newsletters", color: "bg-teal-500/20 text-teal-400 border-teal-500/30" },
-  { id: "ads", label: "Ads & Promo", color: "bg-rose-500/20 text-rose-400 border-rose-500/30" },
-  { id: "system", label: "System", color: "bg-slate-500/20 text-slate-400 border-slate-500/30" },
-  { id: "misc", label: "Misc", color: "bg-gray-500/20 text-gray-400 border-gray-500/30" },
+  { id: "finance", label: "Finance", color: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+  { id: "finance_transaction", label: "Transactions", color: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+  { id: "investments", label: "Investments", color: "bg-amber-50 text-amber-800 border-amber-200" },
+  { id: "career", label: "Career", color: "bg-blue-50 text-blue-800 border-blue-200" },
+  { id: "jobs", label: "Jobs", color: "bg-indigo-50 text-indigo-800 border-indigo-200" },
+  { id: "meetings", label: "Meetings", color: "bg-purple-50 text-purple-800 border-purple-200" },
+  { id: "otp", label: "OTP & Codes", color: "bg-orange-50 text-orange-800 border-orange-200" },
+  { id: "social", label: "Social", color: "bg-rose-50 text-rose-800 border-rose-200" },
+  { id: "newsletter", label: "Newsletters", color: "bg-teal-50 text-teal-800 border-teal-200" },
+  { id: "ads", label: "Ads & Promo", color: "bg-stone-100 text-stone-700 border-stone-200" },
+  { id: "system", label: "System", color: "bg-slate-50 text-slate-700 border-slate-200" },
+  { id: "misc", label: "Misc", color: "bg-stone-50 text-stone-700 border-stone-200" },
 ];
 
 const STATUS_OPTIONS = [
@@ -312,11 +312,11 @@ export default function AllMailPage() {
       {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand shadow-brand-glow">
+          <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand shadow-xs">
             <Mail className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-text-primary tracking-tight">
+            <h1 className="text-xl font-serif font-bold text-text-primary tracking-tight">
               All Mail
             </h1>
             <p className="text-xs text-text-muted">
@@ -337,7 +337,7 @@ export default function AllMailPage() {
                 setSearchQuery(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-8 pr-3 py-1.5 rounded border border-border bg-surface-primary text-xs text-text-primary placeholder:text-text-muted focus:border-brand focus:outline-none transition-colors"
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-border-default bg-surface text-xs text-text-primary placeholder:text-text-muted focus:border-brand focus:outline-none transition-colors"
             />
           </div>
 

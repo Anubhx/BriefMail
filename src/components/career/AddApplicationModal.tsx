@@ -75,19 +75,19 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className="w-full max-w-md bg-surface-DEFAULT border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md bg-surface-elevated border border-border-default rounded-2xl overflow-hidden shadow-xl animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-surface-elevated/40">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border-default bg-surface">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-subtle text-brand border border-brand/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand border border-brand/20">
               <Plus className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-text-primary font-ui">
+              <h2 className="text-base font-serif font-bold text-text-primary">
                 Add Job Application
               </h2>
               <p className="text-xs text-text-muted">
@@ -97,7 +97,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-text-muted hover:bg-surface-elevated hover:text-text-primary transition-colors"
+            className="rounded-lg p-1.5 text-text-muted hover:bg-surface hover:text-text-primary transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -106,7 +106,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
           {error && (
-            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
+            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
               {error}
             </div>
           )}
@@ -115,7 +115,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1 flex items-center gap-1.5">
               <Building className="h-3.5 w-3.5 text-text-muted" />
-              Company Name <span className="text-rose-400">*</span>
+              Company Name <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
@@ -123,7 +123,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
               placeholder="e.g. Google, Stripe, Microsoft"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
-              className="w-full rounded-lg bg-surface-base border border-white/10 px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              className="w-full rounded-lg bg-surface border border-border-default px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
             />
           </div>
 
@@ -131,7 +131,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1 flex items-center gap-1.5">
               <Briefcase className="h-3.5 w-3.5 text-text-muted" />
-              Role / Position <span className="text-rose-400">*</span>
+              Role / Position <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
@@ -139,7 +139,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
               placeholder="e.g. Senior Frontend Engineer"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-lg bg-surface-base border border-white/10 px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              className="w-full rounded-lg bg-surface border border-border-default px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
             />
           </div>
 
@@ -161,7 +161,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
                       | "rejected"
                   )
                 }
-                className="w-full rounded-lg bg-surface-base border border-white/10 px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none"
+                className="w-full rounded-lg bg-surface border border-border-default px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none cursor-pointer"
               >
                 <option value="applied">Applied</option>
                 <option value="shortlisted">Shortlisted</option>
@@ -180,7 +180,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
                 type="date"
                 value={appliedDate}
                 onChange={(e) => setAppliedDate(e.target.value)}
-                className="w-full rounded-lg bg-surface-base border border-white/10 px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none"
+                className="w-full rounded-lg bg-surface border border-border-default px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none"
               />
             </div>
           </div>
@@ -194,7 +194,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
               <select
                 value={jobBoard}
                 onChange={(e) => setJobBoard(e.target.value)}
-                className="w-full rounded-lg bg-surface-base border border-white/10 px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none"
+                className="w-full rounded-lg bg-surface border border-border-default px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none cursor-pointer"
               >
                 <option value="LinkedIn">LinkedIn</option>
                 <option value="Naukri">Naukri</option>
@@ -218,7 +218,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
                 placeholder="e.g. 24"
                 value={salary}
                 onChange={(e) => setSalary(e.target.value)}
-                className="w-full rounded-lg bg-surface-base border border-white/10 px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none font-mono"
+                className="w-full rounded-lg bg-surface border border-border-default px-3 py-2 text-sm text-text-primary focus:border-brand focus:outline-none font-mono"
               />
             </div>
           </div>
@@ -234,7 +234,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
               placeholder="https://www.linkedin.com/jobs/..."
               value={jobUrl}
               onChange={(e) => setJobUrl(e.target.value)}
-              className="w-full rounded-lg bg-surface-base border border-white/10 px-3 py-2 text-xs text-text-primary focus:border-brand focus:outline-none font-mono"
+              className="w-full rounded-lg bg-surface border border-border-default px-3 py-2 text-xs text-text-primary focus:border-brand focus:outline-none font-mono"
             />
           </div>
 
@@ -249,7 +249,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
               placeholder="e.g. Applied with resume v3, referred by Alex..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-lg bg-surface-base border border-white/10 p-2.5 text-xs text-text-primary focus:border-brand focus:outline-none"
+              className="w-full rounded-lg bg-surface border border-border-default p-2.5 text-xs text-text-primary focus:border-brand focus:outline-none"
             />
           </div>
 
@@ -258,14 +258,14 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-lg border border-white/10 text-text-secondary hover:bg-surface-elevated text-xs font-medium transition-colors"
+              className="flex-1 px-4 py-2.5 rounded-lg border border-border-default text-text-secondary hover:bg-surface-subtle text-xs font-medium transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2.5 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-semibold transition-all shadow-md hover:shadow-brand-glow flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-semibold transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? "Adding..." : "Add to Pipeline"}
             </button>
