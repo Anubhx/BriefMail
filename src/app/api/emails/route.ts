@@ -116,7 +116,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     } else if (categories.length === 1) {
       const singleCat = categories[0];
       if (singleCat === "career" || singleCat === "jobs") {
-        query = query.in("category", ["career", "jobs"]);
+        // Exclude Futurense / IIT Madras Pravartak / UI UX Manager Cohort course meetings from career/jobs
+        query = query
+          .in("category", ["career", "jobs"])
+          .not("from_email", "ilike", "%futurense.com%")
+          .not("from_name", "ilike", "%ui ux manager cohort%")
+          .not("from_name", "ilike", "%iit madras pravartak%")
+          .not("subject", "ilike", "%ui ux manager cohort%")
+          .not("subject", "ilike", "%iit madras pravartak%");
+      } else if (singleCat === "meetings") {
+        query = query.or(
+          "category.eq.meetings,subcategory.eq.meeting_invite,from_email.ilike.%futurense.com%,from_name.ilike.%ui ux manager cohort%"
+        );
       } else if (singleCat === "system") {
         query = query.or(
           "category.eq.system,subcategory.in.(workspace_notification,platform_digest,system_alert,newsletter)"

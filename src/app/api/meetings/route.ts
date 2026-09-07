@@ -44,11 +44,67 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // 2. Also fetch any Futurense / UI UX Manager Cohort emails that may not be in meetings table yet
+  const { data: courseEmails } = await db
+    .from("emails")
+    .select("id, subject, from_name, from_email, snippet, received_at, extracted_data")
+    .eq("user_id", appUser.id)
+    .or("from_email.ilike.%futurense.com%,from_name.ilike.%ui ux manager cohort%,from_name.ilike.%iit madras pravartak%,subject.ilike.%ui ux manager cohort%")
+    .order("received_at", { ascending: false });
+
+  const existingEmailIds = new Set((allMeetings || []).map((m: any) => m.email_id).filter(Boolean));
+  const combinedMeetings = [...(allMeetings || [])];
+
+  for (const em of courseEmails || []) {
+    if (existingEmailIds.has(em.id)) continue;
+
+    const ext = (em.extracted_data as any) || {};
+    const meetingLink = ext.meeting_link || ext.link || null;
+    let platform = ext.platform || "meet";
+    if (meetingLink) {
+      if (meetingLink.includes("zoom.us")) platform = "zoom";
+      else if (meetingLink.includes("teams.")) platform = "teams";
+      else if (meetingLink.includes("meet.google.com")) platform = "meet";
+    }
+
+    const startTime = ext.meeting_time || ext.start_time || em.received_at;
+
+    combinedMeetings.push({
+      id: `email-${em.id}`,
+      user_id: appUser.id,
+      email_id: em.id,
+      title: em.subject || "UI UX Manager Cohort Session",
+      organizer_name: em.from_name || "UI UX Manager Cohort (IIT Madras Pravartak)",
+      organizer_email: em.from_email || "tech@futurense.com",
+      start_time: startTime,
+      meeting_link: meetingLink,
+      platform: platform,
+      status: "upcoming",
+      created_at: em.received_at,
+    });
+  }
+
+  // Cleanup: update category to meetings in emails table and delete stale job_applications
+  void Promise.resolve(
+    db.from("emails")
+      .update({ category: "meetings", subcategory: "meeting_invite" })
+      .eq("user_id", appUser.id)
+      .or("from_email.ilike.%futurense.com%,from_name.ilike.%ui ux manager cohort%,from_name.ilike.%iit madras pravartak%,subject.ilike.%ui ux manager cohort%")
+      .neq("category", "meetings")
+  ).catch(() => {});
+
+  void Promise.resolve(
+    db.from("job_applications")
+      .delete()
+      .eq("user_id", appUser.id)
+      .or("company_name.ilike.%futurense%,company_name.ilike.%ui ux manager cohort%,company_name.ilike.%iit madras pravartak%,role_title.ilike.%cohort%")
+  ).catch(() => {});
+
   const now = new Date();
   const upcoming = [];
   const past = [];
 
-  for (const m of allMeetings || []) {
+  for (const m of combinedMeetings) {
     const startTime = m.start_time ? new Date(m.start_time) : null;
     // If meeting was in the last 30 minutes or in future, consider upcoming
     if (startTime && startTime.getTime() >= now.getTime() - 30 * 60 * 1000) {
@@ -68,7 +124,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return NextResponse.json({
     upcoming,
     past,
-    total_count: (allMeetings || []).length,
+    total_count: combinedMeetings.length,
   });
 }
 

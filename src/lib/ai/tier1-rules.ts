@@ -328,6 +328,31 @@ export function classifyByRules(email: EmailInput): ClassificationResult | null 
     };
   }
 
+  // ── RULE SET 1.5: Course / Cohort Meetings (e.g. UI UX Manager Cohort via IIT Madras Pravartak / Futurense) ──
+  // Emails from Futurense / IIT Madras Pravartak / UI UX Manager Cohort are course sessions and class meetings.
+  // They must ALWAYS go to "meetings", NEVER to "jobs", "career", or "uiux_role".
+  const fromEmailLower = fromEmail.toLowerCase();
+  const fromNameLower = fromName.toLowerCase();
+  const subjectLower = subject.toLowerCase();
+
+  const isFuturenseCourse =
+    fromEmailLower.includes("futurense.com") ||
+    fromNameLower.includes("ui ux manager cohort") ||
+    fromNameLower.includes("iit madras pravartak") ||
+    fromNameLower.includes("futurense") ||
+    subjectLower.includes("ui ux manager cohort") ||
+    subjectLower.includes("iit madras pravartak");
+
+  if (isFuturenseCourse) {
+    return {
+      category: "meetings",
+      subcategory: "meeting_invite",
+      confidence: 0.99,
+      tier: "regex",
+      has_action_item: true,
+    };
+  }
+
   // ── RULE SET 2: Ads / Bank Promotional Checks ───────────────────────────────
   // Special check: Bank emails with promotional subject → category = 'ads', NOT 'finance'
   const isBankDomain = hasDomain(fromEmail, FINANCE_DOMAINS) || hasDomain(fromEmail, FINANCE_TRANSACTION_DOMAINS);
@@ -417,10 +442,6 @@ export function classifyByRules(email: EmailInput): ClassificationResult | null 
   // Emails from "HDFC Sky" are stock trading/market updates or newsletters and are
   // in no way related to payments, bank debits/credits, or financial transactions.
   // Other HDFC emails (HDFC Bank, cards, EMIs, SIPs) remain in finance.
-  const fromNameLower = fromName.toLowerCase();
-  const fromEmailLower = fromEmail.toLowerCase();
-  const subjectLower = subject.toLowerCase();
-
   const isHdfcSky =
     fromNameLower.includes("hdfc sky") ||
     fromNameLower.includes("hdfcsky") ||

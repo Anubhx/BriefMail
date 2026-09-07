@@ -121,6 +121,21 @@ export async function GET(): Promise<NextResponse> {
     const subcat = (email.subcategory || "").toLowerCase();
     const subject = (email.subject || "").toLowerCase();
     const fromEmail = (email.from_email || "").toLowerCase();
+    const compName = (app.company_name || "").toLowerCase();
+    const roleTitle = (app.role_title || "").toLowerCase();
+
+    // 0. Course meetings (Futurense, IIT Madras Pravartak, UI UX Manager Cohort) are course sessions, NOT job applications!
+    if (
+      fromEmail.includes("futurense.com") ||
+      compName.includes("futurense") ||
+      compName.includes("ui ux manager cohort") ||
+      compName.includes("iit madras pravartak") ||
+      roleTitle.includes("cohort") ||
+      subject.includes("ui ux manager cohort") ||
+      subject.includes("iit madras pravartak")
+    ) {
+      return false;
+    }
 
     // 1. Do NOT show job_alert_digest or job_alert in career kanban
     if (subcat === "job_alert_digest" || subcat === "job_alert") {

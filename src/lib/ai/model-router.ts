@@ -79,6 +79,7 @@ Schema:
 
 Rules: return valid JSON only. Numbers without currency symbols. null for missing fields. confidence below 0.6 means uncertain but still return best guess.
 CRITICAL: Emails from "HDFC SKY" (or HDFC Securities trading platform) are stock trading/demat/market/newsletter emails. NEVER classify "HDFC Sky" as finance or payment transactions. Classify as "investments" (e.g. demat_statement, stock_purchase, portfolio_update) or "newsletter". Other HDFC entities (HDFC Bank, HDFC Cards, HDFC Home Loans) CAN be finance.
+CRITICAL: Emails from "tech@futurense.com", "Futurense", "IIT Madras Pravartak", or "UI UX Manager Cohort" are COURSE MEETING & CLASS LECTURE emails. They must ALWAYS be classified as category: "meetings" (subcategory: "meeting_invite" or "meeting_update"). They are NOT job listings or career emails. NEVER classify them as "jobs", "career", or "uiux_role".
 
 Email data:
 `;
@@ -411,6 +412,20 @@ class ModelRouter {
           if (isSky && (parsed.category === "finance" || parsed.category === "finance_transaction")) {
             parsed.category = "investments";
             parsed.subcategory = "demat_alert";
+          }
+
+          // Explicit safeguard: Futurense / IIT Madras Pravartak / UI UX Manager Cohort must ALWAYS be meetings
+          const isCourseMeeting =
+            fromEmailLower.includes("futurense.com") ||
+            fromNameLower.includes("ui ux manager cohort") ||
+            fromNameLower.includes("iit madras pravartak") ||
+            fromNameLower.includes("futurense") ||
+            subjectLower.includes("ui ux manager cohort") ||
+            subjectLower.includes("iit madras pravartak");
+
+          if (isCourseMeeting) {
+            parsed.category = "meetings";
+            parsed.subcategory = "meeting_invite";
           }
 
           return parsed;

@@ -86,8 +86,8 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
   }
 
   const emailId = insertedEmail.id as string;
-  const cat = (classification.category || "").toLowerCase();
-  const subcat = (classification.subcategory || "").toLowerCase();
+  let cat = (classification.category || "").toLowerCase();
+  let subcat = (classification.subcategory || "").toLowerCase();
   const ext = classification.extracted_data || {};
 
   // Check if email is from HDFC Sky (never a payment or bank transaction)
@@ -98,6 +98,20 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
     (fromEmail || "").toLowerCase().includes("hdfc-sky") ||
     (subject || "").toLowerCase().includes("hdfc sky") ||
     (subject || "").toLowerCase().includes("hdfcsky");
+
+  // Check if email is from Futurense / IIT Madras Pravartak / UI UX Manager Cohort (course meetings, NOT jobs or career)
+  const isCourseMeeting =
+    (fromEmail || "").toLowerCase().includes("futurense.com") ||
+    (fromName || "").toLowerCase().includes("ui ux manager cohort") ||
+    (fromName || "").toLowerCase().includes("iit madras pravartak") ||
+    (fromName || "").toLowerCase().includes("futurense") ||
+    (subject || "").toLowerCase().includes("ui ux manager cohort") ||
+    (subject || "").toLowerCase().includes("iit madras pravartak");
+
+  if (isCourseMeeting) {
+    cat = "meetings";
+    subcat = "meeting_invite";
+  }
 
   // 2. Insert into specialized domain tables
   try {
@@ -155,10 +169,11 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
       });
     }
 
-    // 2B. Career & Jobs (Only real job applications and career milestones; NOT job alerts)
+    // 2B. Career & Jobs (Only real job applications and career milestones; NOT job alerts or course meetings)
     const isJobApp =
-      ["job_application", "application_confirmed", "application_status"].includes(subcat) ||
-      ["offer_received", "offer_letter", "interview_invite", "rejection"].includes(subcat);
+      !isCourseMeeting &&
+      (["job_application", "application_confirmed", "application_status"].includes(subcat) ||
+      ["offer_received", "offer_letter", "interview_invite", "rejection"].includes(subcat));
 
     if (isJobApp) {
       const company = (ext.company as string) || (ext.company_name as string) || fromName || "Unknown Company";
@@ -199,9 +214,9 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
     }
 
     // 2C. Meetings
-    if (cat === "meetings" || subcat === "meeting_invite") {
-      const title = (ext.title as string) || subject || "Meeting";
-      const meetingTime = (ext.meeting_time as string) || (ext.start_time as string) || null;
+    if (isCourseMeeting || cat === "meetings" || subcat === "meeting_invite") {
+      const title = (ext.title as string) || subject || (isCourseMeeting ? "UI UX Manager Cohort Session" : "Meeting");
+      const meetingTime = (ext.meeting_time as string) || (ext.start_time as string) || (isCourseMeeting ? receivedAt.toISOString() : null);
       const meetingLink = (ext.meeting_link as string) || (ext.link as string) || null;
       let platform = (ext.platform as string) || "other";
       if (meetingLink) {
