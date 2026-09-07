@@ -75,43 +75,42 @@ export default function CareerPage() {
   }, [applications]);
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-[1600px] mx-auto pb-12">
+    <div className="flex flex-col gap-5 w-full max-w-[1600px] mx-auto pb-12 select-none font-ui">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3 pb-2 border-b border-border-default">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-ui text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
-              Career Copilot
+          <div className="flex items-center gap-2.5">
+            <h1 className="font-serif text-2xl sm:text-3xl text-text-primary tracking-tight font-normal">
+              Career Pipeline
             </h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-subtle text-brand border border-brand/20">
-              <Sparkles className="h-3 w-3" />
-              AI Pipeline
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-surface-secondary text-text-muted border border-border-default">
+              Auto-Tracked
             </span>
           </div>
-          <p className="mt-1 text-xs sm:text-sm text-text-muted">
+          <p className="mt-0.5 text-xs text-text-muted">
             Track job applications, interview timelines, and offer letters automatically synced from your emails.
           </p>
         </div>
 
         {/* Header Action Buttons */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => fetchApplications(true)}
             disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-DEFAULT hover:bg-surface-elevated border border-white/10 text-text-secondary hover:text-text-primary text-xs font-medium transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-surface hover:bg-surface-secondary border border-border-default text-text-secondary hover:text-text-primary text-xs font-medium transition-colors shadow-xs"
             title="Refresh applications"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-brand" : ""}`}
+              className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-brand" : "text-text-muted"}`}
             />
-            <span className="hidden sm:inline">Refresh</span>
+            <span>Refresh</span>
           </button>
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs sm:text-sm font-semibold transition-all shadow-md hover:shadow-brand-glow"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-brand hover:bg-brand-hover text-white text-xs font-semibold transition-colors shadow-xs"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             <span>Add Application</span>
           </button>
         </div>
@@ -128,13 +127,13 @@ export default function CareerPage() {
       {/* Search and Filter Controls */}
       <div className="flex items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
           <input
             type="text"
             placeholder="Search by company, role, or stage..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-surface-DEFAULT/80 border border-white/10 text-xs sm:text-sm text-text-primary placeholder:text-text-disabled focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand backdrop-blur-md"
+            className="w-full pl-9 pr-3 py-1.5 rounded bg-surface border border-border-default text-xs text-text-primary placeholder:text-text-muted focus:border-brand focus:outline-none transition-colors shadow-xs"
           />
         </div>
 
@@ -143,22 +142,22 @@ export default function CareerPage() {
             onClick={() => setSearchQuery("")}
             className="text-xs text-text-muted hover:text-text-primary underline"
           >
-            Clear
+            Clear search
           </button>
         )}
       </div>
 
       {/* Main Kanban Board or Loading Skeleton */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="h-[480px] rounded-2xl bg-surface-DEFAULT/40 border border-white/5 animate-pulse p-4 flex flex-col gap-3"
+              className="h-[480px] rounded-lg bg-surface-secondary/70 border border-border-default animate-pulse p-3 flex flex-col gap-2.5"
             >
-              <div className="h-5 w-24 bg-surface-elevated rounded-md" />
-              <div className="h-28 bg-surface-elevated/70 rounded-xl" />
-              <div className="h-28 bg-surface-elevated/50 rounded-xl" />
+              <div className="h-4 w-20 bg-surface rounded" />
+              <div className="h-24 bg-surface rounded-lg border border-border-default" />
+              <div className="h-24 bg-surface rounded-lg border border-border-default" />
             </div>
           ))}
         </div>

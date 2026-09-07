@@ -84,20 +84,20 @@ export function TransactionList({ transactions }: TransactionListProps) {
   const getModeIcon = (mode: string) => {
     switch (mode.toUpperCase()) {
       case "UPI":
-        return <Smartphone className="w-3.5 h-3.5 text-blue-400" />;
+        return <Smartphone className="w-3.5 h-3.5 text-[#4267D5]" />;
       case "CARD":
-        return <CreditCard className="w-3.5 h-3.5 text-purple-400" />;
+        return <CreditCard className="w-3.5 h-3.5 text-[#8B5CC7]" />;
       case "NETBANKING":
-        return <Landmark className="w-3.5 h-3.5 text-emerald-400" />;
+        return <Landmark className="w-3.5 h-3.5 text-[#2FA66A]" />;
       default:
         return <CreditCard className="w-3.5 h-3.5 text-text-muted" />;
     }
   };
 
   return (
-    <div className="flex flex-col gap-5 w-full font-ui select-none">
+    <div className="flex flex-col gap-4 w-full font-ui select-none">
       {/* Search & Filter Controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-xl bg-surface border border-border-subtle shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-lg bg-surface border border-border-default shadow-xs">
         {/* Search input */}
         <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
@@ -106,23 +106,23 @@ export function TransactionList({ transactions }: TransactionListProps) {
             placeholder="Search merchant or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-surface-elevated text-xs font-ui text-text-primary placeholder:text-text-muted border border-border-subtle focus:outline-none focus:border-brand"
+            className="w-full pl-9 pr-3 py-1.5 rounded bg-surface-secondary text-xs font-ui text-text-primary placeholder:text-text-muted border border-border-default focus:outline-none focus:border-brand transition-colors"
           />
         </div>
 
         {/* Filters */}
         <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar">
           {/* Mode Selector */}
-          <div className="flex items-center gap-1 bg-surface-elevated p-1 rounded-lg border border-border-subtle text-xs">
+          <div className="flex items-center gap-0.5 bg-surface-secondary p-0.5 rounded border border-border-default text-xs">
             {["all", "UPI", "Card", "NetBanking"].map((mode) => (
               <button
                 key={mode}
                 onClick={() => setSelectedMode(mode)}
                 className={clsx(
-                  "px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors capitalize",
+                  "px-2.5 py-1 rounded text-[11px] font-medium transition-colors capitalize",
                   selectedMode === mode
-                    ? "bg-brand text-white font-semibold shadow-xs"
-                    : "text-text-muted hover:text-text-secondary"
+                    ? "bg-surface text-text-primary font-semibold shadow-xs"
+                    : "text-text-muted hover:text-text-primary"
                 )}
               >
                 {mode}
@@ -134,7 +134,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-2.5 py-1 rounded-lg bg-surface-elevated text-xs font-ui text-text-secondary border border-border-subtle focus:outline-none cursor-pointer"
+            className="px-2.5 py-1 rounded bg-surface-secondary text-xs font-ui text-text-secondary border border-border-default focus:outline-none cursor-pointer"
           >
             <option value="all">All Types</option>
             <option value="debit">Debits Only</option>
@@ -144,45 +144,45 @@ export function TransactionList({ transactions }: TransactionListProps) {
       </div>
 
       {/* Grouped Transaction List */}
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         {Object.keys(groupedByDate).length === 0 ? (
-          <div className="p-8 text-center border border-dashed border-border-subtle rounded-xl text-text-muted text-sm font-ui bg-surface/30">
+          <div className="p-8 text-center border border-dashed border-border-default rounded-lg text-text-muted text-sm font-ui bg-surface-secondary">
             No transactions match your search filter
           </div>
         ) : (
           Object.entries(groupedByDate).map(([dateStr, items]) => (
-            <div key={dateStr} className="flex flex-col gap-2">
+            <div key={dateStr} className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-mono font-semibold text-text-muted uppercase tracking-wider">
+                <span className="text-[11px] font-mono font-semibold text-text-muted uppercase tracking-wider">
                   {dateStr === new Date().toISOString().split("T")[0] ? "Today" : dateStr}
                 </span>
                 <span className="text-[11px] font-mono text-text-muted">
-                  {items.length} transactions
+                  {items.length} {items.length === 1 ? "entry" : "entries"}
                 </span>
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="bg-surface border border-border-default rounded-lg divide-y divide-border-default overflow-hidden shadow-xs">
                 {items.map((tx) => {
                   const isCredit = tx.type === "credit";
 
                   return (
                     <div
                       key={tx.id}
-                      className="p-4 rounded-xl bg-surface border border-border-subtle hover:border-brand/30 transition-all duration-150 flex items-center justify-between gap-3 shadow-xs"
+                      className="p-3.5 hover:bg-surface-secondary/60 transition-colors duration-100 flex items-center justify-between gap-3"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           className={clsx(
-                            "w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border",
+                            "w-8 h-8 rounded flex items-center justify-center shrink-0 border",
                             isCredit
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                              : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                              ? "bg-[#2FA66A]/10 text-[#2FA66A] border-[#2FA66A]/20"
+                              : "bg-surface-secondary text-text-muted border-border-default"
                           )}
                         >
                           {isCredit ? (
-                            <ArrowDownLeft className="w-4 h-4 text-emerald-400" />
+                            <ArrowDownLeft className="w-3.5 h-3.5 text-[#2FA66A]" />
                           ) : (
-                            <ArrowUpRight className="w-4 h-4 text-rose-400" />
+                            <ArrowUpRight className="w-3.5 h-3.5 text-text-muted" />
                           )}
                         </div>
 
@@ -196,7 +196,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
                               {tx.payment_mode}
                             </span>
                             <span>•</span>
-                            <span className="px-1.5 py-0.2 rounded bg-surface-elevated text-[10px] font-mono">
+                            <span className="px-1.5 py-0.2 rounded bg-surface-secondary text-[10px] font-mono text-text-secondary border border-border-default">
                               {tx.category}
                             </span>
                           </div>
@@ -207,7 +207,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
                         <span
                           className={clsx(
                             "text-sm font-bold block",
-                            isCredit ? "text-emerald-400" : "text-text-primary"
+                            isCredit ? "text-[#2FA66A]" : "text-text-primary"
                           )}
                         >
                           {isCredit ? `+${formatCurrency(tx.amount)}` : `-${formatCurrency(tx.amount)}`}

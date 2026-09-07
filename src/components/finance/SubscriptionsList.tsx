@@ -31,9 +31,9 @@ export function SubscriptionsList({ subscriptions }: SubscriptionsListProps) {
   // Clean empty state when no subscriptions
   if (!subscriptions || subscriptions.length === 0) {
     return (
-      <div className="p-10 text-center border border-dashed border-border-subtle rounded-xl text-text-muted text-sm font-ui bg-surface/30 flex flex-col items-center justify-center gap-2">
+      <div className="p-8 text-center border border-dashed border-border-default rounded-lg text-text-muted text-sm font-ui bg-surface-secondary flex flex-col items-center justify-center gap-2">
         <RefreshCw className="w-8 h-8 text-text-muted/50 mb-1" />
-        <p className="font-medium text-text-secondary">No financial emails processed yet</p>
+        <p className="font-medium text-text-primary">No financial emails processed yet</p>
         <p className="text-xs text-text-muted">Recurring subscriptions, renewals, and billing emails will appear here.</p>
       </div>
     );
@@ -44,61 +44,61 @@ export function SubscriptionsList({ subscriptions }: SubscriptionsListProps) {
   const totalMonthlyCost = activeSubs.reduce((a, b) => a + (b.cost || 0), 0);
 
   return (
-    <div className="flex flex-col gap-6 w-full font-ui select-none">
+    <div className="flex flex-col gap-4 w-full font-ui select-none">
       {/* Header Commitment Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 rounded-xl bg-surface border border-border-subtle shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-lg bg-surface border border-border-default shadow-xs">
         <div>
-          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-muted">
+          <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-muted">
             Recurring Monthly Commitment
           </span>
-          <h2 className="text-2xl font-bold font-mono text-text-primary tracking-tight">
+          <h2 className="text-2xl font-bold font-mono text-text-primary tracking-tight mt-0.5">
             {formatCurrency(totalMonthlyCost)}/mo
           </h2>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-elevated text-xs font-mono text-text-secondary border border-border-subtle">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>{activeSubs.length} Active / {list.length} Total Subscriptions</span>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-surface-secondary text-xs font-mono text-text-secondary border border-border-default">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#2FA66A]" />
+          <span>{activeSubs.length} Active / {list.length} Total</span>
         </div>
       </div>
 
       {/* Subscription Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
         {list.map((sub, idx) => {
           const isActive = sub.status === "active";
 
           return (
             <motion.div
               key={sub.id}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: idx * 0.05 }}
-              className="p-5 rounded-xl bg-surface border border-border-subtle hover:border-brand/30 transition-all duration-200 shadow-sm flex flex-col justify-between gap-4"
+              transition={{ duration: 0.2, delay: idx * 0.04 }}
+              className="p-4 rounded-lg bg-surface border border-border-default hover:border-border-strong transition-colors duration-150 shadow-xs flex flex-col justify-between gap-3"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <div
                     className={clsx(
-                      "w-10 h-10 rounded-lg border flex items-center justify-center font-bold",
+                      "w-9 h-9 rounded border flex items-center justify-center font-bold",
                       isActive
-                        ? "bg-purple-500/10 border-purple-500/20 text-purple-400"
-                        : "bg-surface-elevated border-border-subtle text-text-muted"
+                        ? "bg-[#8B5CC7]/10 border-[#8B5CC7]/20 text-[#8B5CC7]"
+                        : "bg-surface-secondary border-border-default text-text-muted"
                     )}
                   >
                     <RefreshCw className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-text-primary">{sub.service}</h3>
+                    <h3 className="text-sm font-semibold text-text-primary">{sub.service}</h3>
                     <span className="text-xs text-text-muted">{sub.category}</span>
                   </div>
                 </div>
 
                 <span
                   className={clsx(
-                    "px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border flex items-center gap-1",
+                    "px-2 py-0.5 rounded text-[10px] font-mono font-semibold border flex items-center gap-1",
                     isActive
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                      ? "bg-[#2FA66A]/10 text-[#2FA66A] border-[#2FA66A]/20"
+                      : "bg-surface-secondary text-text-muted border-border-default"
                   )}
                 >
                   {isActive ? (
@@ -113,9 +113,9 @@ export function SubscriptionsList({ subscriptions }: SubscriptionsListProps) {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between border-t border-border-subtle/50 pt-3 text-xs font-mono">
+              <div className="flex items-center justify-between border-t border-border-default pt-2.5 text-xs font-mono">
                 <div className="flex items-center gap-1 text-text-muted">
-                  <Calendar className="w-3.5 h-3.5" />
+                  <Calendar className="w-3.5 h-3.5 text-text-muted" />
                   <span>Next bill: {sub.next_billing}</span>
                 </div>
                 <span className="text-sm font-bold text-text-primary">

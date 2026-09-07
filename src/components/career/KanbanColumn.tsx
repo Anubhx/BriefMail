@@ -41,29 +41,29 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col rounded-2xl bg-surface-base/60 backdrop-blur-md border transition-all duration-200 min-w-[280px] sm:min-w-[300px] flex-1 ${
+      className={`flex flex-col rounded-lg bg-surface-secondary/60 border transition-all duration-150 min-w-[280px] sm:min-w-[300px] flex-1 ${
         isOver
-          ? "border-brand/50 ring-2 ring-brand/20 bg-surface-elevated/40"
-          : "border-white/5"
+          ? "border-brand/40 ring-1 ring-brand/20 bg-surface-secondary"
+          : "border-border-default"
       }`}
     >
       {/* Column Header */}
-      <div className="p-4 border-b border-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className={`h-2.5 w-2.5 rounded-full ${config.color}`} />
-          <h3 className="font-ui font-semibold text-sm text-text-primary tracking-wide">
+      <div className="p-3 border-b border-border-default flex items-center justify-between bg-surface/40">
+        <div className="flex items-center gap-2">
+          <div className={`h-2 w-2 rounded-full ${config.color}`} />
+          <h3 className="font-ui font-semibold text-xs uppercase tracking-wider text-text-primary">
             {config.title}
           </h3>
         </div>
         <span
-          className={`px-2 py-0.5 rounded-full text-xs font-semibold ${config.badgeBg} ${config.badgeText} border border-white/5`}
+          className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-surface text-text-secondary border border-border-default"
         >
           {applications.length}
         </span>
       </div>
 
       {/* Cards List / Droppable Area */}
-      <div className="p-3 flex-1 flex flex-col gap-3 min-h-[420px]">
+      <div className="p-2.5 flex-1 flex flex-col gap-2.5 min-h-[420px]">
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           {applications.map((app) => (
             <KanbanCard
@@ -76,7 +76,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         </SortableContext>
 
         {applications.length === 0 && (
-          <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-xl p-6 text-center text-text-disabled">
+          <div className="flex-1 flex flex-col items-center justify-center border border-dashed border-border-default rounded-lg p-6 text-center text-text-muted">
             <span className="text-xs">Drop cards here</span>
           </div>
         )}

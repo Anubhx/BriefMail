@@ -22,42 +22,42 @@ const COLUMNS: ColumnConfig[] = [
   {
     id: "applied",
     title: "Applied",
-    color: "bg-sky-400",
-    badgeBg: "bg-sky-500/10",
-    badgeText: "text-sky-400",
-    borderColor: "border-sky-500/20",
+    color: "bg-[#4267D5]",
+    badgeBg: "bg-[#4267D5]/10",
+    badgeText: "text-[#4267D5]",
+    borderColor: "border-[#4267D5]/20",
   },
   {
     id: "shortlisted",
     title: "Shortlisted",
-    color: "bg-purple-400",
-    badgeBg: "bg-purple-500/10",
-    badgeText: "text-purple-400",
-    borderColor: "border-purple-500/20",
+    color: "bg-[#8B5CC7]",
+    badgeBg: "bg-[#8B5CC7]/10",
+    badgeText: "text-[#8B5CC7]",
+    borderColor: "border-[#8B5CC7]/20",
   },
   {
     id: "interviewing",
     title: "Interviewing",
-    color: "bg-amber-400",
-    badgeBg: "bg-amber-500/10",
-    badgeText: "text-amber-400",
-    borderColor: "border-amber-500/20",
+    color: "bg-[#D58A00]",
+    badgeBg: "bg-[#D58A00]/10",
+    badgeText: "text-[#D58A00]",
+    borderColor: "border-[#D58A00]/20",
   },
   {
     id: "offered",
     title: "Offered",
-    color: "bg-emerald-400",
-    badgeBg: "bg-emerald-500/15",
-    badgeText: "text-emerald-400",
-    borderColor: "border-emerald-500/30",
+    color: "bg-[#2FA66A]",
+    badgeBg: "bg-[#2FA66A]/10",
+    badgeText: "text-[#2FA66A]",
+    borderColor: "border-[#2FA66A]/20",
   },
   {
     id: "rejected",
     title: "Rejected",
-    color: "bg-rose-400",
-    badgeBg: "bg-rose-500/10",
-    badgeText: "text-rose-400",
-    borderColor: "border-rose-500/20",
+    color: "bg-[#777A80]",
+    badgeBg: "bg-[#777A80]/10",
+    badgeText: "text-[#777A80]",
+    borderColor: "border-[#777A80]/20",
   },
 ];
 
@@ -203,25 +203,24 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     onApplicationsChange(updated);
   };
 
-  // If no applications at all, show empty state
   if (applications.length === 0) {
     return (
-      <div className="w-full rounded-2xl border border-white/10 bg-surface-DEFAULT/70 backdrop-blur-md p-10 sm:p-16 flex flex-col items-center justify-center text-center">
-        <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-brand-subtle text-brand border border-brand/20 mb-5 shadow-brand-glow">
-          <Briefcase className="h-8 w-8 sm:h-10 sm:w-10" />
+      <div className="w-full rounded-lg border border-dashed border-border-default bg-surface-secondary p-10 sm:p-14 flex flex-col items-center justify-center text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded bg-surface border border-border-default text-text-muted mb-3 shadow-xs">
+          <Briefcase className="h-6 w-6 text-text-muted" />
         </div>
-        <h3 className="text-lg sm:text-xl font-bold text-text-primary font-ui">
-          No applications yet
+        <h3 className="text-base font-semibold text-text-primary font-ui">
+          No applications recorded yet
         </h3>
-        <p className="mt-2 text-xs sm:text-sm text-text-muted max-w-md">
+        <p className="mt-1 text-xs text-text-muted max-w-md">
           Emails with job applications, interview invites, and offers will appear here
-          automatically once classified by your AI pipeline.
+          automatically once classified by your pipeline.
         </p>
         <button
           onClick={onOpenAddModal}
-          className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs sm:text-sm font-semibold transition-all shadow-md hover:shadow-brand-glow"
+          className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded bg-brand hover:bg-brand-hover text-white text-xs font-semibold transition-colors shadow-xs"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           Add Manual Application
         </button>
       </div>

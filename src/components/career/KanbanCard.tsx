@@ -80,11 +80,11 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group relative rounded-xl bg-surface-DEFAULT/90 p-4 border transition-all duration-200 ${
+      className={`group relative rounded-lg bg-surface p-3.5 border transition-all duration-150 ${
         isOffered
-          ? "border-emerald-500/30 hover:border-emerald-500/60 shadow-[0_4px_16px_-4px_rgba(16,185,129,0.15)]"
-          : "border-white/8 hover:border-white/20 shadow-elevation-1 hover:shadow-elevation-2"
-      } ${isDragging ? "ring-2 ring-brand/50 shadow-2xl" : ""}`}
+          ? "border-[#2FA66A]/40 shadow-xs hover:border-[#2FA66A]"
+          : "border-border-default hover:border-border-strong shadow-xs"
+      } ${isDragging ? "ring-2 ring-brand/50 shadow-md" : ""}`}
     >
       {/* Top row: Drag Handle & Source Badge */}
       <div className="flex items-center justify-between gap-2 mb-2">
@@ -92,26 +92,26 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           <button
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing text-text-disabled hover:text-text-muted p-0.5 rounded -ml-1 transition-colors"
+            className="cursor-grab active:cursor-grabbing text-text-muted hover:text-text-primary p-0.5 rounded -ml-1 transition-colors"
             title="Drag to reorder or move stage"
           >
-            <GripVertical className="h-4 w-4" />
+            <GripVertical className="h-3.5 w-3.5" />
           </button>
-          <span className="inline-flex items-center gap-1 text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded-full bg-surface-elevated text-text-secondary border border-white/5">
+          <span className="inline-flex items-center gap-1 text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-surface-secondary text-text-muted border border-border-default">
             {source}
           </span>
         </div>
 
         {/* Applied relative date */}
-        <span className="text-[11px] text-text-muted flex items-center gap-1 shrink-0">
-          <Calendar className="h-3 w-3 text-text-disabled" />
+        <span className="text-[11px] font-mono text-text-muted flex items-center gap-1 shrink-0">
+          <Calendar className="h-3 w-3 text-text-muted" />
           {relativeDate}
         </span>
       </div>
 
       {/* Main Content: Company & Role */}
-      <div className="space-y-1">
-        <h4 className="font-bold text-text-primary text-sm font-ui leading-tight line-clamp-1 group-hover:text-brand-hover transition-colors">
+      <div className="space-y-0.5">
+        <h4 className="font-semibold text-text-primary text-sm font-ui leading-tight line-clamp-1 group-hover:text-brand transition-colors">
           {app.company_name}
         </h4>
         <p className="text-xs text-text-secondary line-clamp-1">
@@ -123,24 +123,24 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       {isOffered && (
         <div
           onClick={() => onOpenOfferDetails?.(application)}
-          className="mt-3 cursor-pointer rounded-lg bg-gradient-to-r from-emerald-950/50 to-emerald-900/30 p-2.5 border border-emerald-500/25 hover:border-emerald-500/50 transition-all flex items-center justify-between gap-2"
+          className="mt-2.5 cursor-pointer rounded bg-[#2FA66A]/10 p-2 border border-[#2FA66A]/20 hover:border-[#2FA66A]/40 transition-all flex items-center justify-between gap-2"
         >
-          <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+          <div className="flex items-center gap-1.5 text-xs text-[#2FA66A] font-semibold">
             <Trophy className="h-3.5 w-3.5 shrink-0" />
-            <span className="line-clamp-1">
+            <span className="line-clamp-1 font-mono">
               {app.salary_offered
                 ? `₹${app.salary_offered} LPA Offer`
                 : "Offer Received!"}
             </span>
           </div>
-          <span className="text-[10px] text-emerald-300 underline font-medium shrink-0">
-            View Details
+          <span className="text-[10px] text-[#2FA66A] underline font-medium shrink-0">
+            Details
           </span>
         </div>
       )}
 
       {/* Card Footer: Quick Actions */}
-      <div className="mt-3.5 pt-2.5 border-t border-white/5 flex items-center justify-between gap-2">
+      <div className="mt-3 pt-2 border-t border-border-default flex items-center justify-between gap-2">
         {/* If notes or job link exists */}
         <div className="flex items-center gap-2 text-text-muted">
           {app.portfolio_links?.[0] && (
@@ -148,7 +148,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
               href={app.portfolio_links[0]}
               target="_blank"
               rel="noreferrer"
-              className="text-text-disabled hover:text-sky-400 transition-colors p-1"
+              className="text-text-muted hover:text-brand transition-colors p-1"
               title="Open Job Link"
             >
               <ExternalLink className="h-3.5 w-3.5" />
@@ -157,7 +157,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           {isOffered && (
             <button
               onClick={() => onOpenOfferDetails?.(application)}
-              className="text-[11px] text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+              className="text-[11px] text-[#2FA66A] hover:underline font-medium transition-colors"
             >
               Offer Letter
             </button>
@@ -168,7 +168,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
         {nextStage && onMoveToNextStage && (
           <button
             onClick={() => onMoveToNextStage(app.id, app.current_stage)}
-            className="flex items-center gap-1 text-[11px] font-medium text-text-muted hover:text-text-primary px-2 py-1 rounded-md bg-surface-elevated/70 hover:bg-surface-elevated border border-white/5 transition-all ml-auto"
+            className="flex items-center gap-1 text-[11px] font-medium text-text-muted hover:text-text-primary px-2 py-0.5 rounded bg-surface-secondary hover:bg-surface-elevated border border-border-default transition-all ml-auto"
             title={`Move to ${nextStage}`}
           >
             <span className="capitalize">{nextStage}</span>

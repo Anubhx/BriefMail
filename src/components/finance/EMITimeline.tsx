@@ -45,9 +45,9 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
   // Clean empty state if no items
   if (!items || items.length === 0) {
     return (
-      <div className="p-10 text-center border border-dashed border-border-subtle rounded-xl text-text-muted text-sm font-ui bg-surface/30 flex flex-col items-center justify-center gap-2">
+      <div className="p-8 text-center border border-dashed border-border-default rounded-lg text-text-muted text-sm font-ui bg-surface-secondary flex flex-col items-center justify-center gap-2">
         <Building2 className="w-8 h-8 text-text-muted/50 mb-1" />
-        <p className="font-medium text-text-secondary">No financial emails processed yet</p>
+        <p className="font-medium text-text-primary">No financial emails processed yet</p>
         <p className="text-xs text-text-muted">EMI and loan tracking will appear here once loan statement emails arrive.</p>
       </div>
     );
@@ -61,25 +61,25 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full font-ui select-none">
+    <div className="flex flex-col gap-4 w-full font-ui select-none">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 rounded-xl bg-surface border border-border-subtle shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-lg bg-surface border border-border-default shadow-xs">
         <div>
-          <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-text-muted">
+          <h2 className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-muted">
             Total Outstanding Liability
           </h2>
-          <span className="text-2xl font-bold font-mono text-text-primary tracking-tight">
+          <span className="text-2xl font-bold font-mono text-text-primary tracking-tight mt-0.5 block">
             {formatCurrency(grandTotal)}
           </span>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-elevated text-xs font-mono text-text-secondary border border-border-subtle">
-          <Building2 className="w-4 h-4 text-brand" />
-          <span>{list.length} Active Loans</span>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-surface-secondary text-xs font-mono text-text-secondary border border-border-default">
+          <Building2 className="w-3.5 h-3.5 text-text-muted" />
+          <span>{list.length} Active {list.length === 1 ? "Loan" : "Loans"}</span>
         </div>
       </div>
 
       {/* EMI Visual Timeline List */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {list.map((item) => {
           const isExpanded = expandedId === item.id;
           const monthsRemaining = Math.max(0, item.tenure_months - item.months_paid);
@@ -90,18 +90,18 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
           return (
             <div
               key={item.id}
-              className="p-5 rounded-xl bg-surface border border-border-subtle hover:border-brand/30 transition-all duration-200 shadow-sm"
+              className="p-4 rounded-lg bg-surface border border-border-default hover:border-border-strong transition-colors duration-150 shadow-xs"
             >
               {/* Top Row: Lender & Amounts */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-brand-subtle flex items-center justify-center text-brand font-bold text-sm">
+                  <div className="w-9 h-9 rounded bg-surface-secondary border border-border-default flex items-center justify-center text-text-primary font-bold text-xs font-mono">
                     {item.lender.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
                       {item.lender}
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-surface-elevated text-text-muted">
+                      <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-surface-secondary text-text-muted border border-border-default">
                         {item.loan_type}
                       </span>
                     </h3>
@@ -113,31 +113,31 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
 
                 <div className="flex items-center gap-3 sm:text-right">
                   <div>
-                    <span className="text-xs text-text-muted block">Remaining</span>
+                    <span className="text-[10px] text-text-muted block">Remaining</span>
                     <span className="text-sm font-bold font-mono text-text-primary">
                       {formatCurrency(item.remaining_amount)}
                     </span>
                   </div>
 
-                  <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                    {monthsRemaining} months left
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#F8F7F4] text-[#D58A00] border border-[#D58A00]/20">
+                    {monthsRemaining}m left
                   </span>
                 </div>
               </div>
 
               {/* Progress Bar Timeline */}
-              <div className="flex flex-col gap-1.5 my-3">
+              <div className="flex flex-col gap-1.5 my-2.5">
                 <div className="flex justify-between text-[11px] font-mono text-text-muted">
                   <span>{pctPaid}% paid ({item.months_paid} mos)</span>
                   <span>Due {item.next_due}</span>
                 </div>
 
-                <div className="h-2.5 w-full bg-surface-elevated rounded-full overflow-hidden p-0.5 border border-border-subtle">
+                <div className="h-2 w-full bg-surface-secondary rounded-full overflow-hidden p-0.5 border border-border-default">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${pctPaid}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="h-full bg-emerald-500 rounded-full shadow-sm"
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="h-full bg-[#2FA66A] rounded-full"
                   />
                 </div>
               </div>
@@ -147,14 +147,14 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
                 <>
                   <button
                     onClick={() => toggleExpand(item.id)}
-                    className="mt-2 flex items-center justify-between w-full pt-2 border-t border-border-subtle/50 text-xs font-medium text-text-muted hover:text-text-primary transition-colors"
+                    className="mt-2 flex items-center justify-between w-full pt-2 border-t border-border-default text-xs font-medium text-text-muted hover:text-text-primary transition-colors"
                   >
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-brand" />
+                      <Calendar className="w-3.5 h-3.5 text-text-muted" />
                       {isExpanded ? "Hide Amortization Schedule" : "View Amortization Schedule"}
                     </span>
                     <ChevronDown
-                      className={clsx("w-4 h-4 transition-transform duration-200", isExpanded && "rotate-180")}
+                      className={clsx("w-4 h-4 transition-transform duration-200 text-text-muted", isExpanded && "rotate-180")}
                     />
                   </button>
 
@@ -165,25 +165,25 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="overflow-hidden mt-3 pt-3 border-t border-border-subtle"
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden mt-3 pt-3 border-t border-border-default"
                       >
                         <div className="overflow-x-auto">
                           <table className="w-full text-left text-xs font-mono">
                             <thead>
-                              <tr className="border-b border-border-subtle text-text-muted text-[11px]">
+                              <tr className="border-b border-border-default text-text-muted text-[11px]">
                                 <th className="py-1.5 font-medium">Month</th>
                                 <th className="py-1.5 font-medium">Principal</th>
                                 <th className="py-1.5 font-medium">Interest</th>
                                 <th className="py-1.5 font-medium text-right">Balance</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-border-subtle/30 text-text-secondary">
+                            <tbody className="divide-y divide-border-default text-text-secondary">
                               {item.amortization.map((row, rIdx) => (
-                                <tr key={rIdx} className="hover:bg-surface-elevated/40">
+                                <tr key={rIdx} className="hover:bg-surface-secondary/50">
                                   <td className="py-1.5">{row.month}</td>
-                                  <td className="py-1.5 text-emerald-400">{formatCurrency(row.principal)}</td>
-                                  <td className="py-1.5 text-rose-400">{formatCurrency(row.interest)}</td>
+                                  <td className="py-1.5 text-[#2FA66A]">{formatCurrency(row.principal)}</td>
+                                  <td className="py-1.5 text-text-muted">{formatCurrency(row.interest)}</td>
                                   <td className="py-1.5 text-right font-bold text-text-primary">
                                     {formatCurrency(row.balance)}
                                   </td>
