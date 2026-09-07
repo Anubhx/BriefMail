@@ -1,6 +1,61 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { getEmailDetail } from "@/lib/gmail/fetch";
+import { decryptToken, refreshAccessToken } from "@/lib/gmail/tokens";
+
+export const dynamic = "force-dynamic";
+
+async function getFreshAccessToken(
+  db: ReturnType<typeof createServerClient>,
+  accountId: string
+): Promise<string | null> {
+  const { data: account, error } = await db
+    .from("gmail_accounts")
+    .select("id, access_token, refresh_token, token_expiry")
+    .eq("id", accountId)
+    .single();
+
+  if (error || !account) {
+    return null;
+  }
+
+  try {
+    const expiry = account.token_expiry ? new Date(account.token_expiry) : null;
+    const isExpired = !expiry || expiry.getTime() <= Date.now() + 2 * 60 * 1000;
+
+    if (!isExpired && account.access_token) {
+      const decrypted = decryptToken(account.access_token);
+      if (decrypted) return decrypted;
+    }
+
+    if (account.refresh_token) {
+      const refreshed = await refreshAccessToken(account.refresh_token);
+      if (refreshed?.access_token) {
+        await db
+          .from("gmail_accounts")
+          .update({
+            access_token: refreshed.encrypted_access_token,
+            token_expiry: refreshed.expiry.toISOString(),
+          })
+          .eq("id", account.id);
+
+        return refreshed.access_token;
+      }
+    }
+  } catch (err) {
+    console.warn(`[emails/[id]] Token refresh error for account ${accountId}:`, err);
+  }
+
+  if (account.access_token) {
+    try {
+      const decrypted = decryptToken(account.access_token);
+      if (decrypted) return decrypted;
+    } catch {}
+  }
+
+  return null;
+}
 
 // GET /api/emails/[id] — fetch full email details and mark as read
 export async function GET(
@@ -67,6 +122,27 @@ export async function GET(
 
   if (error || !email) {
     return NextResponse.json({ error: "email_not_found" }, { status: 404 });
+  }
+
+  // If body_html is NULL/missing in DB, fetch fresh HTML on-the-fly from Gmail API without persisting to DB
+  if (!email.body_html && email.gmail_account_id && email.message_id) {
+    try {
+      const accessToken = await getFreshAccessToken(db, email.gmail_account_id);
+      if (accessToken) {
+        const detail = await getEmailDetail(accessToken, email.message_id);
+        if (detail.bodyHtml) {
+          email.body_html = detail.bodyHtml;
+        }
+        if (!email.body_text && detail.bodyText) {
+          email.body_text = detail.bodyText;
+        }
+      }
+    } catch (fetchErr) {
+      console.warn(
+        `[emails/[id]] Live Gmail fetch fallback failed for message ${email.message_id}:`,
+        fetchErr
+      );
+    }
   }
 
   // Mark as read automatically when opened
