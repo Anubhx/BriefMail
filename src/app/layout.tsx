@@ -26,6 +26,13 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "BriefMail - Intelligent Email Copilot",
   description: "Automated triage, finance, career tracking, and meeting digests powered by AI.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/logos/logo-square.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/logos/logo-square.png",
+  },
 };
 
 export default function RootLayout({

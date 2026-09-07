@@ -2,20 +2,14 @@ import Link from "next/link";
 import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 import { Mail, ArrowRight, ShieldCheck, Zap, Bot } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Logo } from "@/components/ui/Logo";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-surface-base text-text-primary flex flex-col justify-between p-6">
       {/* Header Navigation */}
       <header className="max-w-6xl mx-auto w-full flex items-center justify-between py-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center font-bold text-white shadow-xs">
-            <Mail className="w-5 h-5" />
-          </div>
-          <span className="font-serif text-2xl font-bold tracking-tight text-text-primary">
-            Brief<span className="text-brand">Mail</span>
-          </span>
-        </div>
+        <Logo variant="long" width={180} height={34} href="/" priority />
 
         {/* Clerk Auth Controls */}
         <div className="flex items-center gap-4">
@@ -110,9 +104,12 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-6xl mx-auto w-full py-6 border-t border-border-default flex items-center justify-between text-xs text-text-muted">
-        <span>© 2026 BriefMail Inc. All rights reserved.</span>
-        <span>Built with Next.js 15 & Clerk Auth</span>
+      <footer className="max-w-6xl mx-auto w-full py-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-text-muted">
+        <div className="flex items-center gap-2.5">
+          <Logo variant="square" width={18} height={16} href="/" />
+          <span>© 2026 BriefMail Inc. All rights reserved.</span>
+        </div>
+        <span>Built with Next.js 15 &amp; Clerk Auth</span>
       </footer>
     </div>
   );

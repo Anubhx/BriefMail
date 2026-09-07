@@ -42,5 +42,5 @@ Thumbs.db
 .vercel
 
 # Explicitly track project documentation & agent skills
-/.docs
-/.agents
+/.docs/
+/.agents/

@@ -21,6 +21,7 @@ import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@/hooks/useGSAP";
+import { Logo } from "@/components/ui/Logo";
 
 export interface BottomNavItem {
   href: string;
@@ -109,9 +110,12 @@ function BottomNavContent() {
               style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
             >
               <div className="flex items-center justify-between pb-3 border-b border-border">
-                <div>
-                  <h3 className="text-sm font-ui font-semibold text-text-primary">More Destinations</h3>
-                  <p className="text-xs text-text-muted">Secondary mailboxes and system views</p>
+                <div className="flex items-center gap-2.5">
+                  <Logo variant="square" width={24} height={22} />
+                  <div>
+                    <h3 className="text-sm font-ui font-semibold text-text-primary">More Destinations</h3>
+                    <p className="text-xs text-text-muted">Secondary mailboxes and system views</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setIsMoreOpen(false)}

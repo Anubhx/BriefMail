@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { BottomNav } from "@/components/ui/BottomNav";
+import { Logo } from "@/components/ui/Logo";
 
 export default function DashboardLayout({
   children,
@@ -33,8 +34,11 @@ export default function DashboardLayout({
         {/* Quiet Editorial Header */}
         <header className="h-13 border-b border-border bg-surface flex items-center justify-between px-4 lg:px-6 shrink-0 z-10 select-none">
           <div className="flex items-center gap-2.5">
-            <span className="text-xs font-mono uppercase tracking-widest text-text-muted">BriefMail</span>
-            <span className="text-border-strong text-xs font-mono">/</span>
+            <div className="lg:hidden flex items-center shrink-0">
+              <Logo variant="square" width={22} height={20} href="/inbox" />
+            </div>
+            <span className="hidden sm:inline text-xs font-mono uppercase tracking-widest text-text-muted">BriefMail</span>
+            <span className="hidden sm:inline text-border-strong text-xs font-mono">/</span>
             <h1 className="text-sm font-medium text-text-primary tracking-tight">
               {getPageTitle()}
             </h1>

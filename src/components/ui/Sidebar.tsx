@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 
+import { Logo } from "@/components/ui/Logo";
+
 const mainNavItems = [
   { href: "/inbox", label: "Inbox", icon: Inbox, badge: 5 },
   { href: "/all-mail", label: "All Mail", icon: Mail },
@@ -51,13 +53,14 @@ function SidebarContent() {
     >
       <div className="flex flex-col gap-5">
         {/* Brand Header */}
-        <Link href="/inbox" className="flex items-center gap-2 px-2 py-1.5 group">
-          <div className="flex items-center gap-1.5">
-            <span className="font-ui text-base font-semibold tracking-tight text-text-primary">
-              BriefMail
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-brand" />
-          </div>
+        <Link href="/inbox" className="flex items-center px-1.5 py-1 group">
+          <Logo
+            variant="long"
+            width={145}
+            height={27}
+            priority
+            className="group-hover:opacity-90 transition-opacity"
+          />
         </Link>
 
         {/* Section 1: Main Navigation */}
