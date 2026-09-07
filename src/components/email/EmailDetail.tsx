@@ -102,9 +102,14 @@ export function EmailDetail({
     setCompletedItems((prev) => ({ ...prev, [idx]: !prev[idx] }));
   };
 
+  const body_html = email.body_html;
+  const wrappedHtml = body_html
+    ? `<div style="background:#ffffff;color:#111111;font-family:sans-serif;padding:16px;color-scheme:light;">${addTargetBlank(body_html)}</div>`
+    : "";
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex justify-end bg-background bg-white dark:bg-gray-900 md:bg-black/40 md:backdrop-blur-xs overflow-hidden">
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-white md:bg-black/40 md:backdrop-blur-xs flex justify-end">
         {/* Backdrop dismiss on tablet/desktop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -120,14 +125,14 @@ export function EmailDetail({
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", stiffness: 320, damping: 32 }}
-          className="relative w-full md:max-w-2xl lg:max-w-3xl h-full bg-background bg-white dark:bg-gray-900 flex flex-col z-50 shadow-elevation-3 overflow-hidden"
+          className="relative w-full md:max-w-2xl lg:max-w-3xl min-h-full md:h-full bg-white md:bg-surface flex flex-col z-50 shadow-elevation-3 overflow-hidden"
           style={{
             paddingTop: "env(safe-area-inset-top, 0px)",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
           }}
         >
-          {/* Top Sticky Header Actions */}
-          <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-border bg-background bg-white dark:bg-gray-900 shrink-0 z-10">
+          {/* Top Sticky Header Actions (Themed with border-b separating from email content) */}
+          <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-border bg-surface shrink-0 z-10">
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
@@ -219,7 +224,7 @@ export function EmailDetail({
           </div>
 
           {/* Reading Canvas */}
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-10 py-6 sm:py-8 space-y-7 bg-background bg-white dark:bg-gray-900">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-10 py-6 sm:py-8 space-y-7 bg-surface">
             {/* Subject - Editorial Headline */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -325,9 +330,14 @@ export function EmailDetail({
             <div className="pt-2 text-text-primary leading-relaxed max-w-prose">
               {email.body_html ? (
                 <div
-                  className="prose prose-neutral max-w-none text-[15px] sm:text-base leading-relaxed overflow-x-auto"
-                  dangerouslySetInnerHTML={{ __html: addTargetBlank(email.body_html) }}
-                />
+                  className="bg-white rounded-lg overflow-hidden"
+                  style={{ colorScheme: "light", backgroundColor: "white" }}
+                >
+                  <div
+                    className="prose prose-neutral max-w-none text-[15px] sm:text-base leading-relaxed overflow-x-auto"
+                    dangerouslySetInnerHTML={{ __html: wrappedHtml }}
+                  />
+                </div>
               ) : email.body_text ? (
                 <div className="font-ui text-[15px] sm:text-base whitespace-pre-wrap leading-relaxed text-text-primary">
                   {email.body_text}
