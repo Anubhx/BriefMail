@@ -78,21 +78,37 @@ interface GmailHistoryResponse {
 
 async function gmailFetch<T>(
   accessToken: string,
-  url: string
+  url: string,
+  retries = 3
 ): Promise<T> {
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
 
-  if (res.status === 401) {
-    throw new Error("gmail_auth_expired");
+    if (res.status === 401) {
+      throw new Error("gmail_auth_expired");
+    }
+
+    if (res.ok) {
+      return res.json() as Promise<T>;
+    }
+
+    // Gmail rate limits: 429 Too Many Requests or 403 User-rate limit exceeded
+    if ((res.status === 429 || res.status === 403) && attempt < retries) {
+      const delayMs = Math.pow(2, attempt) * 1000 + Math.random() * 500;
+      console.warn(
+        `[gmailFetch] Gmail rate limited (status ${res.status}). Retrying attempt ${attempt + 1}/${retries} in ${Math.round(delayMs)}ms...`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      continue;
+    }
+
+    const text = await res.text().catch(() => "");
+    throw new Error(`gmail_api_error: ${res.status} ${res.statusText}${text ? " - " + text.slice(0, 150) : ""}`);
   }
 
-  if (!res.ok) {
-    throw new Error(`gmail_api_error: ${res.status} ${res.statusText}`);
-  }
-
-  return res.json() as Promise<T>;
+  throw new Error("gmail_api_error: max retries exceeded");
 }
 
 function getHeader(headers: GmailHeader[], name: string): string {

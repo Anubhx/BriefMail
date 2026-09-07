@@ -48,7 +48,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     )
     .eq("status", "pending")
     .order("arrived_at", { ascending: true })
-    .limit(50);
+    .limit(30);
 
   if (selectErr) {
     console.error("[queue/drain] Database select error:", selectErr);
@@ -259,8 +259,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return atLeastOneSuccess || messageIds.length === 0;
   }
 
-  // 4. Process all selected rows concurrently in parallel with Promise.allSettled
-  const results = await Promise.allSettled(rows.map((row) => processRow(row)));
+  // 4. Process selected rows in controlled chunks of 5 to respect Gmail API per-user limits
+  const CHUNK_SIZE = 5;
+  const results: PromiseSettledResult<boolean>[] = [];
+
+  for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+    const chunk = rows.slice(i, i + CHUNK_SIZE);
+    const chunkResults = await Promise.allSettled(chunk.map((row) => processRow(row)));
+    results.push(...chunkResults);
+  }
 
   let processedCount = 0;
   let failedCount = 0;
