@@ -60,9 +60,8 @@ skills-lock.json
 .docs/ADVANCED_MAIL_MASTER_GUIDE.md
 
 # Explicitly track project documentation & agent skills
-!/.docs/Design.md
-!/.docs/tokens.json
-/.agents/skills/
-/.agents/antigravity_global_skills/
-!/.agents/skills/antigravity-design-expert/
 
+
+# Agent skills & internal docs (local only)
+/.agents/
+/.docs/
