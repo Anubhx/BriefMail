@@ -23,6 +23,7 @@ interface KanbanColumnProps {
   applications: ApplicationWithOffer[];
   onMoveToNextStage: (id: string, currentStage: string) => void;
   onOpenOfferDetails: (app: ApplicationWithOffer) => void;
+  onDeleteApplication?: (id: string) => void;
 }
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -30,6 +31,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   applications,
   onMoveToNextStage,
   onOpenOfferDetails,
+  onDeleteApplication,
 }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: config.id,
@@ -71,6 +73,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
               application={app}
               onMoveToNextStage={onMoveToNextStage}
               onOpenOfferDetails={onOpenOfferDetails}
+              onDelete={onDeleteApplication}
             />
           ))}
         </SortableContext>

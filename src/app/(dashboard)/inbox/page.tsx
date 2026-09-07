@@ -28,7 +28,8 @@ interface EmailsApiResponse {
 function InboxContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const urlCategory = searchParams?.get("category") || "all";
+  const rawUrlCategory = searchParams?.get("category") || "all";
+  const urlCategory = rawUrlCategory === "finance" ? "finance_transaction" : rawUrlCategory;
 
   const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = useState(urlCategory);

@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Trophy,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { formatDistanceToNow, parseISO, isValid } from "date-fns";
 import { ApplicationWithOffer } from "./OfferDetailsPanel";
@@ -19,6 +20,7 @@ interface KanbanCardProps {
   application: ApplicationWithOffer;
   onMoveToNextStage?: (id: string, currentStage: string) => void;
   onOpenOfferDetails?: (app: ApplicationWithOffer) => void;
+  onDelete?: (id: string) => void;
   isOverlay?: boolean;
 }
 
@@ -28,6 +30,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   application,
   onMoveToNextStage,
   onOpenOfferDetails,
+  onDelete,
   isOverlay = false,
 }) => {
   const {
@@ -102,11 +105,28 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           </span>
         </div>
 
-        {/* Applied relative date */}
-        <span className="text-[11px] font-mono text-text-muted flex items-center gap-1 shrink-0">
-          <Calendar className="h-3 w-3 text-text-muted" />
-          {relativeDate}
-        </span>
+        {/* Applied relative date & delete action */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-[11px] font-mono text-text-muted flex items-center gap-1">
+            <Calendar className="h-3 w-3 text-text-muted" />
+            {relativeDate}
+          </span>
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm("Remove this from Career tracker?")) {
+                  onDelete(app.id);
+                }
+              }}
+              className="opacity-70 hover:opacity-100 transition-opacity p-0.5 text-text-muted hover:text-[#CF421C] rounded hover:bg-surface-secondary cursor-pointer"
+              title="Remove this from Career tracker?"
+              aria-label="Remove this from Career tracker?"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Content: Company & Role */}

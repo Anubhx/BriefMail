@@ -35,11 +35,16 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: "user_not_found" }, { status: 404 });
   }
 
-  // Fetch applications with joined offer_letters if any
+  // Fetch applications with joined offer_letters and linked emails
   const { data: applications, error: appErr } = await db
     .from("job_applications")
     .select(`
       *,
+      emails (
+        id,
+        category,
+        subcategory
+      ),
       offer_letters (
         id,
         ctc_lpa,
@@ -64,7 +69,26 @@ export async function GET(): Promise<NextResponse> {
     );
   }
 
-  return NextResponse.json({ applications: applications || [] });
+  // Only return emails WHERE subcategory = 'job_application'
+  // OR subcategory IN ('interview_invite', 'offer_letter')
+  // NOT job_alert emails.
+  const validSubcategories = new Set([
+    "job_application",
+    "interview_invite",
+    "offer_letter",
+  ]);
+
+  const filteredApplications = (applications || []).filter((app: any) => {
+    // Retain manually added applications that have no linked email_id
+    if (!app.email_id) return true;
+
+    const emailSubcat = app.emails?.subcategory;
+    if (!emailSubcat) return false;
+    if (emailSubcat === "job_alert" || emailSubcat === "job_alert_digest") return false;
+    return validSubcategories.has(emailSubcat);
+  });
+
+  return NextResponse.json({ applications: filteredApplications });
 }
 
 // POST /api/career/applications — create new application

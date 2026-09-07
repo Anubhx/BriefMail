@@ -145,8 +145,12 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
       });
     }
 
-    // 2B. Career & Jobs
-    if (["career", "jobs"].includes(cat) || ["offer_letter", "interview_invite", "application_status", "rejection"].includes(subcat)) {
+    // 2B. Career & Jobs (Only real job applications and career milestones; NOT job alerts)
+    const isJobApp =
+      subcat === "job_application" ||
+      ["offer_letter", "interview_invite", "application_status", "rejection"].includes(subcat);
+
+    if (isJobApp) {
       const company = (ext.company as string) || (ext.company_name as string) || fromName || "Unknown Company";
       const role = (ext.role as string) || (ext.role_title as string) || subject;
       const portfolioLinks = Array.isArray(ext.portfolio_links) ? ext.portfolio_links : [];

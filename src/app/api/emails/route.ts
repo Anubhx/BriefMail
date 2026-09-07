@@ -108,6 +108,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const categories = categoryParam
       .split(",")
       .map((c) => c.trim())
+      .map((c) => (c === "finance" ? "finance_transaction" : c))
       .filter(Boolean);
 
     if (categories.length > 1) {
@@ -122,7 +123,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         );
       } else if (singleCat === "otp") {
         query = query.or("category.eq.otp,subcategory.eq.otp_verification");
-      } else if (singleCat === "finance_transaction") {
+      } else if (singleCat === "finance_transaction" || singleCat === "finance") {
         query = query.or("category.eq.finance_transaction,category.eq.finance");
       } else {
         query = query.eq("category", singleCat);

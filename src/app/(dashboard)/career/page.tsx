@@ -74,6 +74,23 @@ export default function CareerPage() {
     return { total, active, offers, interviewRate };
   }, [applications]);
 
+  const handleDeleteApplication = useCallback(async (id: string) => {
+    // Optimistically remove card from UI
+    setApplications((prev) => prev.filter((app) => app.id !== id));
+    try {
+      const res = await fetch(`/api/career/applications/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        console.error("Failed to delete application from server");
+        fetchApplications(true);
+      }
+    } catch (err) {
+      console.error("Error deleting application:", err);
+      fetchApplications(true);
+    }
+  }, [fetchApplications]);
+
   return (
     <div className="flex flex-col gap-5 w-full max-w-[1600px] mx-auto pb-12 select-none font-ui">
       {/* Page Header */}
@@ -101,22 +118,22 @@ export default function CareerPage() {
             title="Refresh applications"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-brand" : "text-text-muted"}`}
+              className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-brand" : "text-text-muted"}`}
             />
-            <span>Refresh</span>
+            <span>{refreshing ? "Syncing..." : "Sync"}</span>
           </button>
 
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-brand hover:bg-brand-hover text-white text-xs font-semibold transition-colors shadow-xs"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Add Application</span>
           </button>
         </div>
       </div>
 
-      {/* Top Stats Bar */}
+      {/* Metrics Bar */}
       <CareerStatsBar
         total={stats.total}
         active={stats.active}
@@ -124,16 +141,16 @@ export default function CareerPage() {
         interviewRate={stats.interviewRate}
       />
 
-      {/* Search and Filter Controls */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+      {/* Search & Filter Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-2.5 rounded-lg bg-surface border border-border-default shadow-xs">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
             type="text"
-            placeholder="Search by company, role, or stage..."
+            placeholder="Search company, role, or stage..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded bg-surface border border-border-default text-xs text-text-primary placeholder:text-text-muted focus:border-brand focus:outline-none transition-colors shadow-xs"
+            className="w-full pl-9 pr-3 py-1.5 rounded bg-surface-secondary text-xs font-ui text-text-primary placeholder:text-text-muted border border-border-default focus:outline-none focus:border-brand transition-colors"
           />
         </div>
 
@@ -166,6 +183,7 @@ export default function CareerPage() {
           applications={filteredApplications}
           onApplicationsChange={setApplications}
           onOpenAddModal={() => setIsAddModalOpen(true)}
+          onDeleteApplication={handleDeleteApplication}
         />
       )}
 

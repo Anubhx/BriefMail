@@ -12,7 +12,7 @@ export interface CategoryTabItem {
 
 const CATEGORIES: CategoryTabItem[] = [
   { id: "all", label: "All" },
-  { id: "finance", label: "Finance" },
+  { id: "finance_transaction", label: "Finance" },
   { id: "jobs", label: "Jobs" },
   { id: "career", label: "Career" },
   { id: "investments", label: "Investments" },
@@ -20,7 +20,6 @@ const CATEGORIES: CategoryTabItem[] = [
   { id: "social", label: "Social" },
   { id: "newsletter", label: "Newsletter" },
   { id: "otp", label: "OTP" },
-  { id: "finance_transaction", label: "Transactions" },
   { id: "system", label: "System" },
 ];
 
@@ -39,8 +38,14 @@ export function CategoryTabs({
     <div className="w-full overflow-x-auto no-scrollbar border-b border-border bg-surface select-none">
       <div className="flex items-center gap-5 px-4 min-w-max h-11">
         {CATEGORIES.map((tab) => {
-          const isActive = activeCategory.toLowerCase() === tab.id.toLowerCase();
-          const count = categoryCounts[tab.id] ?? tab.count ?? 0;
+          const isActive =
+            activeCategory.toLowerCase() === tab.id.toLowerCase() ||
+            (tab.id === "finance_transaction" && activeCategory.toLowerCase() === "finance");
+          const count =
+            categoryCounts[tab.id] ??
+            (tab.id === "finance_transaction" ? categoryCounts["finance"] : undefined) ??
+            tab.count ??
+            0;
 
           return (
             <button

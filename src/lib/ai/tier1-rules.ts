@@ -245,18 +245,46 @@ const INVESTMENT_SUBJECT_PATTERNS: [RegExp, string][] = [
   [/portfolio\s*(update|statement|summary)/i, "portfolio_update"],
 ];
 
-// ── Job Subject Patterns ──────────────────────────────────────────────────────
+// ── Job Subject Patterns (Split: job_application vs job_alert) ─────────────
 
-const JOB_SUBJECT_PATTERNS: [RegExp, string][] = [
-  [/UI.?UX|user\s*interface|interaction\s*design|product\s*designer/i, "uiux_role"],
-  [/frontend\s*(developer|engineer)|react\s*(developer|engineer)|next\.?js/i, "engineering_role"],
-  [/full.?stack|backend\s*(developer|engineer)|node\.?js/i, "engineering_role"],
-  [/visual\s*design|graphic\s*design|brand\s*design/i, "design_role"],
-  [/product\s*manager|program\s*manager/i, "product_role"],
-  [/new\s*job.*match|jobs?\s*(alert|matching)/i, "job_alert_digest"],
-  [/application\s*(received|submitted|confirmed)|applied\s*successfully/i, "application_status"],
-  [/referral\s*(update|received|submitted)/i, "referral"],
+const JOB_APPLICATION_PATTERNS: RegExp[] = [
+  /application\s*submitted/i,
+  /you\s*applied/i,
+  /application\s*received/i,
+  /thank\s*you\s*for\s*applying/i,
+  /application\s*confirmation/i,
+  /we\s*received\s*your\s*application/i,
+  /application\s*for/i,
+  /your\s*application\s*to/i,
+  /applied\s*successfully/i,
 ];
+
+const JOB_ALERT_SUBJECT_PATTERNS: RegExp[] = [
+  /new\s*jobs/i,
+  /jobs\s*for\s*you/i,
+  /job\s*alert/i,
+  /vacancy/i,
+  /hiring/i,
+  /job\s*opening/i,
+  /positions?\s*available/i,
+  /jobseeker/i,
+  /recommended\s*jobs/i,
+  /jobs?\s*matching/i,
+  /UI.?UX|user\s*interface|interaction\s*design|product\s*designer/i,
+  /frontend\s*(developer|engineer)|react\s*(developer|engineer)|next\.?js/i,
+  /full.?stack|backend\s*(developer|engineer)|node\.?js/i,
+  /visual\s*design|graphic\s*design|brand\s*design/i,
+  /product\s*manager|program\s*manager/i,
+  /referral\s*(update|received|submitted)/i,
+];
+
+function isJobAlertSender(fromEmail: string, subject: string): boolean {
+  const emailLower = (fromEmail || "").toLowerCase();
+  if (emailLower.includes("alerts@indeed.com")) return true;
+  if (/^jobalerts@/i.test(emailLower) || emailLower.includes("jobalerts@")) return true;
+  if (emailLower.includes("noreply@linkedin.com") && /jobs?/i.test(subject)) return true;
+  return false;
+}
 
 // ── Career Subject Patterns ───────────────────────────────────────────────────
 
@@ -449,23 +477,37 @@ export function classifyByRules(email: EmailInput): ClassificationResult | null 
     };
   }
 
-  // ── RULE SET 8: Jobs ───────────────────────────────────────────────────────
-  if (hasDomain(fromEmail, JOB_DOMAINS)) {
-    const refined = matchSubject(subject, JOB_SUBJECT_PATTERNS);
+  // ── RULE SET 8: Jobs (split into job_application and job_alert) ─────────────
+  // 1. Check if user actually applied (job_application)
+  const isJobApplication = JOB_APPLICATION_PATTERNS.some((re) => re.test(subject));
+  if (isJobApplication) {
     return {
       category: "jobs",
-      subcategory: refined ?? "job_alert_digest",
+      subcategory: "job_application",
+      confidence: 0.95,
+      tier: "regex",
+    };
+  }
+
+  // 2. Check if job alert sender or subject pattern matches (job_alert)
+  const isJobAlertSenderMatch = isJobAlertSender(fromEmail, subject);
+  const isJobAlertSubjectMatch = JOB_ALERT_SUBJECT_PATTERNS.some((re) => re.test(subject));
+
+  if (isJobAlertSenderMatch || isJobAlertSubjectMatch) {
+    return {
+      category: "jobs",
+      subcategory: "job_alert",
       confidence: 0.92,
       tier: "regex",
     };
   }
 
-  const jobSubMatch = matchSubject(subject, JOB_SUBJECT_PATTERNS);
-  if (jobSubMatch) {
+  // 3. Domain match in JOB_DOMAINS (if not already matched as application, default to job_alert)
+  if (hasDomain(fromEmail, JOB_DOMAINS)) {
     return {
       category: "jobs",
-      subcategory: jobSubMatch,
-      confidence: 0.8,
+      subcategory: "job_alert",
+      confidence: 0.88,
       tier: "regex",
     };
   }

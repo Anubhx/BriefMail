@@ -67,12 +67,14 @@ interface KanbanBoardProps {
   applications: ApplicationWithOffer[];
   onApplicationsChange: (apps: ApplicationWithOffer[]) => void;
   onOpenAddModal: () => void;
+  onDeleteApplication?: (id: string) => void;
 }
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   applications,
   onApplicationsChange,
   onOpenAddModal,
+  onDeleteApplication,
 }) => {
   const [activeCard, setActiveCard] = useState<ApplicationWithOffer | null>(null);
   const [selectedOfferApp, setSelectedOfferApp] = useState<ApplicationWithOffer | null>(null);
@@ -248,6 +250,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   applications={columnApps}
                   onMoveToNextStage={handleMoveToNextStage}
                   onOpenOfferDetails={handleOpenOfferDetails}
+                  onDeleteApplication={onDeleteApplication}
                 />
               );
             })}

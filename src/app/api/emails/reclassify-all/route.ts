@@ -26,19 +26,32 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const db = createServerClient();
   const includeRegex = request.nextUrl.searchParams.get("include_regex") === "true";
+  const targetCategory = request.nextUrl.searchParams.get("category");
+  const limit = Math.min(200, Math.max(1, parseInt(request.nextUrl.searchParams.get("limit") || "50", 10)));
 
-  // 1. Fetch 50 emails WHERE category IS NULL (or classification_tier = 'regex' if requested)
+  // 1. Fetch emails to reclassify
   let selectQuery = db
     .from("emails")
     .select("id, from_email, from_name, subject, snippet, labels");
 
-  if (includeRegex) {
+  if (targetCategory) {
+    if (targetCategory === "jobs") {
+      selectQuery = selectQuery
+        .eq("category", "jobs")
+        .not("subcategory", "in", '("job_application","job_alert")');
+    } else {
+      selectQuery = selectQuery.eq("category", targetCategory);
+    }
+  } else if (includeRegex) {
     selectQuery = selectQuery.or("category.is.null,classification_tier.eq.regex");
   } else {
-    selectQuery = selectQuery.is("category", null);
+    // Select emails where category is null, or where category = 'jobs' needing subcategories assigned
+    selectQuery = selectQuery.or(
+      "category.is.null,and(category.eq.jobs,subcategory.not.in.(job_application,job_alert))"
+    );
   }
 
-  const { data: rawEmails, error: selectErr } = await selectQuery.limit(50);
+  const { data: rawEmails, error: selectErr } = await selectQuery.limit(limit);
 
   if (selectErr) {
     console.error("[emails/reclassify-all] Database select error:", selectErr);
@@ -50,16 +63,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const emails = (rawEmails || []) as EmailRow[];
 
+  // Helper for counting remaining
+  const getRemainingCount = async () => {
+    let countQuery = db
+      .from("emails")
+      .select("*", { count: "exact", head: true });
+
+    if (targetCategory) {
+      if (targetCategory === "jobs") {
+        countQuery = countQuery
+          .eq("category", "jobs")
+          .not("subcategory", "in", '("job_application","job_alert")');
+      } else {
+        countQuery = countQuery.eq("category", targetCategory);
+      }
+    } else {
+      countQuery = countQuery.or(
+        "category.is.null,and(category.eq.jobs,subcategory.not.in.(job_application,job_alert))"
+      );
+    }
+
+    const { count } = await countQuery;
+    return count ?? 0;
+  };
+
   // If no emails found
   if (emails.length === 0) {
-    const { count: remainingCount } = await db
-      .from("emails")
-      .select("*", { count: "exact", head: true })
-      .is("category", null);
-
+    const remainingCount = await getRemainingCount();
     return NextResponse.json({
       reclassified: 0,
-      remaining: remainingCount ?? 0,
+      remaining: remainingCount,
     });
   }
 
@@ -110,15 +143,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // 6. Count remaining: SELECT COUNT(*) FROM emails WHERE category IS NULL
-  const { count: remainingCount } = await db
-    .from("emails")
-    .select("*", { count: "exact", head: true })
-    .is("category", null);
+  // 6. Count remaining using getRemainingCount()
+  const remainingCount = await getRemainingCount();
 
   // 7. Return { reclassified: number, remaining: number }
   return NextResponse.json({
     reclassified,
-    remaining: remainingCount ?? 0,
+    remaining: remainingCount,
   });
 }
