@@ -32,41 +32,41 @@ const getRedisClient = () => {
 
 // Helper to parse financial amounts from extracted_data or subject/snippet text
 function parseAmount(
-  subject: string,
+  subject?: string | null,
   extracted_data?: Record<string, unknown> | null,
   snippet?: string | null
 ): number {
   // 1. Try extracted_data first
   if (extracted_data) {
-    if (typeof extracted_data.amount === "number") {
+    if (typeof extracted_data.amount === "number" && !isNaN(extracted_data.amount)) {
       return Math.abs(extracted_data.amount);
     }
     if (typeof extracted_data.amount === "string") {
       const parsed = parseFloat(extracted_data.amount.replace(/,/g, ""));
       if (!isNaN(parsed)) return Math.abs(parsed);
     }
-    if (typeof extracted_data.emi_amount === "number") {
+    if (typeof extracted_data.emi_amount === "number" && !isNaN(extracted_data.emi_amount)) {
       return Math.abs(extracted_data.emi_amount);
     }
-    if (typeof extracted_data.sip_amount === "number") {
+    if (typeof extracted_data.sip_amount === "number" && !isNaN(extracted_data.sip_amount)) {
       return Math.abs(extracted_data.sip_amount);
     }
   }
 
   // 2. Try subject & snippet regex
-  const textToScan = `${subject || ""} ${snippet || ""}`;
+  const textToScan = `${subject ?? ""} ${snippet ?? ""}`;
   const match = textToScan.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/i);
   if (match && match[1]) {
     const val = parseFloat(match[1].replace(/,/g, ""));
-    if (!isNaN(val)) return val;
+    if (!isNaN(val)) return Math.abs(val);
   }
 
   return 0;
 }
 
 // Helper to detect payment mode
-function parsePaymentMode(subject: string, snippet?: string | null, subcategory?: string | null): string {
-  const text = `${subject || ""} ${snippet || ""} ${subcategory || ""}`.toLowerCase();
+function parsePaymentMode(subject?: string | null, snippet?: string | null, subcategory?: string | null): string {
+  const text = `${subject ?? ""} ${snippet ?? ""} ${subcategory ?? ""}`.toLowerCase();
   if (text.includes("upi")) return "UPI";
   if (text.includes("neft") || text.includes("rtgs") || text.includes("imps")) return "NetBanking";
   if (text.includes("card") || text.includes("credit card") || text.includes("debit card")) return "Card";
@@ -75,8 +75,8 @@ function parsePaymentMode(subject: string, snippet?: string | null, subcategory?
 }
 
 // Helper to format/extract date
-function parseDueDate(subject: string, snippet?: string | null, receivedAt?: string | null): { dueDateStr: string; daysLeft: number } {
-  const text = `${subject || ""} ${snippet || ""}`;
+function parseDueDate(subject?: string | null, snippet?: string | null, receivedAt?: string | null): { dueDateStr: string; daysLeft: number } {
+  const text = `${subject ?? ""} ${snippet ?? ""}`;
   const now = new Date();
   
   // Try pattern like 03/May/2026 or 12-Sep-2026 or Sep 12, 2026
@@ -84,7 +84,7 @@ function parseDueDate(subject: string, snippet?: string | null, receivedAt?: str
     text.match(/\b([A-Za-z]{3,9})\s+(\d{1,2})(?:,?\s+(\d{4}))?\b/);
 
   let targetDate: Date | null = null;
-  if (dateMatch) {
+  if (dateMatch && dateMatch[0]) {
     const parsed = new Date(dateMatch[0]);
     if (!isNaN(parsed.getTime())) {
       targetDate = parsed;
@@ -114,6 +114,29 @@ function parseDueDate(subject: string, snippet?: string | null, receivedAt?: str
   const dueDateStr = targetDate.toISOString().split("T")[0];
   return { dueDateStr, daysLeft };
 }
+
+const FALLBACK_ERROR_RESPONSE = {
+  overview: {
+    total_debits: 0,
+    total_credits: 0,
+    total_debits_this_month: 0,
+    total_credits_this_month: 0,
+    next_emi: null,
+    active_sips_total: 0,
+  },
+  transactions: [],
+  emi_tracker: [],
+  sip_investments: [],
+  investments: {
+    has_data: false,
+    total_portfolio_value: 0,
+    total_invested: 0,
+    overall_returns_pct: 0,
+    sips: [],
+  },
+  subscriptions: [],
+  has_data: false,
+};
 
 export async function GET() {
   try {
@@ -360,10 +383,12 @@ export async function GET() {
 
     const overview = {
       has_data: hasOverviewData,
-      total_debits_this_month: Math.round(totalDebitsThisMonth),
-      total_credits_this_month: Math.round(totalCreditsThisMonth),
+      total_debits: Math.round(totalDebitsThisMonth ?? 0),
+      total_credits: Math.round(totalCreditsThisMonth ?? 0),
+      total_debits_this_month: Math.round(totalDebitsThisMonth ?? 0),
+      total_credits_this_month: Math.round(totalCreditsThisMonth ?? 0),
       next_emi: nextEmi,
-      active_sips_total: Math.round(activeSipsTotal),
+      active_sips_total: Math.round(activeSipsTotal ?? 0),
     };
 
     // ── 5. Calculate Transactions Section ─────────────────────────────────────
@@ -580,15 +605,16 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       has_data:
         hasOverviewData ||
-        transactions.length > 0 ||
-        emiItems.length > 0 ||
-        sips.length > 0 ||
-        subscriptions.length > 0,
+        (transactions ?? []).length > 0 ||
+        (emiItems ?? []).length > 0 ||
+        (sips ?? []).length > 0 ||
+        (subscriptions ?? []).length > 0,
       overview,
-      transactions,
+      transactions: transactions ?? [],
       emi_tracker,
+      sip_investments: sips ?? [],
       investments,
-      subscriptions,
+      subscriptions: subscriptions ?? [],
     };
 
     // 10. Cache Result in Redis (5-minute TTL)
@@ -608,9 +634,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Finance summary API error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch finance summary data" },
-      { status: 500 }
-    );
+    return NextResponse.json(FALLBACK_ERROR_RESPONSE, { status: 200 });
   }
 }

@@ -27,16 +27,17 @@ export interface EMIItem {
 }
 
 interface EMITimelineProps {
-  items?: EMIItem[];
-  totalOutstanding?: number;
+  items?: EMIItem[] | null;
+  totalOutstanding?: number | null;
 }
 
-const formatCurrency = (val: number) => {
+const formatCurrency = (val?: number | null) => {
+  const safeVal = typeof val === "number" && !isNaN(val) ? val : 0;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(val);
+  }).format(safeVal);
 };
 
 export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
@@ -47,14 +48,17 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
     return (
       <div className="p-8 text-center border border-dashed border-border-default rounded-lg text-text-muted text-sm font-ui bg-surface-secondary flex flex-col items-center justify-center gap-2">
         <Building2 className="w-8 h-8 text-text-muted/50 mb-1" />
-        <p className="font-medium text-text-primary">No financial emails processed yet</p>
+        <p className="font-medium text-text-primary">No data yet</p>
         <p className="text-xs text-text-muted">EMI and loan tracking will appear here once loan statement emails arrive.</p>
       </div>
     );
   }
 
-  const list = items;
-  const grandTotal = totalOutstanding ?? list.reduce((acc, i) => acc + (i.remaining_amount || 0), 0);
+  const list = items ?? [];
+  const grandTotal =
+    totalOutstanding != null
+      ? (totalOutstanding ?? 0)
+      : list.reduce((acc, i) => acc + (i?.remaining_amount ?? 0), 0);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -69,7 +73,7 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
             Total Outstanding Liability
           </h2>
           <span className="text-2xl font-bold font-mono text-text-primary tracking-tight mt-0.5 block">
-            {formatCurrency(grandTotal)}
+            {formatCurrency(grandTotal ?? 0)}
           </span>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-surface-secondary text-xs font-mono text-text-secondary border border-border-default">
@@ -81,11 +85,21 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
       {/* EMI Visual Timeline List */}
       <div className="flex flex-col gap-3">
         {list.map((item) => {
+          if (!item) return null;
           const isExpanded = expandedId === item.id;
-          const monthsRemaining = Math.max(0, item.tenure_months - item.months_paid);
-          const pctPaid = item.tenure_months > 0
-            ? Math.min(100, Math.round((item.months_paid / item.tenure_months) * 100))
-            : 0;
+          const tenureMonths = item.tenure_months ?? 0;
+          const monthsPaid = item.months_paid ?? 0;
+          const monthsRemaining = Math.max(0, tenureMonths - monthsPaid);
+          const pctPaid =
+            tenureMonths > 0
+              ? Math.min(100, Math.round(((monthsPaid ?? 0) / tenureMonths) * 100))
+              : 0;
+          const lenderName = item.lender ?? "Lender";
+          const lenderBadge = (lenderName ?? "").slice(0, 2).toUpperCase();
+          const monthlyEmi = item.monthly_emi ?? 0;
+          const interestRate = item.interest_rate ?? 0;
+          const remainingAmt = item.remaining_amount ?? 0;
+          const nextDueStr = item.next_due ? String(item.next_due) : "Upcoming";
 
           return (
             <div
@@ -96,17 +110,17 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded bg-surface-secondary border border-border-default flex items-center justify-center text-text-primary font-bold text-xs font-mono">
-                    {item.lender.slice(0, 2).toUpperCase()}
+                    {lenderBadge}
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-                      {item.lender}
+                      {lenderName}
                       <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-surface-secondary text-text-muted border border-border-default">
-                        {item.loan_type}
+                        {item.loan_type ?? "Loan"}
                       </span>
                     </h3>
                     <span className="text-xs font-mono text-text-muted">
-                      {formatCurrency(item.monthly_emi)}/mo • {item.interest_rate}% p.a.
+                      {formatCurrency(monthlyEmi ?? 0)}/mo • {(interestRate ?? 0)}% p.a.
                     </span>
                   </div>
                 </div>
@@ -115,7 +129,7 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
                   <div>
                     <span className="text-[10px] text-text-muted block">Remaining</span>
                     <span className="text-sm font-bold font-mono text-text-primary">
-                      {formatCurrency(item.remaining_amount)}
+                      {formatCurrency(remainingAmt ?? 0)}
                     </span>
                   </div>
 
@@ -128,8 +142,8 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
               {/* Progress Bar Timeline */}
               <div className="flex flex-col gap-1.5 my-2.5">
                 <div className="flex justify-between text-[11px] font-mono text-text-muted">
-                  <span>{pctPaid}% paid ({item.months_paid} mos)</span>
-                  <span>Due {item.next_due}</span>
+                  <span>{pctPaid}% paid ({monthsPaid} mos)</span>
+                  <span>Due {nextDueStr}</span>
                 </div>
 
                 <div className="h-2 w-full bg-surface-secondary rounded-full overflow-hidden p-0.5 border border-border-default">
@@ -143,7 +157,7 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
               </div>
 
               {/* Expand Toggle Button */}
-              {item.amortization && item.amortization.length > 0 && (
+              {(item.amortization ?? []).length > 0 && (
                 <>
                   <button
                     onClick={() => toggleExpand(item.id)}
@@ -179,13 +193,13 @@ export function EMITimeline({ items, totalOutstanding }: EMITimelineProps) {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-border-default text-text-secondary">
-                              {item.amortization.map((row, rIdx) => (
+                              {(item.amortization ?? []).map((row, rIdx) => (
                                 <tr key={rIdx} className="hover:bg-surface-secondary/50">
-                                  <td className="py-1.5">{row.month}</td>
-                                  <td className="py-1.5 text-[#2FA66A]">{formatCurrency(row.principal)}</td>
-                                  <td className="py-1.5 text-text-muted">{formatCurrency(row.interest)}</td>
+                                  <td className="py-1.5">{row?.month ?? "Month"}</td>
+                                  <td className="py-1.5 text-[#2FA66A]">{formatCurrency(row?.principal ?? 0)}</td>
+                                  <td className="py-1.5 text-text-muted">{formatCurrency(row?.interest ?? 0)}</td>
                                   <td className="py-1.5 text-right font-bold text-text-primary">
-                                    {formatCurrency(row.balance)}
+                                    {formatCurrency(row?.balance ?? 0)}
                                   </td>
                                 </tr>
                               ))}

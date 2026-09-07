@@ -16,18 +16,19 @@ export interface SIPItem {
 }
 
 interface SIPDashboardProps {
-  sips?: SIPItem[];
-  totalValue?: number;
-  totalInvested?: number;
-  overallReturnsPct?: number;
+  sips?: SIPItem[] | null;
+  totalValue?: number | null;
+  totalInvested?: number | null;
+  overallReturnsPct?: number | null;
 }
 
-const formatCurrency = (val: number) => {
+const formatCurrency = (val?: number | null) => {
+  const safeVal = typeof val === "number" && !isNaN(val) ? val : 0;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(val);
+  }).format(safeVal);
 };
 
 export function SIPDashboard({
@@ -43,20 +44,21 @@ export function SIPDashboard({
     return (
       <div className="p-8 text-center border border-dashed border-border-default rounded-lg text-text-muted text-sm font-ui bg-surface-secondary flex flex-col items-center justify-center gap-2">
         <Layers className="w-8 h-8 text-text-muted/50 mb-1" />
-        <p className="font-medium text-text-primary">No financial emails processed yet</p>
+        <p className="font-medium text-text-primary">No data yet</p>
         <p className="text-xs text-text-muted">Mutual fund SIP statements and investment notifications will appear here.</p>
       </div>
     );
   }
 
-  const list = sips;
-  const portfolioTotal = totalValue ?? list.reduce((a, b) => a + (b.current_value || 0), 0);
-  const investedTotal = totalInvested ?? list.reduce((a, b) => a + (b.total_invested || 0), 0);
+  const list = sips ?? [];
+  const portfolioTotal = totalValue != null ? totalValue : list.reduce((a, b) => a + (b?.current_value ?? 0), 0);
+  const investedTotal = totalInvested != null ? totalInvested : list.reduce((a, b) => a + (b?.total_invested ?? 0), 0);
   const overallReturn =
-    overallReturnsPct ??
-    (investedTotal > 0
-      ? Math.round(((portfolioTotal - investedTotal) / investedTotal) * 10000) / 100
-      : 0);
+    overallReturnsPct != null
+      ? overallReturnsPct
+      : (investedTotal > 0
+          ? Math.round(((portfolioTotal - investedTotal) / investedTotal) * 10000) / 100
+          : 0);
 
   // Soft muted category colors
   const colors = ["#4267D5", "#2FA66A", "#D58A00", "#309BA8", "#8B5CC7"];
@@ -81,7 +83,7 @@ export function SIPDashboard({
                 Total Portfolio Value
               </span>
               <h2 className="text-2xl sm:text-3xl font-bold font-mono text-text-primary tracking-tight mt-0.5">
-                {formatCurrency(portfolioTotal)}
+                {formatCurrency(portfolioTotal ?? 0)}
               </h2>
             </div>
 
@@ -89,13 +91,13 @@ export function SIPDashboard({
               <span
                 className={clsx(
                   "px-2.5 py-1 rounded text-xs font-mono font-bold flex items-center gap-1 border",
-                  overallReturn >= 0
+                  (overallReturn ?? 0) >= 0
                     ? "bg-[#2FA66A]/10 text-[#2FA66A] border-[#2FA66A]/20"
                     : "bg-[#CF421C]/10 text-[#CF421C] border-[#CF421C]/20"
                 )}
               >
-                {overallReturn >= 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
-                {overallReturn >= 0 ? `+${overallReturn}%` : `${overallReturn}%`}
+                {(overallReturn ?? 0) >= 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                {(overallReturn ?? 0) >= 0 ? `+${(overallReturn ?? 0)}%` : `${(overallReturn ?? 0)}%`}
               </span>
             </div>
           </div>
@@ -104,7 +106,7 @@ export function SIPDashboard({
             <div>
               <span className="text-xs text-text-muted block">Total Invested</span>
               <span className="text-base font-bold font-mono text-text-secondary">
-                {formatCurrency(investedTotal)}
+                {formatCurrency(investedTotal ?? 0)}
               </span>
             </div>
             <div>
@@ -112,11 +114,11 @@ export function SIPDashboard({
               <span
                 className={clsx(
                   "text-base font-bold font-mono",
-                  portfolioTotal >= investedTotal ? "text-[#2FA66A]" : "text-[#CF421C]"
+                  (portfolioTotal ?? 0) >= (investedTotal ?? 0) ? "text-[#2FA66A]" : "text-[#CF421C]"
                 )}
               >
-                {portfolioTotal >= investedTotal ? "+" : ""}
-                {formatCurrency(portfolioTotal - investedTotal)}
+                {(portfolioTotal ?? 0) >= (investedTotal ?? 0) ? "+" : ""}
+                {formatCurrency((portfolioTotal ?? 0) - (investedTotal ?? 0))}
               </span>
             </div>
           </div>
@@ -133,14 +135,19 @@ export function SIPDashboard({
               {(() => {
                 let accumulated = 0;
                 return list.map((item, idx) => {
-                  const pct = portfolioTotal > 0 ? (item.current_value / portfolioTotal) * 100 : 100 / list.length;
-                  const dashArray = `${pct} ${100 - pct}`;
+                  if (!item) return null;
+                  const itemVal = item.current_value ?? 0;
+                  const pct = (portfolioTotal ?? 0) > 0
+                    ? ((itemVal ?? 0) / portfolioTotal) * 100
+                    : (list.length > 0 ? 100 / list.length : 0);
+                  const safePct = Math.max(0, Math.min(100, pct ?? 0));
+                  const dashArray = `${(safePct ?? 0).toFixed(2)} ${(100 - (safePct ?? 0)).toFixed(2)}`;
                   const offset = accumulated;
-                  accumulated += pct;
+                  accumulated += (safePct ?? 0);
 
                   return (
                     <circle
-                      key={item.id}
+                      key={item.id ?? idx}
                       cx="50"
                       cy="50"
                       r="15.915"
@@ -166,12 +173,12 @@ export function SIPDashboard({
 
           <div className="flex flex-wrap gap-2 justify-center mt-2">
             {list.map((item, idx) => (
-              <div key={item.id} className="flex items-center gap-1 text-[10px] font-mono text-text-secondary">
+              <div key={item?.id ?? idx} className="flex items-center gap-1 text-[10px] font-mono text-text-secondary">
                 <span
                   className="w-2 h-2 rounded-full inline-block"
                   style={{ backgroundColor: colors[idx % colors.length] }}
                 />
-                <span className="truncate max-w-[120px]">{item.category || item.fund_name}</span>
+                <span className="truncate max-w-[120px]">{item?.category || item?.fund_name || "Fund"}</span>
               </div>
             ))}
           </div>
@@ -180,60 +187,68 @@ export function SIPDashboard({
 
       {/* SIP Card Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        {list.map((item, idx) => (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: idx * 0.04 }}
-            className="p-4 rounded-lg bg-surface border border-border-default hover:border-border-strong transition-colors duration-150 shadow-xs flex flex-col justify-between gap-3"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-surface-secondary text-text-secondary border border-border-default mb-1 inline-block">
-                  {item.category}
-                </span>
-                <h4 className="text-sm font-semibold text-text-primary leading-tight">
-                  {item.fund_name}
-                </h4>
-              </div>
+        {list.map((item, idx) => {
+          if (!item) return null;
+          const retPct = item.returns_pct ?? 0;
+          const monthlyAmt = item.monthly_amount ?? 0;
+          const investedAmt = item.total_invested ?? 0;
+          const currentVal = item.current_value ?? 0;
 
-              <span
-                className={clsx(
-                  "px-2 py-0.5 rounded text-[11px] font-mono font-bold flex items-center gap-0.5 border shrink-0",
-                  item.returns_pct >= 0
-                    ? "bg-[#2FA66A]/10 text-[#2FA66A] border-[#2FA66A]/20"
-                    : "bg-[#CF421C]/10 text-[#CF421C] border-[#CF421C]/20"
-                )}
-              >
-                {item.returns_pct >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {item.returns_pct >= 0 ? `+${item.returns_pct}%` : `${item.returns_pct}%`}
-              </span>
-            </div>
+          return (
+            <motion.div
+              key={item.id ?? idx}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: idx * 0.04 }}
+              className="p-4 rounded-lg bg-surface border border-border-default hover:border-border-strong transition-colors duration-150 shadow-xs flex flex-col justify-between gap-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-surface-secondary text-text-secondary border border-border-default mb-1 inline-block">
+                    {item.category ?? "Equity"}
+                  </span>
+                  <h4 className="text-sm font-semibold text-text-primary leading-tight">
+                    {item.fund_name ?? "Mutual Fund"}
+                  </h4>
+                </div>
 
-            <div className="grid grid-cols-3 gap-2 border-t border-border-default pt-2.5 text-xs font-mono">
-              <div>
-                <span className="text-[10px] text-text-muted block">SIP / Mo</span>
-                <span className="font-semibold text-text-primary">{formatCurrency(item.monthly_amount)}</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-text-muted block">Invested</span>
-                <span className="text-text-secondary">{formatCurrency(item.total_invested)}</span>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] text-text-muted block">Current Value</span>
                 <span
                   className={clsx(
-                    "font-bold",
-                    item.current_value >= item.total_invested ? "text-[#2FA66A]" : "text-[#CF421C]"
+                    "px-2 py-0.5 rounded text-[11px] font-mono font-bold flex items-center gap-0.5 border shrink-0",
+                    (retPct ?? 0) >= 0
+                      ? "bg-[#2FA66A]/10 text-[#2FA66A] border-[#2FA66A]/20"
+                      : "bg-[#CF421C]/10 text-[#CF421C] border-[#CF421C]/20"
                   )}
                 >
-                  {formatCurrency(item.current_value)}
+                  {(retPct ?? 0) >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                  {(retPct ?? 0) >= 0 ? `+${(retPct ?? 0)}%` : `${(retPct ?? 0)}%`}
                 </span>
               </div>
-            </div>
-          </motion.div>
-        ))}
+
+              <div className="grid grid-cols-3 gap-2 border-t border-border-default pt-2.5 text-xs font-mono">
+                <div>
+                  <span className="text-[10px] text-text-muted block">SIP / Mo</span>
+                  <span className="font-semibold text-text-primary">{formatCurrency(monthlyAmt ?? 0)}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-text-muted block">Invested</span>
+                  <span className="text-text-secondary">{formatCurrency(investedAmt ?? 0)}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-text-muted block">Current Value</span>
+                  <span
+                    className={clsx(
+                      "font-bold",
+                      (currentVal ?? 0) >= (investedAmt ?? 0) ? "text-[#2FA66A]" : "text-[#CF421C]"
+                    )}
+                  >
+                    {formatCurrency(currentVal ?? 0)}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );

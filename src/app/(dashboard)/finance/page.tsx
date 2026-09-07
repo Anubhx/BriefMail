@@ -26,6 +26,30 @@ const TABS = [
   { id: "subscriptions", label: "Subscriptions", icon: RefreshCw },
 ];
 
+const FALLBACK_FINANCE_DATA = {
+  overview: {
+    total_debits: 0,
+    total_credits: 0,
+    total_debits_this_month: 0,
+    total_credits_this_month: 0,
+    next_emi: null,
+    active_sips_total: 0,
+    has_data: false,
+  },
+  transactions: [],
+  emi_tracker: [],
+  sip_investments: [],
+  investments: {
+    has_data: false,
+    total_portfolio_value: 0,
+    total_invested: 0,
+    overall_returns_pct: 0,
+    sips: [],
+  },
+  subscriptions: [],
+  has_data: false,
+};
+
 export default function FinancePage() {
   const [activeTab, setActiveTab] = useState<string>("overview");
 
@@ -33,12 +57,40 @@ export default function FinancePage() {
   const { data, isLoading } = useQuery({
     queryKey: ["finance-summary"],
     queryFn: async () => {
-      const res = await fetch("/api/finance/summary");
-      if (!res.ok) throw new Error("Failed to load finance data");
-      return res.json();
+      try {
+        const res = await fetch("/api/finance/summary");
+        if (!res.ok) {
+          return FALLBACK_FINANCE_DATA;
+        }
+        const json = await res.json();
+        return json ?? FALLBACK_FINANCE_DATA;
+      } catch (err) {
+        console.error("Failed to load finance data:", err);
+        return FALLBACK_FINANCE_DATA;
+      }
     },
     staleTime: 1000 * 60 * 5, // 5 min cache
   });
+
+  const emiItems = Array.isArray(data?.emi_tracker)
+    ? data.emi_tracker
+    : (data?.emi_tracker?.items ?? []);
+  const emiTotalOutstanding = Array.isArray(data?.emi_tracker)
+    ? undefined
+    : data?.emi_tracker?.total_outstanding;
+
+  const transactions = data?.transactions ?? [];
+
+  const sips =
+    Array.isArray(data?.sip_investments) && data.sip_investments.length > 0
+      ? data.sip_investments
+      : (data?.investments?.sips ?? (Array.isArray(data?.sip_investments) ? data.sip_investments : []));
+
+  const totalPortfolioValue = data?.investments?.total_portfolio_value ?? 0;
+  const totalInvested = data?.investments?.total_invested ?? 0;
+  const overallReturnsPct = data?.investments?.overall_returns_pct ?? 0;
+
+  const subscriptions = data?.subscriptions ?? [];
 
   return (
     <div className="flex flex-col gap-5 max-w-7xl mx-auto h-full font-ui select-none pb-12">
@@ -111,8 +163,8 @@ export default function FinancePage() {
                     Upcoming Liabilities & EMIs
                   </h3>
                   <EMITimeline
-                    items={data?.emi_tracker?.items}
-                    totalOutstanding={data?.emi_tracker?.total_outstanding}
+                    items={emiItems}
+                    totalOutstanding={emiTotalOutstanding}
                   />
                 </div>
 
@@ -120,34 +172,34 @@ export default function FinancePage() {
                   <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-text-muted mb-3">
                     Recent Transactions
                   </h3>
-                  <TransactionList transactions={data?.transactions?.slice(0, 4)} />
+                  <TransactionList transactions={(transactions ?? []).slice(0, 4)} />
                 </div>
               </div>
             </div>
           )}
 
           {activeTab === "transactions" && (
-            <TransactionList transactions={data?.transactions} />
+            <TransactionList transactions={transactions} />
           )}
 
           {activeTab === "emi" && (
             <EMITimeline
-              items={data?.emi_tracker?.items}
-              totalOutstanding={data?.emi_tracker?.total_outstanding}
+              items={emiItems}
+              totalOutstanding={emiTotalOutstanding}
             />
           )}
 
           {activeTab === "investments" && (
             <SIPDashboard
-              sips={data?.investments?.sips}
-              totalValue={data?.investments?.total_portfolio_value}
-              totalInvested={data?.investments?.total_invested}
-              overallReturnsPct={data?.investments?.overall_returns_pct}
+              sips={sips}
+              totalValue={totalPortfolioValue}
+              totalInvested={totalInvested}
+              overallReturnsPct={overallReturnsPct}
             />
           )}
 
           {activeTab === "subscriptions" && (
-            <SubscriptionsList subscriptions={data?.subscriptions} />
+            <SubscriptionsList subscriptions={subscriptions} />
           )}
         </motion.div>
       </AnimatePresence>
