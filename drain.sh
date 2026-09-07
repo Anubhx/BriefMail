@@ -1,7 +1,22 @@
 #!/bin/bash
 
-SECRET="ecd42864603dfaab506abc673e0fb6d3e58dca3b232678b76fe409714a852fb1"
-URL="https://briefmail.vercel.app/api/queue/drain"
+# Load environment variables from .env if available
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/.env" ]; then
+  export $(grep -v '^#' "$SCRIPT_DIR/.env" | grep -E '^N8N_WEBHOOK_SECRET|^NEXT_PUBLIC_APP_URL' | xargs)
+elif [ -f "$SCRIPT_DIR/.env.local" ]; then
+  export $(grep -v '^#' "$SCRIPT_DIR/.env.local" | grep -E '^N8N_WEBHOOK_SECRET|^NEXT_PUBLIC_APP_URL' | xargs)
+fi
+
+SECRET="${N8N_WEBHOOK_SECRET}"
+BASE_URL="${NEXT_PUBLIC_APP_URL:-https://briefmail.vercel.app}"
+URL="${BASE_URL%/}/api/queue/drain"
+
+if [ -z "$SECRET" ]; then
+  echo "❌ Error: N8N_WEBHOOK_SECRET environment variable is missing."
+  echo "Please export N8N_WEBHOOK_SECRET=... or add it to your .env file."
+  exit 1
+fi
 
 echo "Starting queue drain loop against $URL..."
 echo "Configured for Gemini 3.5 Flash Lite with multi-key rate-limit pacing (3s delay)"
