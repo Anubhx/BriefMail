@@ -12,10 +12,14 @@ const config: Config = {
           subtle: "rgba(255, 90, 42, 0.08)",
           muted: "rgba(255, 90, 42, 0.15)",
         },
+        background: {
+          DEFAULT: "#FFFFFF",
+        },
         surface: {
           canvas: "#F5F3EE",
           base: "#F5F3EE",
           DEFAULT: "#FFFFFF",
+          primary: "#FFFFFF",
           secondary: "#F8F7F4",
           elevated: "#F8F7F4",
           subtle: "#F1F0EC",

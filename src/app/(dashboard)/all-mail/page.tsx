@@ -213,7 +213,9 @@ export default function AllMailPage() {
       if (page === 1) {
         setAllFetchedEmails(data.emails);
         if (data.emails.length > 0) {
-          setSelectedEmailId(data.emails[0].id);
+          if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+            setSelectedEmailId(data.emails[0].id);
+          }
         } else {
           setSelectedEmailId(null);
         }
@@ -581,7 +583,7 @@ export default function AllMailPage() {
                     onClick={() => toggleCategory(cat.id)}
                     className={`flex items-center justify-between px-2.5 py-1.5 rounded border text-xs transition-all text-left ${
                       isSelected
-                        ? "bg-surface-primary border-brand text-brand font-semibold shadow-xs"
+                        ? "bg-surface border-brand text-brand font-semibold shadow-xs"
                         : "bg-surface hover:bg-surface-subtle text-text-muted border-border"
                     }`}
                   >
@@ -807,7 +809,7 @@ export default function AllMailPage() {
         </div>
 
         {/* Desktop Reading Pane (Split on lg screens) */}
-        <div className="hidden lg:flex flex-1 bg-surface rounded-lg border border-border p-8 flex-col justify-start overflow-y-auto min-h-[600px]">
+        <div className="hidden lg:flex flex-1 bg-background bg-white dark:bg-gray-900 rounded-lg border border-border p-8 flex-col justify-start overflow-y-auto min-h-[600px]">
           {selectedEmail ? (
             <div className="flex flex-col gap-6 max-w-prose">
               {/* Header Details */}
@@ -936,7 +938,10 @@ export default function AllMailPage() {
         <div className="lg:hidden">
           <EmailDetail
             email={selectedEmail || activeEmailModal}
-            onClose={() => setActiveEmailModal(null)}
+            onClose={() => {
+              setActiveEmailModal(null);
+              setSelectedEmailId(null);
+            }}
             onArchive={(id) => archiveMutation.mutate(id)}
             onSnooze={(id, snoozeUntil) => snoozeMutation.mutate({ id, snoozeUntil })}
             onStar={(id, isStarred) => starMutation.mutate({ id, isStarred })}

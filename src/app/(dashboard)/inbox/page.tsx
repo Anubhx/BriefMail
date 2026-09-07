@@ -76,7 +76,9 @@ function InboxContent() {
         setAllFetchedEmails(data.emails);
         // Auto-select first email on desktop if none selected
         if (!selectedEmailId && data.emails.length > 0) {
-          setSelectedEmailId(data.emails[0].id);
+          if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+            setSelectedEmailId(data.emails[0].id);
+          }
         }
       } else {
         setAllFetchedEmails((prev) => {
@@ -207,7 +209,7 @@ function InboxContent() {
                 setSearchQuery(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-8 pr-3 py-1.5 rounded border border-border bg-surface-primary text-xs text-text-primary placeholder:text-text-muted focus:border-brand focus:outline-none transition-colors"
+              className="w-full pl-8 pr-3 py-1.5 rounded border border-border bg-surface text-xs text-text-primary placeholder:text-text-muted focus:border-brand focus:outline-none transition-colors"
             />
           </div>
 
@@ -320,7 +322,7 @@ function InboxContent() {
         </div>
 
         {/* Desktop Reading Pane (Split on lg screens) */}
-        <div className="hidden lg:flex flex-1 bg-surface rounded-lg border border-border p-8 flex-col justify-start overflow-y-auto min-h-[600px]">
+        <div className="hidden lg:flex flex-1 bg-background bg-white dark:bg-gray-900 rounded-lg border border-border p-8 flex-col justify-start overflow-y-auto min-h-[600px]">
           {selectedEmail ? (
             <div className="flex flex-col gap-6 max-w-prose">
               {/* Header Details */}
@@ -448,7 +450,10 @@ function InboxContent() {
         <div className="lg:hidden">
           <EmailDetail
             email={selectedEmail || activeEmailModal}
-            onClose={() => setActiveEmailModal(null)}
+            onClose={() => {
+              setActiveEmailModal(null);
+              setSelectedEmailId(null);
+            }}
             onArchive={(id) => archiveMutation.mutate(id)}
             onSnooze={(id, snoozeUntil) => snoozeMutation.mutate({ id, snoozeUntil })}
             onStar={(id, isStarred) => starMutation.mutate({ id, isStarred })}

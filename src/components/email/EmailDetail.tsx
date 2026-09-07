@@ -104,30 +104,30 @@ export function EmailDetail({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex justify-end bg-black/30 backdrop-blur-xs">
-        {/* Backdrop dismiss */}
+      <div className="fixed inset-0 z-50 flex justify-end bg-background bg-white dark:bg-gray-900 md:bg-black/40 md:backdrop-blur-xs overflow-hidden">
+        {/* Backdrop dismiss on tablet/desktop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0"
+          className="hidden md:block absolute inset-0"
         />
 
-        {/* Panel Container — Full screen on Mobile, clean slide-over on Tablet/Desktop */}
+        {/* Panel Container — Full screen takeover on Mobile with solid background, slide-over on Desktop */}
         <motion.div
           initial={{ x: "100%" }}
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", stiffness: 320, damping: 32 }}
-          className="relative w-full md:max-w-2xl lg:max-w-3xl h-full bg-surface-primary flex flex-col z-10 shadow-elevation-3 overflow-hidden"
+          className="relative w-full md:max-w-2xl lg:max-w-3xl h-full bg-background bg-white dark:bg-gray-900 flex flex-col z-50 shadow-elevation-3 overflow-hidden"
           style={{
             paddingTop: "env(safe-area-inset-top, 0px)",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
           }}
         >
           {/* Top Sticky Header Actions */}
-          <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-border bg-surface shrink-0">
+          <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-border bg-background bg-white dark:bg-gray-900 shrink-0 z-10">
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
@@ -219,7 +219,7 @@ export function EmailDetail({
           </div>
 
           {/* Reading Canvas */}
-          <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-8 space-y-7 bg-surface-primary">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-10 py-6 sm:py-8 space-y-7 bg-background bg-white dark:bg-gray-900">
             {/* Subject - Editorial Headline */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
