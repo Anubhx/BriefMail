@@ -45,6 +45,41 @@ export const FINANCE_DOMAINS: string[] = [
   "easebuzz.com",
 ];
 
+export const FINANCE_TRANSACTION_DOMAINS: string[] = [
+  "hdfcbank.com",
+  "icicibank.com",
+  "axisbank.com",
+  "sbi.co.in",
+  "kotak.com",
+  "paytm.com",
+  "phonepe.com",
+  "gpay.com",
+  "razorpay.com",
+  "stripe.com",
+  "zerodha.com",
+  "groww.in",
+  "kfintech.com",
+  "camsites.com",
+  "camsonline.com",
+  "karvyfintech.com",
+  "billdesk.com",
+  "ccavenue.com",
+];
+
+export const SOCIAL_DOMAINS: string[] = [
+  "linkedin.com",
+  "twitter.com",
+  "x.com",
+  "instagram.com",
+  "facebook.com",
+  "snapchat.com",
+  "youtube.com",
+  "reddit.com",
+  "quora.com",
+  "medium.com",
+  "substack.com",
+];
+
 const INVESTMENT_DOMAINS: string[] = [
   "camsonline.com",
   "karvyfintech.com",
@@ -106,23 +141,96 @@ function matchSubject(subject: string, patterns: [RegExp, string][]): string | n
   return null;
 }
 
-// ── Finance subject patterns ─────────────────────────────────────────────────
+// ── OTP Subject Patterns (High Priority) ──────────────────────────────────────
 
-const FINANCE_SUBJECT_PATTERNS: [RegExp, string][] = [
-  [/EMI\s*(due|debit|receipt|paid|processed)/i, "emi_payment"],
-  [/auto.?debit|nach\s*(debit|mandate)/i, "emi_payment"],
+const OTP_SUBJECT_PATTERNS: RegExp[] = [
+  /\bOTP\b/i,
+  /one\s*time\s*password/i,
+  /verification\s*code/i,
+  /your\s*code\s*is/i,
+  /security\s*code/i,
+  /login\s*code/i,
+  /authentication\s*code/i,
+  /\b2FA\b/i,
+  /verify\s*your/i,
+];
+
+// ── Ads & Promotional Patterns ────────────────────────────────────────────────
+
+const ADS_SENDER_REGEX = /^(?:noreply|no-reply|marketing|promotions|offers|deals|newsletter)@/i;
+
+const ADS_SUBJECT_PATTERNS: [RegExp, string][] = [
+  [/%\s*off/i, "promo_discount"],
+  [/\bsale\b/i, "promo_sale"],
+  [/\boffer\b/i, "promo_offer"],
+  [/\bdiscount\b/i, "promo_discount"],
+  [/\bdeal\b/i, "promo_deal"],
+  [/limited\s*time/i, "limited_time_offer"],
+  [/\bexclusive\b/i, "exclusive_offer"],
+  [/\bunsubscribe\b/i, "marketing_unsub"],
+  [/\bpromo\b/i, "promo_code"],
+  [/\bcashback\b/i, "cashback_offer"],
+  [/reward\s*points?/i, "reward_points"],
+  [/\bwin\b/i, "contest_win"],
+  [/free\s*gift/i, "free_gift"],
+  [/click\s*here/i, "cta_promo"],
+  [/shop\s*now/i, "cta_shop"],
+  [/buy\s*now/i, "cta_buy"],
+];
+
+// Bank promotional keywords that should be categorized as 'ads', NOT 'finance'
+const BANK_PROMO_KEYWORDS = /\b(offer|reward|cashback|credit\s*card|apply\s*now|pre-?approved)\b/i;
+
+// ── Social Subject Patterns ───────────────────────────────────────────────────
+
+const SOCIAL_SUBJECT_PATTERNS: [RegExp, string][] = [
+  [/accepted\s*your/i, "social_accepted"],
+  [/connected\s*with\s*you/i, "social_connected"],
+  [/commented\s*on/i, "social_comment"],
+  [/liked\s*your/i, "social_like"],
+  [/followed\s*you/i, "social_follow"],
+  [/mentioned\s*you/i, "social_mention"],
+  [/sent\s*you\s*a\s*message/i, "social_message"],
+  [/\binvitation\b/i, "social_invitation"],
+];
+
+// ── Newsletter Subject Patterns ───────────────────────────────────────────────
+
+const NEWSLETTER_SUBJECT_PATTERNS: [RegExp, string][] = [
+  [/\bunsubscribe\b/i, "newsletter_unsub"],
+  [/view\s*in\s*browser/i, "newsletter_view_browser"],
+  [/email\s*preferences/i, "newsletter_prefs"],
+  [/manage\s*subscription/i, "newsletter_manage"],
+  [/issue\s*#\d+/i, "newsletter_issue"],
+  [/weekly\s*digest/i, "weekly_digest"],
+  [/monthly\s*update/i, "monthly_update"],
+  [/\bnewsletter\b/i, "newsletter_digest"],
+];
+
+// ── Finance Transaction Patterns ──────────────────────────────────────────────
+
+const FINANCE_TRANSACTION_SUBJECT_PATTERNS: [RegExp, string][] = [
+  [/\bdebited\b/i, "bank_debit"],
+  [/\bcredited\b/i, "bank_credit"],
+  [/\btransaction\b/i, "bank_transaction"],
+  [/payment\s*(received|sent|processed|successful)/i, "payment_status"],
+  [/\btransferred\b/i, "fund_transfer"],
+  [/\bstatement\b|e-statement|mini\s*statement/i, "bank_statement"],
+  [/bill\s*generated/i, "bill_generated"],
+  [/\bEMI\b|auto.?debit|nach\s*(debit|mandate)/i, "emi_payment"],
+  [/due\s*date/i, "bill_due"],
+  [/amount\s*due/i, "amount_due"],
+  [/\binvoice\b/i, "invoice"],
+  [/\breceipt\b/i, "receipt"],
   [/credit\s*card\s*(statement|bill|due|payment|outstanding)/i, "credit_card_bill"],
   [/balance\s*conversion|emi\s*conversion/i, "credit_card_bill"],
   [/a\/c\s*(x+\d+\s*)?(credited|debited)|account\s*(credited|debited)/i, "bank_alert"],
   [/UPI\s*(credit|debit|transaction|ref)/i, "upi_neft"],
   [/NEFT|RTGS|IMPS|fund\s*transfer/i, "upi_neft"],
-  [/mini\s*statement|account\s*statement|e-statement/i, "bank_statement"],
-  [/loan\s*(disburs|sanctioned|approved)/i, "loan_offer"],
-  [/personal\s*loan\s*offer|pre-?approved\s*loan/i, "loan_offer"],
   [/insurance\s*(premium|renewal|policy|due)/i, "insurance"],
 ];
 
-// ── Investment subject patterns ───────────────────────────────────────────────
+// ── Investment Subject Patterns ───────────────────────────────────────────────
 
 const INVESTMENT_SUBJECT_PATTERNS: [RegExp, string][] = [
   [/SIP\s*(confirmation|successful|executed|processed|alert)/i, "sip_confirmation"],
@@ -137,7 +245,7 @@ const INVESTMENT_SUBJECT_PATTERNS: [RegExp, string][] = [
   [/portfolio\s*(update|statement|summary)/i, "portfolio_update"],
 ];
 
-// ── Job subject patterns ──────────────────────────────────────────────────────
+// ── Job Subject Patterns ──────────────────────────────────────────────────────
 
 const JOB_SUBJECT_PATTERNS: [RegExp, string][] = [
   [/UI.?UX|user\s*interface|interaction\s*design|product\s*designer/i, "uiux_role"],
@@ -150,6 +258,27 @@ const JOB_SUBJECT_PATTERNS: [RegExp, string][] = [
   [/referral\s*(update|received|submitted)/i, "referral"],
 ];
 
+// ── Career Subject Patterns ───────────────────────────────────────────────────
+
+const CAREER_SUBJECT_PATTERNS: [RegExp, string][] = [
+  [/offer\s*letter|pleased\s*to\s*offer|job\s*offer/i, "offer_letter"],
+  [/congratulations.*offer|we.?d\s*like\s*to\s*offer/i, "offer_letter"],
+  [/interview\s*(invite|invitation|scheduled|schedule|confirmed|confirmation)/i, "interview_invite"],
+  [/technical\s*(round|interview)|hr\s*(round|interview)/i, "interview_invite"],
+  [/assessment|coding\s*(test|challenge|round)|hackerrank|technical\s*task/i, "assessment_link"],
+  [/portfolio\s*(review|submission|request)/i, "portfolio_request"],
+  [/unfortunately|not\s*moving\s*forward|regret\s*to\s*inform|not\s*selected/i, "rejection"],
+];
+
+// ── Meeting Subject Patterns ──────────────────────────────────────────────────
+
+const MEETING_SUBJECT_PATTERNS: RegExp[] = [
+  /meeting\s*(invite|invitation|request|scheduled|confirmed)/i,
+  /calendar\s*invite|you.?re\s*invited\s*to/i,
+  /google\s*meet|zoom\.us|teams\.microsoft|webex/i,
+  /call\s*(scheduled|invite|invitation)/i,
+];
+
 // ── Main classifier ───────────────────────────────────────────────────────────
 
 export function classifyByRules(email: EmailInput): ClassificationResult | null {
@@ -157,29 +286,138 @@ export function classifyByRules(email: EmailInput): ClassificationResult | null 
   const fromEmail = email.from_email ?? "";
   const labels = email.labels ?? [];
 
-  // ── RULE SET 1: Finance ────────────────────────────────────────────────────
-  if (hasDomain(fromEmail, FINANCE_DOMAINS)) {
-    const refined = matchSubject(subject, FINANCE_SUBJECT_PATTERNS);
+  const hasPromotionsLabel = labels.some((l) => l.toUpperCase().includes("CATEGORY_PROMOTIONS"));
+  const hasUpdatesLabel = labels.some((l) => l.toUpperCase().includes("CATEGORY_UPDATES"));
+
+  // ── RULE SET 1: OTPs & Verification (HIGH PRIORITY ACTION ITEM) ─────────────
+  const isOtp = OTP_SUBJECT_PATTERNS.some((re) => re.test(subject));
+  if (isOtp) {
     return {
-      category: "finance",
-      subcategory: refined ?? "bank_alert",
+      category: "otp",
+      subcategory: "otp_verification",
+      confidence: 0.98,
+      tier: "regex",
+      has_action_item: true,
+    };
+  }
+
+  // ── RULE SET 2: Ads / Bank Promotional Checks ───────────────────────────────
+  // Special check: Bank emails with promotional subject → category = 'ads', NOT 'finance'
+  const isBankDomain = hasDomain(fromEmail, FINANCE_DOMAINS) || hasDomain(fromEmail, FINANCE_TRANSACTION_DOMAINS);
+  if (isBankDomain && BANK_PROMO_KEYWORDS.test(subject)) {
+    // Check if it's actually an explicit statement/bill/debit rather than a promo
+    const isExplicitStatement = /(statement|bill\s*generated|due\s*date|debited|credited)/i.test(subject);
+    if (!isExplicitStatement) {
+      return {
+        category: "ads",
+        subcategory: "bank_promo",
+        confidence: 0.95,
+        tier: "regex",
+      };
+    }
+  }
+
+  // Check sender patterns for ads: noreply@*, marketing@*, promotions@*, etc.
+  const isAdsSender = ADS_SENDER_REGEX.test(fromEmail);
+  const adsSubMatch = matchSubject(subject, ADS_SUBJECT_PATTERNS);
+
+  if (isAdsSender && (adsSubMatch || hasPromotionsLabel)) {
+    return {
+      category: "ads",
+      subcategory: adsSubMatch ?? "promotional",
+      confidence: 0.92,
+      tier: "regex",
+    };
+  }
+
+  // Subject pattern matches strong promo signals or Gmail promotion label
+  if (hasPromotionsLabel) {
+    return {
+      category: "ads",
+      subcategory: adsSubMatch ?? "promotions",
+      confidence: 0.9,
+      tier: "regex",
+    };
+  }
+
+  if (adsSubMatch) {
+    return {
+      category: "ads",
+      subcategory: adsSubMatch,
+      confidence: 0.88,
+      tier: "regex",
+    };
+  }
+
+  // ── RULE SET 3: Social Network Notifications ────────────────────────────────
+  const isSocialSender = hasDomain(fromEmail, SOCIAL_DOMAINS);
+  const socialSubMatch = matchSubject(subject, SOCIAL_SUBJECT_PATTERNS);
+
+  if (isSocialSender) {
+    return {
+      category: "social",
+      subcategory: socialSubMatch ?? "social_notification",
+      confidence: 0.93,
+      tier: "regex",
+    };
+  }
+
+  // For non-social sender domains, ensure subject doesn't match meeting invites before treating as social
+  const isMeetingSubject = MEETING_SUBJECT_PATTERNS.some((re) => re.test(subject));
+  if (socialSubMatch && !isMeetingSubject) {
+    if (socialSubMatch !== "social_invitation" || /connect|network|friend|follow|profile/i.test(subject)) {
+      return {
+        category: "social",
+        subcategory: socialSubMatch,
+        confidence: 0.85,
+        tier: "regex",
+      };
+    }
+  }
+
+  // ── RULE SET 4: Newsletters & Subscriptions ─────────────────────────────────
+  const newsletterSubMatch = matchSubject(subject, NEWSLETTER_SUBJECT_PATTERNS);
+  if (newsletterSubMatch || (hasUpdatesLabel && (ADS_SENDER_REGEX.test(fromEmail) || /digest|newsletter|weekly|update/i.test(subject)))) {
+    return {
+      category: "newsletter",
+      subcategory: newsletterSubMatch ?? "newsletter_digest",
+      confidence: 0.9,
+      tier: "regex",
+    };
+  }
+
+  // ── RULE SET 5: Finance Transactions & Finance ──────────────────────────────
+  // Keep existing 'finance' logic aligned with real financial activity
+  const txnSubMatch = matchSubject(subject, FINANCE_TRANSACTION_SUBJECT_PATTERNS);
+
+  if (isBankDomain && txnSubMatch) {
+    return {
+      category: "finance_transaction",
+      subcategory: txnSubMatch,
+      confidence: 0.96,
+      tier: "regex",
+    };
+  }
+
+  if (hasDomain(fromEmail, FINANCE_DOMAINS) && txnSubMatch) {
+    return {
+      category: "finance_transaction",
+      subcategory: txnSubMatch,
       confidence: 0.95,
       tier: "regex",
     };
   }
 
-  // Finance subject-only check (even without matching sender)
-  const financeSubMatch = matchSubject(subject, FINANCE_SUBJECT_PATTERNS);
-  if (financeSubMatch) {
+  if (txnSubMatch) {
     return {
-      category: "finance",
-      subcategory: financeSubMatch,
-      confidence: 0.85,
+      category: "finance_transaction",
+      subcategory: txnSubMatch,
+      confidence: 0.88,
       tier: "regex",
     };
   }
 
-  // ── RULE SET 2: Investments ────────────────────────────────────────────────
+  // ── RULE SET 6: Investments ────────────────────────────────────────────────
   if (hasDomain(fromEmail, INVESTMENT_DOMAINS)) {
     const refined = matchSubject(subject, INVESTMENT_SUBJECT_PATTERNS);
     return {
@@ -200,7 +438,18 @@ export function classifyByRules(email: EmailInput): ClassificationResult | null 
     };
   }
 
-  // ── RULE SET 3: Jobs ───────────────────────────────────────────────────────
+  // ── RULE SET 7: Career Events ──────────────────────────────────────────────
+  const careerMatch = matchSubject(subject, CAREER_SUBJECT_PATTERNS);
+  if (careerMatch) {
+    return {
+      category: "career",
+      subcategory: careerMatch,
+      confidence: 0.9,
+      tier: "regex",
+    };
+  }
+
+  // ── RULE SET 8: Jobs ───────────────────────────────────────────────────────
   if (hasDomain(fromEmail, JOB_DOMAINS)) {
     const refined = matchSubject(subject, JOB_SUBJECT_PATTERNS);
     return {
@@ -221,37 +470,9 @@ export function classifyByRules(email: EmailInput): ClassificationResult | null 
     };
   }
 
-  // ── RULE SET 4: Career Events ──────────────────────────────────────────────
-  const careerPatterns: [RegExp, string][] = [
-    [/offer\s*letter|pleased\s*to\s*offer|job\s*offer/i, "offer_letter"],
-    [/congratulations.*offer|we.?d\s*like\s*to\s*offer/i, "offer_letter"],
-    [/interview\s*(invite|invitation|scheduled|schedule|confirmed|confirmation)/i, "interview_invite"],
-    [/technical\s*(round|interview)|hr\s*(round|interview)/i, "interview_invite"],
-    [/assessment|coding\s*(test|challenge|round)|hackerrank|technical\s*task/i, "assessment_link"],
-    [/portfolio\s*(review|submission|request)/i, "portfolio_request"],
-    [/unfortunately|not\s*moving\s*forward|regret\s*to\s*inform|not\s*selected/i, "rejection"],
-  ];
-
-  const careerMatch = matchSubject(subject, careerPatterns);
-  if (careerMatch) {
-    return {
-      category: "career",
-      subcategory: careerMatch,
-      confidence: 0.9,
-      tier: "regex",
-    };
-  }
-
-  // ── RULE SET 5: Meetings ───────────────────────────────────────────────────
-  const meetingSubjectPatterns: RegExp[] = [
-    /meeting\s*(invite|invitation|request|scheduled|confirmed)/i,
-    /calendar\s*invite|you.?re\s*invited\s*to/i,
-    /google\s*meet|zoom\.us|teams\.microsoft|webex/i,
-    /call\s*(scheduled|invite|invitation)/i,
-  ];
-
+  // ── RULE SET 9: Meetings ───────────────────────────────────────────────────
   const hasCalendarLabel = labels.some((l) => l.toUpperCase().includes("CALENDAR"));
-  const meetingSubjectMatch = meetingSubjectPatterns.some((re) => re.test(subject));
+  const meetingSubjectMatch = MEETING_SUBJECT_PATTERNS.some((re) => re.test(subject));
 
   if (meetingSubjectMatch || hasCalendarLabel) {
     return {
@@ -262,10 +483,8 @@ export function classifyByRules(email: EmailInput): ClassificationResult | null 
     };
   }
 
-  // ── RULE SET 6: System / Action ────────────────────────────────────────────
+  // ── RULE SET 10: System / Action ───────────────────────────────────────────
   const systemPatterns: [RegExp, string, boolean][] = [
-    [/\bOTP\b|one.?time\s*(password|pin|code)|verification\s*code/i, "otp_verification", true],
-    [/verify\s*(your|this)\s*(email|account|number|phone)/i, "otp_verification", true],
     [/action\s*required|immediate\s*action|urgent\s*action/i, "action_required", true],
     [/subscription\s*(expir|renew|cancel)/i, "subscription_alert", false],
     [/demat.*annual.*maintenance|AMC\s*(due|charge)/i, "demat_alert", false],
@@ -290,7 +509,19 @@ export function classifyByRules(email: EmailInput): ClassificationResult | null 
 
 export function getRuleStats(): { totalRuleSets: number; categories: string[] } {
   return {
-    totalRuleSets: 6,
-    categories: ["finance", "investments", "jobs", "career", "meetings", "system"],
+    totalRuleSets: 10,
+    categories: [
+      "ads",
+      "social",
+      "newsletter",
+      "otp",
+      "finance_transaction",
+      "finance",
+      "investments",
+      "jobs",
+      "career",
+      "meetings",
+      "system",
+    ],
   };
 }

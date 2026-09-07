@@ -18,6 +18,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const isArchivedParam = searchParams.get("is_archived");
   const isStarredParam = searchParams.get("is_starred");
   const isSnoozedParam = searchParams.get("is_snoozed");
+  const dateFrom = searchParams.get("date_from")?.trim();
+  const dateTo = searchParams.get("date_to")?.trim();
+  const sortParam = searchParams.get("sort") || "received_at";
+  const orderParam = searchParams.get("order")?.toLowerCase() === "asc" ? "asc" : "desc";
+  const gmailAccountId = searchParams.get("gmail_account_id")?.trim();
 
   const db = createServerClient();
 
@@ -64,11 +69,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     )
     .eq("user_id", appUser.id);
 
-  // Archive filter: default to non-archived unless specifically requested, or when querying starred/snoozed directly
+  // Gmail account filter
+  if (gmailAccountId && gmailAccountId !== "all") {
+    query = query.eq("gmail_account_id", gmailAccountId);
+  }
+
+  // Archive filter:
+  // "true" -> archived only
+  // "false" -> unarchived only
+  // "all" -> don't filter on is_archived
+  // undefined/null -> default to unarchived (is_archived = false) unless starred or snoozed directly
   if (isArchivedParam === "true") {
     query = query.eq("is_archived", true);
   } else if (isArchivedParam === "false") {
     query = query.eq("is_archived", false);
+  } else if (isArchivedParam === "all") {
+    // No filter on is_archived - return all
   } else if (!isArchivedParam && isStarredParam !== "true" && isSnoozedParam !== "true") {
     query = query.eq("is_archived", false);
   }
@@ -87,20 +103,50 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     query = query.eq("is_snoozed", false);
   }
 
-  // Category filter
+  // Category filter: supports single category or comma-separated categories (?category=finance,jobs)
   if (categoryParam && categoryParam !== "all") {
-    if (categoryParam === "career" || categoryParam === "jobs") {
-      query = query.in("category", ["career", "jobs"]);
-    } else if (categoryParam === "system") {
-      query = query.or("category.eq.system,subcategory.in.(workspace_notification,platform_digest,system_alert,newsletter)");
-    } else {
-      query = query.eq("category", categoryParam);
+    const categories = categoryParam
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+
+    if (categories.length > 1) {
+      query = query.in("category", categories);
+    } else if (categories.length === 1) {
+      const singleCat = categories[0];
+      if (singleCat === "career" || singleCat === "jobs") {
+        query = query.in("category", ["career", "jobs"]);
+      } else if (singleCat === "system") {
+        query = query.or(
+          "category.eq.system,subcategory.in.(workspace_notification,platform_digest,system_alert,newsletter)"
+        );
+      } else {
+        query = query.eq("category", singleCat);
+      }
     }
   }
 
   // Read / Unread filter
-  if (isReadParam !== null && isReadParam !== undefined) {
+  if (isReadParam !== null && isReadParam !== undefined && isReadParam !== "all") {
     query = query.eq("is_read", isReadParam === "true");
+  }
+
+  // Date range filters (received_at)
+  if (dateFrom) {
+    const fromDate = new Date(dateFrom);
+    if (!isNaN(fromDate.getTime())) {
+      query = query.gte("received_at", fromDate.toISOString());
+    }
+  }
+
+  if (dateTo) {
+    const toDate = new Date(dateTo);
+    if (!isNaN(toDate.getTime())) {
+      if (dateTo.length <= 10) {
+        toDate.setHours(23, 59, 59, 999);
+      }
+      query = query.lte("received_at", toDate.toISOString());
+    }
   }
 
   // Search filter
@@ -108,11 +154,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     query = query.or(`subject.ilike.%${search}%,from_email.ilike.%${search}%,from_name.ilike.%${search}%`);
   }
 
-  // Sorting and Pagination
+  // Sorting & Pagination
+  const validSortColumns = ["received_at", "from_name", "subject"];
+  const sortColumn = validSortColumns.includes(sortParam) ? sortParam : "received_at";
+  const ascending = orderParam === "asc";
+
   const fromIndex = (page - 1) * limit;
   const toIndex = fromIndex + limit - 1;
 
-  query = query.order("received_at", { ascending: false }).range(fromIndex, toIndex);
+  query = query.order(sortColumn, { ascending }).range(fromIndex, toIndex);
 
   const { data: emails, count, error } = await query;
 
@@ -131,11 +181,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const categoryCounts: Record<string, number> = {
     all: categoryStats?.length || 0,
     finance: 0,
+    finance_transaction: 0,
     jobs: 0,
     career: 0,
     investments: 0,
     meetings: 0,
     system: 0,
+    ads: 0,
+    social: 0,
+    newsletter: 0,
+    otp: 0,
   };
 
   if (categoryStats) {
@@ -144,10 +199,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       const sub = (item.subcategory || "").toLowerCase();
 
       if (cat === "finance") categoryCounts.finance++;
+      if (cat === "finance_transaction") {
+        categoryCounts.finance_transaction++;
+        categoryCounts.finance++;
+      }
       if (cat === "investments") categoryCounts.investments++;
       if (cat === "meetings") categoryCounts.meetings++;
       if (cat === "career") categoryCounts.career++;
       if (cat === "jobs") categoryCounts.jobs++;
+      if (cat === "ads") categoryCounts.ads++;
+      if (cat === "social") categoryCounts.social++;
+      if (cat === "newsletter") categoryCounts.newsletter++;
+      if (cat === "otp") categoryCounts.otp++;
       if (
         cat === "system" ||
         ["workspace_notification", "platform_digest", "system_alert", "newsletter"].includes(sub)

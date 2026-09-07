@@ -46,6 +46,13 @@ export interface LiveEmailDetail {
   attachments?: any[];
 }
 
+function addTargetBlank(html: string): string {
+  return html.replace(
+    /<a\s/gi,
+    '<a target="_blank" rel="noopener noreferrer" '
+  );
+}
+
 interface EmailDetailProps {
   email: LiveEmailDetail | null;
   onClose: () => void;
@@ -310,7 +317,7 @@ export function EmailDetail({
               {email.body_html ? (
                 <div
                   className="prose prose-invert max-w-none text-sm text-text-secondary leading-relaxed overflow-x-auto"
-                  dangerouslySetInnerHTML={{ __html: email.body_html }}
+                  dangerouslySetInnerHTML={{ __html: addTargetBlank(email.body_html) }}
                 />
               ) : email.body_text ? (
                 <div className="prose prose-invert max-w-none text-sm text-text-secondary leading-relaxed font-sans whitespace-pre-wrap">

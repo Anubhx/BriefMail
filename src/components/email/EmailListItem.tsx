@@ -82,13 +82,17 @@ export function EmailListItem({
 
   const CATEGORY_COLORS: Record<string, string> = {
     finance: "bg-emerald-500/20 text-emerald-400",
+    finance_transaction: "bg-emerald-500/20 text-emerald-400",
     investments: "bg-blue-500/20 text-blue-400",
     jobs: "bg-violet-500/20 text-violet-400",
     career: "bg-purple-500/20 text-purple-400",
     meetings: "bg-amber-500/20 text-amber-400",
     system: "bg-slate-500/20 text-slate-400",
     offers: "bg-pink-500/20 text-pink-400",
+    ads: "bg-rose-500/20 text-rose-400",
     social: "bg-cyan-500/20 text-cyan-400",
+    newsletter: "bg-teal-500/20 text-teal-400",
+    otp: "bg-orange-500/20 text-orange-300",
     misc: "bg-gray-500/20 text-gray-400",
   };
 

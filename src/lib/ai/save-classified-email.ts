@@ -72,6 +72,8 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
         extracted_data: classification.extracted_data ?? {},
         has_action_item: classification.has_action_item ?? false,
         action_items: classification.action_items ?? [],
+        is_archived: classification.category === "ads" ? true : false,
+        is_read: classification.category === "ads" ? true : false,
       },
       { onConflict: "gmail_account_id,message_id" }
     )
@@ -106,7 +108,7 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
         status: "active",
       });
     } else if (
-      ["upi_neft", "bank_alert", "credit_card_bill", "bank_statement", "finance"].includes(cat) ||
+      ["upi_neft", "bank_alert", "credit_card_bill", "bank_statement", "finance", "finance_transaction"].includes(cat) ||
       ["upi_neft", "bank_alert", "credit_card_bill", "bank_statement"].includes(subcat)
     ) {
       const amount = typeof ext.amount === "number" ? Math.abs(ext.amount) : 0;

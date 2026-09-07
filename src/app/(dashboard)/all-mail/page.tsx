@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EmailListItem } from "@/components/email/EmailListItem";
 import { EmailDetail, LiveEmailDetail } from "@/components/email/EmailDetail";
@@ -11,6 +11,14 @@ import {
   Sparkles,
   ChevronDown,
   CheckCircle2,
+  Filter,
+  SlidersHorizontal,
+  X,
+  Calendar,
+  Layers,
+  User,
+  Check,
+  RotateCcw,
 } from "lucide-react";
 
 interface EmailsApiResponse {
@@ -22,26 +30,173 @@ interface EmailsApiResponse {
   category_counts: Record<string, number>;
 }
 
+interface GmailAccount {
+  id: string;
+  email: string;
+  display_name?: string | null;
+}
+
+const CATEGORY_OPTIONS = [
+  { id: "finance", label: "Finance", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
+  { id: "finance_transaction", label: "Transactions", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
+  { id: "investments", label: "Investments", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
+  { id: "career", label: "Career", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+  { id: "jobs", label: "Jobs", color: "bg-violet-500/20 text-violet-400 border-violet-500/30" },
+  { id: "meetings", label: "Meetings", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
+  { id: "otp", label: "OTP & Codes", color: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
+  { id: "social", label: "Social", color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
+  { id: "newsletter", label: "Newsletters", color: "bg-teal-500/20 text-teal-400 border-teal-500/30" },
+  { id: "ads", label: "Ads & Promo", color: "bg-rose-500/20 text-rose-400 border-rose-500/30" },
+  { id: "system", label: "System", color: "bg-slate-500/20 text-slate-400 border-slate-500/30" },
+  { id: "misc", label: "Misc", color: "bg-gray-500/20 text-gray-400 border-gray-500/30" },
+];
+
+const STATUS_OPTIONS = [
+  { id: "all", label: "All" },
+  { id: "unread", label: "Unread" },
+  { id: "read", label: "Read" },
+  { id: "starred", label: "Starred" },
+  { id: "archived", label: "Archived" },
+];
+
+const SORT_OPTIONS = [
+  { label: "Date (Newest first)", sort: "received_at", order: "desc" },
+  { label: "Date (Oldest first)", sort: "received_at", order: "asc" },
+  { label: "Sender (A-Z)", sort: "from_name", order: "asc" },
+  { label: "Subject (A-Z)", sort: "subject", order: "asc" },
+];
+
+function addTargetBlank(html: string): string {
+  return html.replace(
+    /<a\s/gi,
+    '<a target="_blank" rel="noopener noreferrer" '
+  );
+}
+
 export default function AllMailPage() {
   const queryClient = useQueryClient();
+
+  // Search & Pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [activeEmailModal, setActiveEmailModal] = useState<LiveEmailDetail | null>(null);
   const [allFetchedEmails, setAllFetchedEmails] = useState<LiveEmailDetail[]>([]);
 
-  // 1. Fetch all emails (category=all)
+  // Sorting
+  const [sortBy, setSortBy] = useState<string>("received_at");
+  const [sortOrder, setSortOrder] = useState<string>("desc");
+
+  // Filter Panel visibility & state
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("all");
+
+  // Fetch Connected Gmail Accounts
+  const { data: accountsData } = useQuery<GmailAccount[]>({
+    queryKey: ["gmail-accounts-list"],
+    queryFn: async () => {
+      const res = await fetch("/api/settings/gmail-accounts");
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : data.accounts || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const accounts = accountsData || [];
+
+  // Reset pagination to page 1 whenever filters change
+  const handleFilterChange = () => {
+    setPage(1);
+  };
+
+  // Toggle Category selection
+  const toggleCategory = (catId: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(catId) ? prev.filter((id) => id !== catId) : [...prev, catId]
+    );
+    handleFilterChange();
+  };
+
+  // Clear all filters
+  const handleClearAllFilters = () => {
+    setSelectedCategories([]);
+    setStatusFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setSelectedAccountId("all");
+    setPage(1);
+  };
+
+  // Count active filters
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedCategories.length > 0) count += selectedCategories.length;
+    if (statusFilter !== "all") count += 1;
+    if (dateFrom) count += 1;
+    if (dateTo) count += 1;
+    if (selectedAccountId && selectedAccountId !== "all") count += 1;
+    return count;
+  }, [selectedCategories, statusFilter, dateFrom, dateTo, selectedAccountId]);
+
+  // Main email query with all filter, sort, search params
   const { data, isLoading, isFetching, refetch } = useQuery<EmailsApiResponse>({
-    queryKey: ["emails-all-mail", page, searchQuery],
+    queryKey: [
+      "emails-all-mail",
+      page,
+      searchQuery,
+      sortBy,
+      sortOrder,
+      selectedCategories.join(","),
+      statusFilter,
+      dateFrom,
+      dateTo,
+      selectedAccountId,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams({
-        category: "all",
         page: String(page),
         limit: "50",
+        sort: sortBy,
+        order: sortOrder,
       });
+
       if (searchQuery.trim()) {
         params.set("search", searchQuery.trim());
       }
+
+      if (selectedCategories.length > 0) {
+        params.set("category", selectedCategories.join(","));
+      } else {
+        params.set("category", "all");
+      }
+
+      if (statusFilter === "unread") {
+        params.set("is_read", "false");
+      } else if (statusFilter === "read") {
+        params.set("is_read", "true");
+      } else if (statusFilter === "starred") {
+        params.set("is_starred", "true");
+      } else if (statusFilter === "archived") {
+        params.set("is_archived", "true");
+      } else if (statusFilter === "all") {
+        params.set("is_archived", "all");
+      }
+
+      if (dateFrom) {
+        params.set("date_from", dateFrom);
+      }
+      if (dateTo) {
+        params.set("date_to", dateTo);
+      }
+      if (selectedAccountId && selectedAccountId !== "all") {
+        params.set("gmail_account_id", selectedAccountId);
+      }
+
       const res = await fetch(`/api/emails?${params.toString()}`);
       if (!res.ok) {
         throw new Error("Failed to load all mail");
@@ -52,13 +207,15 @@ export default function AllMailPage() {
     refetchInterval: 30 * 1000,
   });
 
-  // Keep list accumulated if paginating, or reset when search changes
-  React.useEffect(() => {
+  // Keep list accumulated if paginating, or reset when filters/search change
+  useEffect(() => {
     if (data?.emails) {
       if (page === 1) {
         setAllFetchedEmails(data.emails);
-        if (!selectedEmailId && data.emails.length > 0) {
+        if (data.emails.length > 0) {
           setSelectedEmailId(data.emails[0].id);
+        } else {
+          setSelectedEmailId(null);
         }
       } else {
         setAllFetchedEmails((prev) => {
@@ -68,9 +225,9 @@ export default function AllMailPage() {
         });
       }
     }
-  }, [data, page, selectedEmailId]);
+  }, [data, page]);
 
-  // 2. Fetch Single Full Email on click/select
+  // Single full email detail query on selection
   const { data: fullEmailData } = useQuery<{ email: LiveEmailDetail }>({
     queryKey: ["email-detail", selectedEmailId],
     queryFn: async () => {
@@ -86,7 +243,7 @@ export default function AllMailPage() {
   const selectedEmail =
     fullEmailData?.email || allFetchedEmails.find((e) => e.id === selectedEmailId) || null;
 
-  // 3. Actions: Archive, Snooze, Star
+  // Actions: Archive, Snooze, Star
   const archiveMutation = useMutation({
     mutationFn: async (id: string) => {
       await fetch(`/api/emails/${id}/archive`, { method: "PATCH" });
@@ -140,9 +297,19 @@ export default function AllMailPage() {
     );
   };
 
+  // Quick Date Range helper
+  const setPresetDateRange = (days: number) => {
+    const to = new Date();
+    const from = new Date();
+    from.setDate(to.getDate() - days);
+    setDateTo(to.toISOString().split("T")[0]);
+    setDateFrom(from.toISOString().split("T")[0]);
+    handleFilterChange();
+  };
+
   return (
     <div className="flex flex-col gap-4 max-w-7xl mx-auto h-full font-ui pb-8">
-      {/* Header Bar */}
+      {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand shadow-brand-glow">
@@ -153,7 +320,7 @@ export default function AllMailPage() {
               All Mail
             </h1>
             <p className="text-xs text-text-muted">
-              Unified archive and inbox view across all categories
+              Unified inbox, archive, and smart filtered mail stream
             </p>
           </div>
         </div>
@@ -186,13 +353,356 @@ export default function AllMailPage() {
         </div>
       </div>
 
+      {/* Sort & Filter Action Bar (Always Visible) */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 p-2 rounded-xl bg-surface border border-white/10 shadow-xs">
+        {/* Left: Sort Bar */}
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-text-muted font-medium flex items-center gap-1 pl-1">
+            <SlidersHorizontal className="h-3.5 w-3.5 text-brand" />
+            <span className="hidden sm:inline">Sort by:</span>
+          </span>
+          <select
+            value={`${sortBy}:${sortOrder}`}
+            onChange={(e) => {
+              const [s, o] = e.target.value.split(":");
+              setSortBy(s);
+              setSortOrder(o);
+              setPage(1);
+            }}
+            className="bg-surface-elevated border border-white/10 text-text-primary rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-brand cursor-pointer"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={`${opt.sort}:${opt.order}`} value={`${opt.sort}:${opt.order}`}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Right: Filter Toggle Button */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsFilterPanelOpen((prev) => !prev)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg border text-xs font-medium transition-all ${
+              isFilterPanelOpen || activeFiltersCount > 0
+                ? "bg-brand/10 border-brand text-brand shadow-xs"
+                : "bg-surface-elevated hover:bg-surface-overlay border-white/10 text-text-secondary hover:text-text-primary"
+            }`}
+          >
+            <Filter className="h-3.5 w-3.5" />
+            <span>Filters</span>
+            {activeFiltersCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.2 rounded-full bg-brand text-white text-[10px] font-bold">
+                {activeFiltersCount}
+              </span>
+            )}
+            <ChevronDown
+              className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                isFilterPanelOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Collapsible Filter Panel */}
+      {isFilterPanelOpen && (
+        <div className="p-4 rounded-xl bg-surface border border-brand/20 shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-brand" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary">
+                Filter Mail
+              </h3>
+            </div>
+            {activeFiltersCount > 0 && (
+              <button
+                onClick={handleClearAllFilters}
+                className="text-[11px] text-brand hover:underline flex items-center gap-1"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Reset all filters
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            {/* 1. Date Range Section */}
+            <div className="space-y-2 p-3 rounded-lg bg-surface-elevated/40 border border-white/5">
+              <label className="font-semibold text-text-primary flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-brand" />
+                Date Range
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-[10px] text-text-muted block mb-1">From</span>
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => {
+                      setDateFrom(e.target.value);
+                      handleFilterChange();
+                    }}
+                    className="w-full bg-surface border border-white/10 rounded-md p-1.5 text-xs text-text-primary focus:outline-none focus:border-brand"
+                  />
+                </div>
+                <div>
+                  <span className="text-[10px] text-text-muted block mb-1">To</span>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => {
+                      setDateTo(e.target.value);
+                      handleFilterChange();
+                    }}
+                    className="w-full bg-surface border border-white/10 rounded-md p-1.5 text-xs text-text-primary focus:outline-none focus:border-brand"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 pt-1">
+                <button
+                  onClick={() => setPresetDateRange(7)}
+                  className="px-2 py-0.5 rounded bg-surface hover:bg-surface-overlay text-[11px] text-text-secondary border border-white/5"
+                >
+                  Last 7 days
+                </button>
+                <button
+                  onClick={() => setPresetDateRange(30)}
+                  className="px-2 py-0.5 rounded bg-surface hover:bg-surface-overlay text-[11px] text-text-secondary border border-white/5"
+                >
+                  Last 30 days
+                </button>
+                {(dateFrom || dateTo) && (
+                  <button
+                    onClick={() => {
+                      setDateFrom("");
+                      setDateTo("");
+                      handleFilterChange();
+                    }}
+                    className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-[11px]"
+                  >
+                    Clear dates
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Status Selector */}
+            <div className="space-y-2 p-3 rounded-lg bg-surface-elevated/40 border border-white/5">
+              <label className="font-semibold text-text-primary flex items-center gap-1.5">
+                <Layers className="h-3.5 w-3.5 text-brand" />
+                Status
+              </label>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {STATUS_OPTIONS.map((st) => {
+                  const isSelected = statusFilter === st.id;
+                  return (
+                    <button
+                      key={st.id}
+                      onClick={() => {
+                        setStatusFilter(st.id);
+                        handleFilterChange();
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                        isSelected
+                          ? "bg-brand text-white border-brand shadow-xs"
+                          : "bg-surface hover:bg-surface-overlay text-text-secondary border-white/10"
+                      }`}
+                    >
+                      {st.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 3. Connected Gmail Account */}
+            <div className="space-y-2 p-3 rounded-lg bg-surface-elevated/40 border border-white/5">
+              <label className="font-semibold text-text-primary flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5 text-brand" />
+                Gmail Account
+              </label>
+              <select
+                value={selectedAccountId}
+                onChange={(e) => {
+                  setSelectedAccountId(e.target.value);
+                  handleFilterChange();
+                }}
+                className="w-full bg-surface border border-white/10 text-text-primary rounded-md p-1.5 text-xs focus:outline-none focus:border-brand cursor-pointer"
+              >
+                <option value="all">All Connected Accounts</option>
+                {accounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.email} {acc.display_name ? `(${acc.display_name})` : ""}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-text-muted">
+                Filter stream to emails delivered to a specific mailbox
+              </p>
+            </div>
+          </div>
+
+          {/* 4. Multi-select Categories */}
+          <div className="space-y-2 p-3 rounded-lg bg-surface-elevated/40 border border-white/5">
+            <div className="flex items-center justify-between">
+              <label className="font-semibold text-text-primary text-xs">
+                Categories (Multi-Select)
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedCategories(CATEGORY_OPTIONS.map((c) => c.id));
+                    handleFilterChange();
+                  }}
+                  className="text-[10px] text-brand hover:underline"
+                >
+                  Select All
+                </button>
+                <span className="text-white/20">•</span>
+                <button
+                  onClick={() => {
+                    setSelectedCategories([]);
+                    handleFilterChange();
+                  }}
+                  className="text-[10px] text-text-muted hover:text-text-primary"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 pt-1">
+              {CATEGORY_OPTIONS.map((cat) => {
+                const isSelected = selectedCategories.includes(cat.id);
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => toggleCategory(cat.id)}
+                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs transition-all text-left ${
+                      isSelected
+                        ? `${cat.color} font-semibold shadow-xs`
+                        : "bg-surface hover:bg-surface-overlay text-text-muted border-white/10"
+                    }`}
+                  >
+                    <span>{cat.label}</span>
+                    {isSelected && <Check className="h-3 w-3 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active Filter Chips (Always visible if any filter applied) */}
+      {activeFiltersCount > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 px-1 py-0.5">
+          <span className="text-[11px] text-text-muted font-medium mr-1">Active filters:</span>
+
+          {/* Category Chips */}
+          {selectedCategories.map((catId) => {
+            const catObj = CATEGORY_OPTIONS.find((c) => c.id === catId);
+            return (
+              <span
+                key={catId}
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs bg-brand/10 text-brand border border-brand/20 font-medium"
+              >
+                Category: {catObj ? catObj.label : catId}
+                <button
+                  onClick={() => toggleCategory(catId)}
+                  className="hover:text-white p-0.5 rounded-full"
+                  title="Remove filter"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            );
+          })}
+
+          {/* Status Chip */}
+          {statusFilter !== "all" && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs bg-brand/10 text-brand border border-brand/20 font-medium">
+              Status: {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+              <button
+                onClick={() => {
+                  setStatusFilter("all");
+                  handleFilterChange();
+                }}
+                className="hover:text-white p-0.5 rounded-full"
+                title="Remove filter"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {/* Date Chips */}
+          {dateFrom && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs bg-brand/10 text-brand border border-brand/20 font-medium">
+              From: {dateFrom}
+              <button
+                onClick={() => {
+                  setDateFrom("");
+                  handleFilterChange();
+                }}
+                className="hover:text-white p-0.5 rounded-full"
+                title="Remove filter"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {dateTo && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs bg-brand/10 text-brand border border-brand/20 font-medium">
+              To: {dateTo}
+              <button
+                onClick={() => {
+                  setDateTo("");
+                  handleFilterChange();
+                }}
+                className="hover:text-white p-0.5 rounded-full"
+                title="Remove filter"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {/* Account Chip */}
+          {selectedAccountId && selectedAccountId !== "all" && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs bg-brand/10 text-brand border border-brand/20 font-medium">
+              Account: {accounts.find((a) => a.id === selectedAccountId)?.email || "Account"}
+              <button
+                onClick={() => {
+                  setSelectedAccountId("all");
+                  handleFilterChange();
+                }}
+                className="hover:text-white p-0.5 rounded-full"
+                title="Remove filter"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {/* Clear All action */}
+          <button
+            onClick={handleClearAllFilters}
+            className="text-xs text-text-muted hover:text-text-primary underline ml-1 cursor-pointer"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+
       {/* Main Content Pane (Split on Desktop) */}
       <div className="flex gap-6 flex-1 min-h-0">
         {/* Email List Column */}
         <div className="flex-1 lg:w-[420px] lg:flex-initial flex flex-col gap-2 min-w-0">
           <div className="flex items-center justify-between px-2 mb-1">
             <h2 className="font-ui text-xs font-semibold text-text-muted uppercase tracking-wider">
-              All Messages
+              Messages
             </h2>
             <span className="text-xs font-mono text-text-muted">
               {data?.total ?? allFetchedEmails.length} items
@@ -226,15 +736,28 @@ export default function AllMailPage() {
                 No mail found
               </h3>
               <p className="text-xs text-text-muted mt-1 max-w-xs">
-                {searchQuery ? "No messages match your search query." : "All your ingested and classified emails will appear here."}
+                {searchQuery || activeFiltersCount > 0
+                  ? "No messages match your active filters or search query."
+                  : "All your ingested and classified emails will appear here."}
               </p>
-              <button
-                onClick={() => refetch()}
-                className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-elevated hover:bg-surface-overlay text-xs text-text-secondary border border-white/10 transition-colors"
-              >
-                <RefreshCw className="h-3 w-3 text-brand" />
-                <span>Check for emails</span>
-              </button>
+              <div className="flex items-center gap-2 mt-4">
+                {activeFiltersCount > 0 && (
+                  <button
+                    onClick={handleClearAllFilters}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated text-xs text-text-secondary border border-white/10 transition-colors"
+                  >
+                    <RotateCcw className="h-3 w-3 text-brand" />
+                    <span>Reset filters</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => refetch()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-elevated hover:bg-surface-overlay text-xs text-text-secondary border border-white/10 transition-colors"
+                >
+                  <RefreshCw className="h-3 w-3 text-brand" />
+                  <span>Check for emails</span>
+                </button>
+              </div>
             </div>
           ) : (
             /* Email List Items */
@@ -289,9 +812,16 @@ export default function AllMailPage() {
               {/* Header Details */}
               <div className="border-b border-border-subtle pb-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-subtle text-brand border border-brand/20">
-                    {selectedEmail.category || "General"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-subtle text-brand border border-brand/20">
+                      {selectedEmail.category || "General"}
+                    </span>
+                    {selectedEmail.subcategory && (
+                      <span className="text-[10px] uppercase font-medium px-2 py-0.5 rounded-full bg-surface-elevated text-text-muted border border-white/5">
+                        {selectedEmail.subcategory}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => archiveMutation.mutate(selectedEmail.id)}
@@ -371,10 +901,10 @@ export default function AllMailPage() {
                   </div>
                 )}
 
-              {/* Body Content */}
+              {/* Body Content with links opening in new tab */}
               <div className="pt-2 text-sm text-text-secondary leading-relaxed font-sans overflow-x-auto">
                 {selectedEmail.body_html ? (
-                  <div dangerouslySetInnerHTML={{ __html: selectedEmail.body_html }} />
+                  <div dangerouslySetInnerHTML={{ __html: addTargetBlank(selectedEmail.body_html) }} />
                 ) : selectedEmail.body_text ? (
                   <div className="whitespace-pre-wrap">{selectedEmail.body_text}</div>
                 ) : (

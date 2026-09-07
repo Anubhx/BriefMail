@@ -20,12 +20,16 @@ export interface EmailItem {
 
 export type EmailCategory =
   | "finance"
+  | "finance_transaction"
   | "investments"
   | "jobs"
   | "career"
   | "meetings"
   | "offers"
+  | "ads"
   | "social"
+  | "newsletter"
+  | "otp"
   | "system"
   | "misc";
 
