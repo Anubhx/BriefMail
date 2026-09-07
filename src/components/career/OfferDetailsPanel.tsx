@@ -442,6 +442,7 @@ export const OfferDetailsPanel: React.FC<OfferPanelProps> = ({
             </button>
           </div>
         </form>
+      </div>
     </div>
   );
 };
