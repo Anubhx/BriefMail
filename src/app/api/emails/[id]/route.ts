@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getEmailDetail } from "@/lib/gmail/fetch";
 import { decryptToken, refreshAccessToken } from "@/lib/gmail/tokens";
+import { decompressHtml } from "@/lib/utils/html-compress";
 
 export const dynamic = "force-dynamic";
 
@@ -122,6 +123,11 @@ export async function GET(
 
   if (error || !email) {
     return NextResponse.json({ error: "email_not_found" }, { status: 404 });
+  }
+
+  // Decompress body_html if present in database
+  if (email.body_html) {
+    email.body_html = decompressHtml(email.body_html);
   }
 
   // If body_html is NULL/missing in DB, fetch fresh HTML on-the-fly from Gmail API without persisting to DB
