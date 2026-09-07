@@ -110,39 +110,41 @@ export function EmailDetail({
     : "";
 
   const detailContent = (
-    <div className="flex flex-col h-full bg-surface">
-      {/* Top Sticky Header Actions (Themed with border-b separating from email content) */}
-      <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-border bg-surface shrink-0 z-10">
+    <div className="flex flex-col h-full bg-white text-gray-900">
+      {/* Top Sticky Header Actions (Light themed with border-b) */}
+      <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b border-gray-200 bg-gray-50 shrink-0 z-10">
         <div className="flex items-center gap-2">
           {onClose && (
             <button
               onClick={onClose}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-surface-subtle transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-200/70 transition-colors"
               aria-label="Back to inbox"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="text-xs font-ui font-medium">Back</span>
+              <span className="text-xs font-medium font-ui">Back</span>
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          {/* Star Button */}
           <button
             onClick={() => email && onStar?.(email.id, !email.is_starred)}
-            className={`p-2 rounded-md transition-colors ${
+            className={`p-2 rounded-md border transition-colors ${
               email.is_starred
-                ? "text-amber-600 hover:text-amber-700"
-                : "text-text-muted hover:text-text-primary hover:bg-surface-subtle"
+                ? "bg-amber-50 border-amber-300 text-amber-600 hover:bg-amber-100"
+                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
             }`}
             title={email.is_starred ? "Unstar" : "Star"}
           >
             <Star className={`w-4 h-4 ${email.is_starred ? "fill-amber-500 text-amber-500" : ""}`} />
           </button>
 
+          {/* Snooze Button & Picker */}
           <div className="relative">
             <button
               onClick={() => setShowSnoozePicker(!showSnoozePicker)}
-              className="p-2 rounded-md text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
+              className="p-2 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
               title="Snooze"
             >
               <Clock className="w-4 h-4" />
@@ -150,39 +152,39 @@ export function EmailDetail({
 
             {/* Snooze Dropdown */}
             {showSnoozePicker && (
-              <div className="absolute right-0 top-full mt-2 w-64 p-3 rounded-lg bg-surface border border-border-strong shadow-elevation-2 z-30 space-y-2">
-                <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider block font-ui">
+              <div className="absolute right-0 top-full mt-2 w-64 p-3 rounded-lg bg-white border border-gray-200 shadow-xl z-30 space-y-2">
+                <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block font-ui">
                   Snooze Until
                 </span>
                 <div className="grid grid-cols-2 gap-1.5 text-xs font-ui">
                   <button
                     onClick={() => handleQuickSnooze(3)}
-                    className="p-2 rounded bg-surface-subtle hover:bg-surface-secondary text-text-secondary text-left transition-colors"
+                    className="p-2 rounded bg-gray-50 hover:bg-gray-100 text-gray-800 text-left transition-colors"
                   >
                     In 3 hours
                   </button>
                   <button
                     onClick={() => handleQuickSnooze(24)}
-                    className="p-2 rounded bg-surface-subtle hover:bg-surface-secondary text-text-secondary text-left transition-colors"
+                    className="p-2 rounded bg-gray-50 hover:bg-gray-100 text-gray-800 text-left transition-colors"
                   >
                     Tomorrow
                   </button>
                   <button
                     onClick={() => handleQuickSnooze(72)}
-                    className="p-2 rounded bg-surface-subtle hover:bg-surface-secondary text-text-secondary text-left col-span-2 transition-colors"
+                    className="p-2 rounded bg-gray-50 hover:bg-gray-100 text-gray-800 text-left col-span-2 transition-colors"
                   >
                     This Weekend
                   </button>
                 </div>
 
-                <form onSubmit={handleSnoozeSubmit} className="pt-2 border-t border-border space-y-2 font-ui">
-                  <label className="text-[10px] text-text-muted block">Custom date & time</label>
+                <form onSubmit={handleSnoozeSubmit} className="pt-2 border-t border-gray-200 space-y-2 font-ui">
+                  <label className="text-[10px] text-gray-500 block">Custom date & time</label>
                   <input
                     type="datetime-local"
                     required
                     value={snoozeDate}
                     onChange={(e) => setSnoozeDate(e.target.value)}
-                    className="w-full rounded border border-border bg-surface p-1.5 text-xs text-text-primary focus:outline-none focus:border-brand"
+                    className="w-full rounded border border-gray-300 bg-white p-1.5 text-xs text-gray-900 focus:outline-none focus:border-brand"
                   />
                   <button
                     type="submit"
@@ -195,9 +197,10 @@ export function EmailDetail({
             )}
           </div>
 
+          {/* Archive Button */}
           <button
             onClick={() => email && onArchive?.(email.id)}
-            className="p-2 rounded-md text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
+            className="p-2 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
             title="Archive Email"
           >
             <Archive className="w-4 h-4" />
@@ -206,55 +209,55 @@ export function EmailDetail({
       </div>
 
       {/* Reading Canvas */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-6 space-y-6 bg-surface">
-        {/* Subject - Editorial Headline */}
-        <div className="space-y-2.5">
-          <div className="flex items-center gap-2">
+      <div className="flex-1 overflow-y-auto bg-white text-gray-900">
+        {/* Subject Area */}
+        <div className="px-4 sm:px-6 pt-5 pb-3">
+          <div className="flex items-center gap-2 mb-1.5">
             {email.category && (
-              <span className="text-[11px] font-ui font-medium uppercase tracking-wider text-brand">
+              <span className="text-[11px] font-ui font-semibold uppercase tracking-wider text-brand">
                 {email.category.replace("_", " ")}
               </span>
             )}
             {email.subcategory && (
-              <span className="text-[11px] font-mono text-text-muted uppercase">
+              <span className="text-[11px] font-mono text-gray-400 uppercase">
                 • {email.subcategory}
               </span>
             )}
           </div>
 
-          <h1 className="font-serif text-2xl sm:text-3xl text-text-primary font-normal leading-tight tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 leading-snug tracking-tight">
             {email.subject || "(No subject)"}
-          </h1>
+          </h2>
         </div>
 
         {/* Sender & Recipient Metadata */}
-        <div className="flex items-start justify-between gap-4 py-3.5 border-y border-border">
+        <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-3 border-y border-gray-200 bg-gray-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-surface-subtle border border-border text-text-secondary flex items-center justify-center font-ui font-semibold text-xs uppercase shrink-0">
+            <div className="w-9 h-9 rounded-full bg-gray-200 border border-gray-300 text-gray-700 flex items-center justify-center font-ui font-bold text-xs uppercase shrink-0">
               {displayName.charAt(0)}
             </div>
             <div>
-              <div className="font-ui font-semibold text-sm text-text-primary">
+              <div className="font-ui font-semibold text-sm text-gray-900">
                 {displayName}
               </div>
               {displayEmail && (
-                <div className="font-mono text-xs text-text-muted">{displayEmail}</div>
+                <div className="font-mono text-xs text-gray-500">{displayEmail}</div>
               )}
             </div>
           </div>
-          <div className="font-mono text-xs text-text-muted shrink-0 pt-1">
+          <div className="font-mono text-xs text-gray-500 shrink-0 pt-0.5">
             {displayDate}
           </div>
         </div>
 
-        {/* AI Summary - Restrained parchment note */}
+        {/* AI Summary - Amber Parchment Card */}
         {email.ai_summary && (
-          <div className="p-4 rounded border-l-2 border-brand bg-surface-secondary space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[11px] font-ui font-semibold uppercase tracking-wider text-brand">
+          <div className="mx-4 sm:mx-6 my-3 p-4 rounded-lg border border-amber-200 bg-amber-50 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-ui font-semibold uppercase tracking-wider text-amber-800">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Summary</span>
             </div>
-            <p className="font-serif italic text-sm text-text-secondary leading-relaxed">
+            <p className="font-serif italic text-sm text-amber-900 leading-relaxed">
               {email.ai_summary}
             </p>
           </div>
@@ -262,13 +265,13 @@ export function EmailDetail({
 
         {/* Action Items Checklist */}
         {(email.has_action_item || actionItems.length > 0) && (
-          <div className="rounded border border-border bg-surface-secondary p-4 space-y-3">
+          <div className="mx-4 sm:mx-6 my-3 rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-ui font-semibold uppercase tracking-wider text-text-primary flex items-center gap-2">
+              <span className="text-xs font-ui font-semibold uppercase tracking-wider text-gray-900 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-700" />
                 Action Items
               </span>
-              <span className="text-[10px] text-text-muted font-mono">
+              <span className="text-[10px] text-gray-500 font-mono">
                 {actionItems.length} item{actionItems.length === 1 ? "" : "s"}
               </span>
             </div>
@@ -282,17 +285,17 @@ export function EmailDetail({
                     onClick={() => toggleActionItem(idx)}
                     className={`flex items-start gap-2.5 p-2 rounded cursor-pointer transition-colors ${
                       isDone
-                        ? "text-text-muted line-through"
-                        : "text-text-secondary hover:bg-surface-subtle"
+                        ? "text-gray-400 line-through"
+                        : "text-gray-800 hover:bg-gray-100"
                     }`}
                   >
                     {isDone ? (
                       <CheckSquare className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
                     ) : (
-                      <Square className="h-4 w-4 text-text-muted shrink-0 mt-0.5" />
+                      <Square className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
                     )}
                     <div className="text-xs font-ui flex-1">
-                      <p className={isDone ? "line-through text-text-muted" : "text-text-primary font-medium"}>
+                      <p className={isDone ? "line-through text-gray-400" : "text-gray-900 font-medium"}>
                         {item.description}
                       </p>
                       {item.due_date && (
@@ -308,27 +311,27 @@ export function EmailDetail({
           </div>
         )}
 
-        {/* Long-form Email Body */}
-        <div className="pt-2 text-text-primary leading-relaxed max-w-prose">
+        {/* Long-form Email Body - Immediately following metadata/summaries */}
+        <div className="px-4 sm:px-6 py-2 text-gray-900 leading-relaxed">
           {email.body_html ? (
             <div
-              className="bg-white rounded-lg overflow-hidden"
+              className="bg-white rounded-lg overflow-hidden text-gray-900"
               style={{ colorScheme: "light", backgroundColor: "white" }}
             >
               <div
-                className="prose prose-neutral max-w-none text-[15px] sm:text-base leading-relaxed overflow-x-auto"
+                className="prose max-w-none text-[15px] sm:text-base leading-relaxed overflow-x-auto text-gray-900"
                 dangerouslySetInnerHTML={{ __html: wrappedHtml }}
               />
             </div>
           ) : email.body_text ? (
             <div
-              className="bg-white rounded-lg overflow-hidden p-4 text-black font-ui text-[15px] sm:text-base whitespace-pre-wrap leading-relaxed"
+              className="bg-white rounded-lg overflow-hidden p-4 text-gray-900 font-ui text-[15px] sm:text-base whitespace-pre-wrap leading-relaxed"
               style={{ colorScheme: "light", backgroundColor: "white" }}
             >
               {email.body_text}
             </div>
           ) : (
-            <div className="text-sm text-text-muted italic leading-relaxed">
+            <div className="text-sm text-gray-500 italic leading-relaxed py-3">
               {email.snippet || "No preview body content available."}
             </div>
           )}
@@ -336,8 +339,8 @@ export function EmailDetail({
 
         {/* Attachments */}
         {email.attachments && email.attachments.length > 0 && (
-          <div className="pt-6 border-t border-border space-y-3">
-            <div className="text-xs font-ui font-semibold text-text-muted uppercase tracking-wider flex items-center gap-1.5">
+          <div className="mx-4 sm:mx-6 my-4 pt-4 border-t border-gray-200 space-y-3">
+            <div className="text-xs font-ui font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Paperclip className="w-3.5 h-3.5" />
               <span>Attachments ({email.attachments.length})</span>
             </div>
@@ -347,10 +350,10 @@ export function EmailDetail({
                 return (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded border border-border bg-surface text-xs font-ui text-text-primary hover:border-border-strong transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded border border-gray-200 bg-gray-50 text-xs font-ui text-gray-800 hover:bg-gray-100 transition-colors"
                   >
                     <span className="truncate max-w-[220px]">{name}</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-text-muted" />
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
                   </div>
                 );
               })}
@@ -383,7 +386,7 @@ export function EmailDetail({
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", stiffness: 320, damping: 32 }}
-          className="relative w-full md:max-w-2xl lg:max-w-3xl min-h-full md:h-full bg-white md:bg-surface flex flex-col z-50 shadow-elevation-3 overflow-hidden"
+          className="relative w-full md:max-w-2xl lg:max-w-3xl min-h-full md:h-full bg-white flex flex-col z-50 shadow-2xl overflow-hidden"
           style={{
             paddingTop: "env(safe-area-inset-top, 0px)",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -395,4 +398,3 @@ export function EmailDetail({
     </AnimatePresence>
   );
 }
-
