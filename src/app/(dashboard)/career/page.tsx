@@ -74,22 +74,93 @@ export default function CareerPage() {
     return { total, active, offers, interviewRate };
   }, [applications]);
 
+  // Helper to detect job alert cards
+  const isJobAlertApplication = useCallback((app: ApplicationWithOffer): boolean => {
+    const isEmail =
+      Boolean(app.email_id) ||
+      app.job_board?.toLowerCase() === "email" ||
+      (app as any).source?.toLowerCase() === "email";
+    if (!isEmail) return false;
+
+    const company = (app.company_name || "").toLowerCase();
+    const companyMatches =
+      company.includes("internshala") ||
+      company.includes("indeed") ||
+      company.includes("naukri");
+
+    const emailObj = Array.isArray(app.emails) ? app.emails[0] : app.emails;
+    const subject = (
+      emailObj?.subject ||
+      (app as any).subject ||
+      ""
+    ).toLowerCase();
+
+    const subjectMatches =
+      subject.includes("alert") ||
+      subject.includes("new jobs") ||
+      subject.includes("vacancy");
+
+    return companyMatches || subjectMatches;
+  }, []);
+
+  const appliedJobAlertsCount = useMemo(() => {
+    return applications.filter(
+      (app) => app.current_stage === "applied" && isJobAlertApplication(app)
+    ).length;
+  }, [applications, isJobAlertApplication]);
+
   const handleDeleteApplication = useCallback(async (id: string) => {
-    // Optimistically remove card from UI
+    // Optimistic update: remove card from local state immediately (don't wait for refetch)
     setApplications((prev) => prev.filter((app) => app.id !== id));
     try {
       const res = await fetch(`/api/career/applications/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) {
-        console.error("Failed to delete application from server");
-        fetchApplications(true);
+        console.error("Failed to delete application from server:", await res.text());
       }
     } catch (err) {
       console.error("Error deleting application:", err);
-      fetchApplications(true);
     }
-  }, [fetchApplications]);
+  }, []);
+
+  const handleClearJobAlerts = useCallback(async () => {
+    const alertCardsInApplied = applications.filter(
+      (app) => app.current_stage === "applied" && isJobAlertApplication(app)
+    );
+
+    const alertCards =
+      alertCardsInApplied.length > 0
+        ? alertCardsInApplied
+        : applications.filter(isJobAlertApplication);
+
+    const ids = alertCards.map((a) => a.id);
+    if (ids.length === 0) {
+      window.alert("No job alert cards found in the Applied column.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Clear ${ids.length} job alert${ids.length > 1 ? "s" : ""} from Applied?`
+    );
+    if (!confirmed) return;
+
+    // Optimistic update: remove cards from local state immediately
+    setApplications((prev) => prev.filter((app) => !ids.includes(app.id)));
+
+    try {
+      const res = await fetch("/api/career/applications/bulk-delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) {
+        console.error("Failed to bulk delete job alerts:", await res.text());
+      }
+    } catch (err) {
+      console.error("Error bulk deleting job alerts:", err);
+    }
+  }, [applications, isJobAlertApplication]);
 
   return (
     <div className="flex flex-col gap-5 w-full max-w-[1600px] mx-auto pb-12 select-none font-ui">
@@ -184,6 +255,8 @@ export default function CareerPage() {
           onApplicationsChange={setApplications}
           onOpenAddModal={() => setIsAddModalOpen(true)}
           onDeleteApplication={handleDeleteApplication}
+          onClearJobAlerts={handleClearJobAlerts}
+          jobAlertsCount={appliedJobAlertsCount}
         />
       )}
 

@@ -37,6 +37,16 @@ export interface ApplicationWithOffer {
   current_stage: string;
   applied_date?: string;
   salary_offered?: number | null;
+  email_id?: string | null;
+  job_board?: string | null;
+  source?: string | null;
+  emails?: {
+    id: string;
+    category?: string | null;
+    subcategory?: string | null;
+    subject?: string | null;
+    from_email?: string | null;
+  } | null;
   offer_letters?: OfferDetails[] | OfferDetails;
   offer_details?: {
     salary_lpa?: number | null;

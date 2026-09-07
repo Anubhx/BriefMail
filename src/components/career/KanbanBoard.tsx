@@ -68,6 +68,8 @@ interface KanbanBoardProps {
   onApplicationsChange: (apps: ApplicationWithOffer[]) => void;
   onOpenAddModal: () => void;
   onDeleteApplication?: (id: string) => void;
+  onClearJobAlerts?: () => void;
+  jobAlertsCount?: number;
 }
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({
@@ -75,6 +77,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onApplicationsChange,
   onOpenAddModal,
   onDeleteApplication,
+  onClearJobAlerts,
+  jobAlertsCount,
 }) => {
   const [activeCard, setActiveCard] = useState<ApplicationWithOffer | null>(null);
   const [selectedOfferApp, setSelectedOfferApp] = useState<ApplicationWithOffer | null>(null);
@@ -251,6 +255,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   onMoveToNextStage={handleMoveToNextStage}
                   onOpenOfferDetails={handleOpenOfferDetails}
                   onDeleteApplication={onDeleteApplication}
+                  onClearJobAlerts={column.id === "applied" ? onClearJobAlerts : undefined}
+                  jobAlertsCount={column.id === "applied" ? jobAlertsCount : undefined}
                 />
               );
             })}

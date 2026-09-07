@@ -144,15 +144,24 @@ export async function DELETE(
     return NextResponse.json({ error: "user_not_found" }, { status: 404 });
   }
 
+  const userIds = [appUser.id, userId].filter(Boolean);
+
+  // Delete related offer_letters first in case of foreign key constraints
+  await db
+    .from("offer_letters")
+    .delete()
+    .eq("job_app_id", id);
+
   const { error } = await db
     .from("job_applications")
     .delete()
     .eq("id", id)
-    .eq("user_id", appUser.id);
+    .in("user_id", userIds);
 
   if (error) {
+    console.error("Error deleting job application:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ deleted: true, success: true });
 }

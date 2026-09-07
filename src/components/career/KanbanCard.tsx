@@ -79,6 +79,28 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   // Source badge
   const source = app.job_board || (app.email_id ? "Email" : "Manual");
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm("Remove this from Career?")) {
+      return;
+    }
+
+    // Remove card from local state immediately (optimistic update — don't wait for refetch)
+    onDelete?.(app.id);
+
+    try {
+      const res = await fetch(`/api/career/applications/${app.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        console.error("Failed to delete application:", await res.text());
+      }
+    } catch (err) {
+      console.error("Error deleting application:", err);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -111,21 +133,16 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             <Calendar className="h-3 w-3 text-text-muted" />
             {relativeDate}
           </span>
-          {onDelete && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (window.confirm("Remove this from Career tracker?")) {
-                  onDelete(app.id);
-                }
-              }}
-              className="opacity-70 hover:opacity-100 transition-opacity p-0.5 text-text-muted hover:text-[#CF421C] rounded hover:bg-surface-secondary cursor-pointer"
-              title="Remove this from Career tracker?"
-              aria-label="Remove this from Career tracker?"
-            >
-              <Trash2 className="h-3 w-3" />
-            </button>
-          )}
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={handleDelete}
+            className="opacity-70 hover:opacity-100 transition-opacity p-0.5 text-text-muted hover:text-[#CF421C] rounded hover:bg-surface-secondary cursor-pointer relative z-10"
+            title="Remove this from Career?"
+            aria-label="Remove this from Career?"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
 
