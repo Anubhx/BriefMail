@@ -32,6 +32,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/batch/active-jobs",
   "/api/batch/process-chunk",
   "/api/batch/update-progress",
+  "/api/emails/reclassify-all",
 
   // Public status endpoint
   "/api/settings/n8n-status",
