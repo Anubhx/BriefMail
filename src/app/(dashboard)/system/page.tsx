@@ -79,28 +79,28 @@ export default function SystemTriagePage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-ui text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
+          <div className="flex items-center gap-2.5">
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
               System Triage & Action Center
             </h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-subtle text-brand border border-brand/20">
-              <Sparkles className="h-3 w-3" />
-              Entity Isolation
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-surface-subtle text-text-secondary border border-border-default">
+              <Sparkles className="h-3 w-3 text-accent-action" />
+              Isolated
             </span>
           </div>
           <p className="mt-1 text-xs sm:text-sm text-text-muted">
-            Interactive action blocks isolated from raw emails, alongside automatically bundled low-priority notifications.
+            Interactive action blocks isolated directly from raw incoming emails, alongside bundled low-priority notifications.
           </p>
         </div>
 
         <button
           onClick={() => fetchData(true)}
           disabled={refreshing}
-          className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-DEFAULT hover:bg-surface-elevated border border-white/10 text-text-secondary hover:text-text-primary text-xs font-medium transition-colors"
+          className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-elevated hover:bg-surface-hover border border-border-default text-text-primary text-xs font-medium transition-colors shadow-xs"
           title="Refresh system triage"
         >
           <RefreshCw
-            className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-brand" : ""}`}
+            className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-accent-action" : "text-text-muted"}`}
           />
           <span>Refresh</span>
         </button>
@@ -112,11 +112,11 @@ export default function SystemTriagePage() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-44 rounded-2xl bg-surface-DEFAULT/50 border border-white/5 animate-pulse p-5"
+                className="h-44 rounded-2xl bg-surface-elevated border border-border-default animate-pulse p-5"
               />
             ))}
           </div>
-          <div className="h-20 rounded-2xl bg-surface-DEFAULT/50 border border-white/5 animate-pulse" />
+          <div className="h-20 rounded-2xl bg-surface-elevated border border-border-default animate-pulse" />
         </div>
       ) : (
         <>
@@ -129,13 +129,13 @@ export default function SystemTriagePage() {
           </section>
 
           {/* 2. SYSTEM BUNDLE: Bundled Low-Priority Notifications below */}
-          <section className="space-y-3">
+          <section className="space-y-3 pt-2 border-t border-border-subtle">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-text-primary font-ui flex items-center gap-2">
-                <Layers className="h-5 w-5 text-sky-400" />
+              <h2 className="text-base sm:text-lg font-serif font-bold text-text-primary flex items-center gap-2">
+                <Layers className="h-5 w-5 text-accent-action" />
                 Bundled Notifications
               </h2>
-              <p className="text-xs text-text-muted">
+              <p className="text-xs text-text-muted mt-0.5">
                 Low-priority platform updates, digests, and workspace notifications separated from your core inbox.
               </p>
             </div>
