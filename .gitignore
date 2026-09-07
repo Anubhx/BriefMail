@@ -48,8 +48,8 @@ drain.sh
 # Auto-generated lock files
 skills-lock.json
 
-# Source design assets (public/logos/ has the usable copies)
-/logos/
+# Source design assets
+# /logos/ — tracked (contains source logo files)
 
 # Binary & large files inside .docs
 .docs/*.jpg
