@@ -1,12 +1,13 @@
 # Dependencies
 /node_modules
 /.pnpm-store
-drain.sh
+
 # Next.js build & cache outputs
 /.next/
 /out/
 /build
 /dist
+tsconfig.tsbuildinfo
 
 # Environment variable secret files
 .env
@@ -15,7 +16,7 @@ drain.sh
 .env.development.local
 .env.test.local
 .env.production.local
-!.env.local.example 
+!.env.local.example
 .env.docker
 
 # Logs & debug outputs
@@ -41,6 +42,27 @@ Thumbs.db
 .turbo
 .vercel
 
+# Scripts
+drain.sh
+
+# Auto-generated lock files
+skills-lock.json
+
+# Source design assets (public/logos/ has the usable copies)
+/logos/
+
+# Binary & large files inside .docs
+.docs/*.jpg
+.docs/*.svg
+.docs/*.pdf
+.docs/id.md
+.docs/1.md
+.docs/ADVANCED_MAIL_MASTER_GUIDE.md
+
 # Explicitly track project documentation & agent skills
-/.docs/
-/.agents/
+!/.docs/Design.md
+!/.docs/tokens.json
+/.agents/skills/
+/.agents/antigravity_global_skills/
+!/.agents/skills/antigravity-design-expert/
+
