@@ -14,7 +14,6 @@ export interface SaveEmailParams {
   subject: string;
   snippet?: string;
   bodyText?: string;
-  bodyHtml?: string;
   receivedAt: Date;
   labels?: string[];
   classification: ClassificationOutput;
@@ -36,14 +35,13 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
     subject,
     snippet = "",
     bodyText = "",
-    bodyHtml = "",
     receivedAt,
     labels = [],
     classification,
     queueItemId,
   } = params;
 
-  // 1. Upsert into core emails table
+  // 1. Upsert into core emails table (body_html is not stored; snippet capped at 500 chars)
   const { data: insertedEmail, error: emailErr } = await db
     .from("emails")
     .upsert(
@@ -58,9 +56,8 @@ export async function saveClassifiedEmail(params: SaveEmailParams): Promise<stri
         to_email: toEmail,
         cc_email: ccEmail,
         subject: subject,
-        snippet: snippet,
+        snippet: snippet.slice(0, 500),
         body_text: bodyText,
-        body_html: bodyHtml,
         received_at: receivedAt.toISOString(),
         labels: labels,
         category: classification.category,

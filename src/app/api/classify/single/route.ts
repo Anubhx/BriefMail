@@ -266,7 +266,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         subject: parsedMsg.subject,
         snippet: parsedMsg.snippet,
         bodyText: parsedMsg.bodyText,
-        bodyHtml: parsedMsg.bodyHtml,
         receivedAt: parsedMsg.receivedAt,
         labels: parsedMsg.labels,
         classification: classification,

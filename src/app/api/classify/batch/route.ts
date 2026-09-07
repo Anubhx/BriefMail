@@ -69,7 +69,6 @@ async function processMessage(
     subject: parsedMsg.subject,
     snippet: parsedMsg.snippet,
     bodyText: parsedMsg.bodyText,
-    bodyHtml: parsedMsg.bodyHtml,
     receivedAt: parsedMsg.receivedAt,
     labels: parsedMsg.labels,
     classification,
