@@ -445,7 +445,7 @@ function SettingsContent() {
               ) : toastMessage.type === "error" ? (
                 <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
               ) : (
-                <ShieldCheck className="w-4 h-4 text-accent-action shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-brand shrink-0" />
               )}
               <span>{toastMessage.text}</span>
             </div>
@@ -553,7 +553,7 @@ function SettingsContent() {
       <div className="p-3.5 sm:p-4 rounded-xl bg-surface-elevated border border-border-default flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-surface-subtle border border-border-default flex items-center justify-center text-text-primary shrink-0">
-            <Cpu className="w-4 h-4 text-accent-action" />
+            <Cpu className="w-4 h-4 text-brand" />
           </div>
           <div>
             <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-text-muted">
@@ -569,7 +569,7 @@ function SettingsContent() {
                 Tier 2 (HuggingFace)
               </span>
               <ArrowRight className="w-3 h-3 text-text-muted" />
-              <span className="px-2 py-0.5 rounded-md bg-accent-action/10 border border-accent-action/30 text-accent-action text-xs font-mono font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-brand/10 border border-brand/30 text-brand text-xs font-mono font-bold">
                 Tier 3 (Gemini 2.5 Flash Lite)
               </span>
             </div>
@@ -582,7 +582,7 @@ function SettingsContent() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border-subtle pb-5">
           <div>
             <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-accent-action" />
+              <Mail className="w-4 h-4 text-brand" />
               <h2 className="font-serif text-base sm:text-lg font-bold text-text-primary">
                 Connected Gmail Accounts
               </h2>
@@ -652,7 +652,7 @@ function SettingsContent() {
               className="py-12 px-4 flex flex-col items-center justify-center text-center rounded-xl bg-surface-subtle/30 border border-dashed border-border-default"
             >
               <div className="w-12 h-12 rounded-2xl bg-surface-elevated border border-border-default flex items-center justify-center text-text-primary mb-3 shadow-xs">
-                <Mail className="w-6 h-6 text-accent-action" />
+                <Mail className="w-6 h-6 text-brand" />
               </div>
               <h3 className="text-base font-serif font-bold text-text-primary">
                 No Gmail accounts connected yet
@@ -807,7 +807,7 @@ function SettingsContent() {
       <div className="bg-surface-elevated rounded-2xl border border-border-default p-4 sm:p-6 flex flex-col gap-5 shadow-xs">
         <div className="border-b border-border-subtle pb-4">
           <div className="flex items-center gap-2">
-            <History className="w-4 h-4 text-accent-action" />
+            <History className="w-4 h-4 text-brand" />
             <h2 className="font-serif text-base sm:text-lg font-bold text-text-primary">
               Historical Email Sync
             </h2>
@@ -925,7 +925,7 @@ function SettingsContent() {
                           </>
                         ) : isProcessing ? (
                           <>
-                            <Clock className="w-3.5 h-3.5 text-accent-action" />
+                            <Clock className="w-3.5 h-3.5 text-brand" />
                             <span>Processing...</span>
                           </>
                         ) : (

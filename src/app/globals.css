@@ -15,6 +15,45 @@
   --text-disabled: #A2A098;
   --accent: #FF5A2A;
   --accent-hover: #E94D21;
+
+  --success: 152 69% 31%;        /* #16803C — green-700 */
+  --success-foreground: 0 0% 98%;
+  --success-muted: 141 84% 93%;  /* #DCFCE7 — green-100 */
+
+  --warning: 32 95% 44%;         /* #D97706 — amber-600 */
+  --warning-foreground: 0 0% 98%;
+  --warning-muted: 48 96% 89%;   /* #FEF9C3 — yellow-100 */
+
+  --danger: 0 72% 51%;           /* #DC2626 — red-600 */
+  --danger-foreground: 0 0% 98%;
+  --danger-muted: 0 86% 97%;     /* #FEF2F2 — red-50 */
+}
+
+.dark {
+  --bg-primary: #121212;
+  --bg-secondary: #181818;
+  --surface: #1E1E1E;
+  --surface-hover: #262626;
+  --border: #2E2E2E;
+  --border-strong: #3D3D3D;
+  --text-primary: #F5F5F5;
+  --text-secondary: #A3A3A3;
+  --text-muted: #737373;
+  --text-disabled: #525252;
+  --accent: #FF5A2A;
+  --accent-hover: #E94D21;
+
+  --success: 142 71% 45%;        /* #22C55E — green-500 */
+  --success-foreground: 0 0% 98%;
+  --success-muted: 143 64% 9%;   /* #052E16 — green-950 */
+
+  --warning: 38 92% 50%;         /* #F59E0B — amber-500 */
+  --warning-foreground: 0 0% 98%;
+  --warning-muted: 32 81% 10%;   /* #1C0A00 — amber-950 approx */
+
+  --danger: 0 91% 71%;           /* #F87171 — red-400 */
+  --danger-foreground: 0 0% 98%;
+  --danger-muted: 0 63% 10%;     /* #1F0000 — red-950 approx */
 }
 
 body {
@@ -41,4 +80,12 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #A2A098;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

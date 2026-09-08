@@ -37,12 +37,12 @@ const CATEGORY_DOT_COLORS: Record<string, string> = {
   career: "#4267D5",
   jobs: "#4267D5",
   meetings: "#8B5CC7",
-  investments: "#D58A00",
-  social: "#D64F7A",
-  newsletter: "#309BA8",
+  investments: "#0D9488",
+  social: "#0EA5E9",
+  newsletter: "#8B5CF6",
   otp: "#E46C2E",
   system: "#777A80",
-  ads: "#D64F7A",
+  ads: "#E11D48",
   misc: "#777A80",
 };
 
@@ -102,6 +102,8 @@ export function EmailListItem({
         "briefmail-list-item relative overflow-hidden border-b border-border transition-colors duration-150 select-none group",
         isSelected
           ? "bg-surface-secondary"
+          : unreadState
+          ? "bg-brand/[0.03] hover:bg-brand/[0.06]"
           : "bg-surface hover:bg-surface-subtle"
       )}
     >

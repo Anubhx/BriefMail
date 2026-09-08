@@ -24,13 +24,14 @@ const mainNavItems = [
   { href: "/snoozed", label: "Snoozed", icon: Clock },
 ];
 
+// TODO: wire category counts from inbox data
 const categoryNavItems = [
   { href: "/finance", label: "Finance", color: "#2FA66A" },
   { href: "/career", label: "Career", color: "#4267D5" },
   { href: "/meetings", label: "Meetings", color: "#8B5CC7" },
-  { href: "/investments", label: "Investments", color: "#D58A00" },
-  { href: "/inbox?category=social", label: "Social", color: "#D64F7A" },
-  { href: "/inbox?category=newsletter", label: "Newsletter", color: "#309BA8" },
+  { href: "/investments", label: "Investments", color: "#0D9488" },
+  { href: "/inbox?category=social", label: "Social", color: "#0EA5E9" },
+  { href: "/inbox?category=newsletter", label: "Newsletter", color: "#8B5CF6" },
   { href: "/system", label: "OTP & Codes", color: "#E46C2E" },
 ];
 

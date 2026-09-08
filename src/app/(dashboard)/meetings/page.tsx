@@ -149,7 +149,7 @@ export default function MeetingsPage() {
             title="Refresh schedule"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-accent-action" : "text-text-muted"}`}
+              className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-brand" : "text-text-muted"}`}
             />
             <span className="hidden sm:inline">Refresh</span>
           </button>

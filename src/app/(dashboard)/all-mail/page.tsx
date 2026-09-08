@@ -37,18 +37,18 @@ interface GmailAccount {
 }
 
 const CATEGORY_OPTIONS = [
-  { id: "finance", label: "Finance", color: "bg-emerald-50 text-emerald-800 border-emerald-200" },
-  { id: "finance_transaction", label: "Transactions", color: "bg-emerald-50 text-emerald-800 border-emerald-200" },
-  { id: "investments", label: "Investments", color: "bg-amber-50 text-amber-800 border-amber-200" },
-  { id: "career", label: "Career", color: "bg-blue-50 text-blue-800 border-blue-200" },
-  { id: "jobs", label: "Jobs", color: "bg-indigo-50 text-indigo-800 border-indigo-200" },
-  { id: "meetings", label: "Meetings", color: "bg-purple-50 text-purple-800 border-purple-200" },
-  { id: "otp", label: "OTP & Codes", color: "bg-orange-50 text-orange-800 border-orange-200" },
-  { id: "social", label: "Social", color: "bg-rose-50 text-rose-800 border-rose-200" },
-  { id: "newsletter", label: "Newsletters", color: "bg-teal-50 text-teal-800 border-teal-200" },
-  { id: "ads", label: "Ads & Promo", color: "bg-stone-100 text-stone-700 border-stone-200" },
-  { id: "system", label: "System", color: "bg-slate-50 text-slate-700 border-slate-200" },
-  { id: "misc", label: "Misc", color: "bg-stone-50 text-stone-700 border-stone-200" },
+  { id: "finance", label: "Finance", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" },
+  { id: "finance_transaction", label: "Transactions", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" },
+  { id: "investments", label: "Investments", color: "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300" },
+  { id: "career", label: "Career", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300" },
+  { id: "jobs", label: "Jobs", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300" },
+  { id: "meetings", label: "Meetings", color: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300" },
+  { id: "otp", label: "OTP & Codes", color: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" },
+  { id: "social", label: "Social", color: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300" },
+  { id: "newsletter", label: "Newsletters", color: "bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300" },
+  { id: "ads", label: "Ads & Promo", color: "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300" },
+  { id: "system", label: "System", color: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400" },
+  { id: "misc", label: "Misc", color: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400" },
 ];
 
 const STATUS_OPTIONS = [

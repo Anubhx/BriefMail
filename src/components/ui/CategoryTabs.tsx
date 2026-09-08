@@ -35,56 +35,60 @@ export function CategoryTabs({
   categoryCounts = {},
 }: CategoryTabsProps) {
   return (
-    <div className="w-full overflow-x-auto no-scrollbar border-b border-border bg-surface select-none">
-      <div className="flex items-center gap-5 px-4 min-w-max h-11">
-        {CATEGORIES.map((tab) => {
-          const isActive =
-            activeCategory.toLowerCase() === tab.id.toLowerCase() ||
-            (tab.id === "finance_transaction" && activeCategory.toLowerCase() === "finance");
-          const count =
-            categoryCounts[tab.id] ??
-            (tab.id === "finance_transaction" ? categoryCounts["finance"] : undefined) ??
-            tab.count ??
-            0;
+    <div className="relative w-full">
+      <div className="relative w-full overflow-x-auto scrollbar-none select-none">
+        <div className="flex items-center gap-4 sm:gap-5 px-3 sm:px-4 w-max min-w-full h-11">
+          {CATEGORIES.map((tab) => {
+            const isActive =
+              activeCategory.toLowerCase() === tab.id.toLowerCase() ||
+              (tab.id === "finance_transaction" && activeCategory.toLowerCase() === "finance");
+            const count =
+              categoryCounts[tab.id] ??
+              (tab.id === "finance_transaction" ? categoryCounts["finance"] : undefined) ??
+              tab.count ??
+              0;
 
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onCategoryChange(tab.id)}
-              className={clsx(
-                "relative flex items-center gap-1.5 h-full px-1 text-xs font-ui transition-colors duration-150 outline-none uppercase tracking-wider",
-                isActive
-                  ? "text-brand font-semibold"
-                  : "text-text-muted hover:text-text-primary"
-              )}
-            >
-              <span>{tab.label}</span>
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onCategoryChange(tab.id)}
+                className={clsx(
+                  "relative flex items-center gap-1.5 h-full px-1 text-xs font-ui transition-colors duration-150 outline-none uppercase tracking-wider shrink-0",
+                  isActive
+                    ? "text-brand font-semibold"
+                    : "text-text-muted hover:text-text-primary"
+                )}
+              >
+                <span>{tab.label}</span>
 
-              {count > 0 && (
-                <span
-                  className={clsx(
-                    "px-1.5 py-0.5 rounded text-[10px] font-mono leading-none transition-colors",
-                    isActive
-                      ? "bg-brand/10 text-brand font-semibold"
-                      : "bg-surface-subtle text-text-muted"
-                  )}
-                >
-                  {count > 99 ? "99+" : count}
-                </span>
-              )}
+                {count > 0 && (
+                  <span
+                    className={clsx(
+                      "px-1.5 py-0.5 rounded text-[10px] font-mono leading-none transition-colors",
+                      isActive
+                        ? "bg-brand/10 text-brand font-semibold"
+                        : "bg-surface-subtle text-text-muted"
+                    )}
+                  >
+                    {count > 99 ? "99+" : count}
+                  </span>
+                )}
 
-              {/* 2px orange bottom underline for active state */}
-              {isActive && (
-                <motion.div
-                  layoutId="categoryActiveUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
-            </button>
-          );
-        })}
+                {/* 2px orange bottom underline for active state */}
+                {isActive && (
+                  <motion.div
+                    layoutId="categoryActiveUnderline"
+                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand"
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
+      {/* Right-side gradient fade mask for horizontal scroll affordance on overflow */}
+      <div className="pointer-events-none absolute right-0 top-0 h-full w-10 sm:w-12 bg-gradient-to-l from-surface to-transparent" />
     </div>
   );
 }

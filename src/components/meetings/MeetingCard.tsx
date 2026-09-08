@@ -148,7 +148,7 @@ export const MeetingCard: React.FC<MeetingCardProps> = ({ meeting, isPast = fals
         isHappeningNow
           ? "border-emerald-300 ring-1 ring-emerald-300/50 bg-emerald-50/[0.04]"
           : isSoon
-          ? "border-accent-action/40 ring-1 ring-accent-action/20"
+          ? "border-brand/40 ring-1 ring-brand/20"
           : "border-border-default"
       }`}
     >
@@ -191,7 +191,7 @@ export const MeetingCard: React.FC<MeetingCardProps> = ({ meeting, isPast = fals
 
       {/* Main Details */}
       <div className="space-y-1.5">
-        <h3 className="text-base sm:text-lg font-serif font-bold text-text-primary leading-snug group-hover:text-accent-action transition-colors">
+        <h3 className="text-base sm:text-lg font-serif font-bold text-text-primary leading-snug group-hover:text-brand transition-colors">
           {meeting.title}
         </h3>
 

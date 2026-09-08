@@ -84,7 +84,7 @@ export default function SystemTriagePage() {
               System Triage & Action Center
             </h1>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-surface-subtle text-text-secondary border border-border-default">
-              <Sparkles className="h-3 w-3 text-accent-action" />
+              <Sparkles className="h-3 w-3 text-brand" />
               Isolated
             </span>
           </div>
@@ -100,7 +100,7 @@ export default function SystemTriagePage() {
           title="Refresh system triage"
         >
           <RefreshCw
-            className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-accent-action" : "text-text-muted"}`}
+            className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-brand" : "text-text-muted"}`}
           />
           <span>Refresh</span>
         </button>
@@ -132,7 +132,7 @@ export default function SystemTriagePage() {
           <section className="space-y-3 pt-2 border-t border-border-subtle">
             <div>
               <h2 className="text-base sm:text-lg font-serif font-bold text-text-primary flex items-center gap-2">
-                <Layers className="h-5 w-5 text-accent-action" />
+                <Layers className="h-5 w-5 text-brand" />
                 Bundled Notifications
               </h2>
               <p className="text-xs text-text-muted mt-0.5">

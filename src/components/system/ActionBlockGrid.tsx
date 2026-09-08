@@ -267,7 +267,7 @@ export const ActionBlockGrid: React.FC<ActionBlockGridProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base sm:text-lg font-serif font-bold text-text-primary flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-accent-action" />
+            <ShieldCheck className="h-5 w-5 text-brand" />
             Extracted Action Blocks
           </h2>
           <p className="text-xs text-text-muted mt-0.5">
