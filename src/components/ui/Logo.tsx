@@ -45,7 +45,7 @@ export function Logo({
   height,
   href,
   priority = false,
-  alt = "BriefMail Logo",
+  alt = "BriefMail logo",
 }: LogoProps) {
   const dimensions = DEFAULT_DIMENSIONS[variant];
   const w = width ?? dimensions.width;
