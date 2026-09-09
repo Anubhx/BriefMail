@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { motion } from "framer-motion";
+import { SplitButton } from "./SplitButton";
 
 export function Nav() {
   return (
@@ -73,15 +74,9 @@ export function Nav() {
             </SignInButton>
 
             <SignUpButton mode="modal">
-              <motion.button
-                type="button"
-                className="font-ui text-[14px] font-medium px-5 py-2.5 md:py-2.5 rounded-[7px] bg-[var(--brand)] text-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_0_0_1px_rgba(0,0,0,0.03)] inline-flex items-center justify-center gap-2 min-h-[44px] cursor-pointer hover:bg-[var(--brand-hover)]"
-                whileHover={{ y: -1 }}
-                whileTap={{ y: 0 }}
-                data-hover
-              >
+              <SplitButton>
                 Connect Gmail →
-              </motion.button>
+              </SplitButton>
             </SignUpButton>
           </Show>
 

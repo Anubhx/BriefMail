@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 import { CustomCursor } from "./CustomCursor";
 import { Nav } from "./Nav";
 import { Hero } from "./Hero";
@@ -12,6 +13,7 @@ import { SurfacesGrid } from "./SurfacesGrid";
 import { PhilosophySection } from "./PhilosophySection";
 import { FinalCTA } from "./FinalCTA";
 import { Footer } from "./Footer";
+import { BackgroundGridLines } from "./BackgroundGridLines";
 
 // Register ScrollTrigger safely
 if (typeof window !== "undefined") {
@@ -42,6 +44,21 @@ export function LandingPage() {
       });
       return;
     }
+
+    // Setup Lenis inertial smooth scrolling tied to GSAP ticker (inspired by Nick Ho)
+    const lenis = new Lenis({
+      lerp: 0.1,
+      wheelMultiplier: 0.75,
+      gestureOrientation: "vertical",
+      syncTouch: false,
+    });
+
+    lenis.on("scroll", ScrollTrigger.update);
+    const updateRaf = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+    gsap.ticker.add(updateRaf);
+    gsap.ticker.lagSmoothing(0);
 
     const mm = gsap.matchMedia();
 
@@ -236,6 +253,8 @@ export function LandingPage() {
     }, container);
 
     return () => {
+      gsap.ticker.remove(updateRaf);
+      lenis.destroy();
       mm.revert();
       ctx.revert();
       ScrollTrigger.getAll().forEach((t) => t.kill());
@@ -247,6 +266,9 @@ export function LandingPage() {
       ref={containerRef}
       className="min-h-screen bg-[var(--canvas)] text-[var(--text)] selection:bg-[var(--brand-muted)] selection:text-[var(--text)] overflow-x-hidden font-ui relative"
     >
+      {/* Architectural vertical grid lines inspired by Nick Ho */}
+      <BackgroundGridLines />
+
       {/* Desktop custom cursor */}
       <CustomCursor />
 

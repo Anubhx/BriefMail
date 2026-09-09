@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "BriefMail terms of service — user responsibilities, service availability, and terms of use.",
+    "BriefMail terms of service - user responsibilities, service availability, and terms of use.",
   alternates: {
     canonical: "https://briefmail.vercel.app/terms",
   },

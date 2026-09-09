@@ -11,7 +11,7 @@ const PROBLEMS = [
   {
     num: "Manual re-entry",
     title: "You're the integration layer",
-    body: "Copying expenses into a budget sheet. Pasting job links into Notion. Re-typing meeting URLs into your calendar. Your inbox already has this data — nobody's using it.",
+    body: "Copying expenses into a budget sheet. Pasting job links into Notion. Re-typing meeting URLs into your calendar. Your inbox already has this data - nobody's using it.",
   },
   {
     num: "Clutter as insurance",
@@ -28,7 +28,7 @@ export function ProblemSection() {
         <div className="grid grid-cols-1 md:grid-cols-[0.42fr_0.58fr] gap-5 md:gap-16 mb-12 md:mb-[72px]">
           <div>
             <span className="font-mono text-[12.5px] text-[var(--text-3)]">
-              01 — the problem
+              01 - the problem
             </span>
           </div>
           <div>

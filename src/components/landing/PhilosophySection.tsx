@@ -9,7 +9,7 @@ const PRINCIPLES = [
   },
   {
     title: "Privacy by default",
-    body: "Structured metadata and summaries live in Postgres with row-level security — not permanent copies of your full email bodies.",
+    body: "Structured metadata and summaries live in Postgres with row-level security - not permanent copies of your full email bodies.",
   },
   {
     title: "Speed as a feature",

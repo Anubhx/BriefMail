@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 interface Surface {
@@ -17,7 +18,7 @@ const SURFACES: Surface[] = [
   {
     key: "finance",
     title: "Finance & investments",
-    desc: "UPI debits, credit card bills, SIP confirmations, and Demat statements — pulled from raw receipts into running totals and upcoming EMIs, automatically.",
+    desc: "UPI debits, credit card bills, SIP confirmations, and Demat statements - pulled from raw receipts into running totals and upcoming EMIs, automatically.",
     accent: "var(--emerald)",
     accentBg: "rgba(47, 166, 106, 0.12)",
     exampleLabel: "next EMI",
@@ -40,7 +41,7 @@ const SURFACES: Surface[] = [
   {
     key: "career",
     title: "Career pipeline",
-    desc: "Recruiter outreach, application confirmations, assessment links, and offer letters — parsed straight into a drag-and-drop Kanban you don't have to build yourself.",
+    desc: "Recruiter outreach, application confirmations, assessment links, and offer letters - parsed straight into a drag-and-drop Kanban you don't have to build yourself.",
     accent: "var(--indigo)",
     accentBg: "rgba(66, 103, 213, 0.12)",
     exampleLabel: "active threads",
@@ -63,7 +64,7 @@ const SURFACES: Surface[] = [
   {
     key: "meetings",
     title: "Meetings & calendar",
-    desc: "Google Meet, Zoom, and Teams invites unified into one schedule, with a next-up hero card and one-click join — no hunting through threads for the link.",
+    desc: "Google Meet, Zoom, and Teams invites unified into one schedule, with a next-up hero card and one-click join - no hunting through threads for the link.",
     accent: "var(--purple)",
     accentBg: "rgba(139, 92, 199, 0.12)",
     exampleLabel: "next up",
@@ -108,6 +109,21 @@ const SURFACES: Surface[] = [
 ];
 
 export function SurfacesGrid() {
+  const [secondsLeft, setSecondsLeft] = useState(292);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => (prev > 1 ? prev - 1 : 292));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (totalSec: number) => {
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
   return (
     <section id="surfaces" className="py-20 md:py-[120px]">
       <div className="max-w-[1200px] mx-auto px-6 md:px-10">
@@ -172,8 +188,8 @@ export function SurfacesGrid() {
               {/* Example row */}
               <div className="font-mono text-[12px] text-[var(--text-3)] pt-4 border-t border-[var(--border)] flex items-center justify-between">
                 <span>{surface.exampleLabel}</span>
-                <b className="text-[var(--text-2)] font-medium">
-                  {surface.exampleValue}
+                <b className="text-[var(--text-2)] font-medium tabular-nums">
+                  {surface.key === "system" ? formatTime(secondsLeft) : surface.exampleValue}
                 </b>
               </div>
             </div>

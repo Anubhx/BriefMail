@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "BriefMail privacy policy — how we handle your Google account data, email metadata, and security.",
+    "BriefMail privacy policy - how we handle your Google account data, email metadata, and security.",
   alternates: {
     canonical: "https://briefmail.vercel.app/privacy",
   },

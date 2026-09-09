@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Inbox",
   description:
-    "Your AI-triaged inbox — emails categorised, prioritised, and ready to action in one clean view.",
+    "Your AI-triaged inbox - emails categorised, prioritised, and ready to action in one clean view.",
   robots: { index: false, follow: false },
 };
 

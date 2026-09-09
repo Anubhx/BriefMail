@@ -32,13 +32,13 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   // ── Title template ────────────────────────────────────────────────────────
   title: {
-    default: "BriefMail — Intelligent Email Copilot",
+    default: "BriefMail - Intelligent Email Copilot",
     template: "%s | BriefMail",
   },
 
   // ── Description ───────────────────────────────────────────────────────────
   description:
-    "BriefMail automatically triages your Gmail inbox, extracts financial receipts, tracks job applications, and generates meeting digests — powered by AI.",
+    "BriefMail automatically triages your Gmail inbox, extracts financial receipts, tracks job applications, and generates meeting digests - powered by AI.",
 
   // ── Canonical URL ─────────────────────────────────────────────────────────
   metadataBase: new URL(BASE_URL),
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: BASE_URL,
     siteName: "BriefMail",
-    title: "BriefMail — Intelligent Email Copilot",
+    title: "BriefMail - Intelligent Email Copilot",
     description:
       "Automated inbox triage, finance tracking, career pipeline, and meeting digests powered by AI.",
     images: [
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "BriefMail — Calm, Editorial Email Triage for Power Users",
+        alt: "BriefMail - Calm, Editorial Email Triage for Power Users",
       },
     ],
   },
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
   // ── Twitter / X card ──────────────────────────────────────────────────────
   twitter: {
     card: "summary_large_image",
-    title: "BriefMail — Intelligent Email Copilot",
+    title: "BriefMail - Intelligent Email Copilot",
     description:
       "Automated inbox triage, finance tracking, career pipeline, and meeting digests powered by AI.",
     images: ["/og-image.jpg"],

@@ -433,10 +433,10 @@ function SettingsContent() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -15, scale: 0.96 }}
             className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm shadow-xs ${toastMessage.type === "success"
-                ? "bg-emerald-50 border-emerald-200 text-emerald-900"
-                : toastMessage.type === "error"
-                  ? "bg-rose-50 border-rose-200 text-rose-900"
-                  : "bg-surface-elevated border-border-default text-text-primary"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-900"
+              : toastMessage.type === "error"
+                ? "bg-rose-50 border-rose-200 text-rose-900"
+                : "bg-surface-elevated border-border-default text-text-primary"
               }`}
           >
             <div className="flex items-center gap-2.5">
@@ -474,18 +474,18 @@ function SettingsContent() {
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <div
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono border transition-colors ${isN8nLoading
-                ? "bg-surface-subtle border-border-default text-text-muted"
-                : n8nStatus?.online
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                  : "bg-rose-50 border-rose-200 text-rose-800"
+              ? "bg-surface-subtle border-border-default text-text-muted"
+              : n8nStatus?.online
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-rose-50 border-rose-200 text-rose-800"
               }`}
           >
             <span
               className={`w-2 h-2 rounded-full ${isN8nLoading
-                  ? "bg-text-muted animate-pulse"
-                  : n8nStatus?.online
-                    ? "bg-emerald-600 animate-pulse"
-                    : "bg-rose-600"
+                ? "bg-text-muted animate-pulse"
+                : n8nStatus?.online
+                  ? "bg-emerald-600 animate-pulse"
+                  : "bg-rose-600"
                 }`}
             />
             <span>
@@ -570,7 +570,7 @@ function SettingsContent() {
               </span>
               <ArrowRight className="w-3 h-3 text-text-muted" />
               <span className="px-2 py-0.5 rounded-md bg-brand/10 border border-brand/30 text-brand text-xs font-mono font-bold">
-                Tier 3 (Gemini 2.5 Flash Lite)
+                Tier 3 (Gemini 3.5 Flash Lite)
               </span>
             </div>
           </div>
@@ -604,8 +604,8 @@ function SettingsContent() {
                 window.location.href = "/api/gmail/auth";
               }}
               className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-sans font-medium text-sm transition-all shadow-xs ${maxAccountsReached
-                  ? "bg-surface-subtle border border-border-default text-text-muted cursor-not-allowed"
-                  : "bg-text-primary text-white hover:bg-text-primary/90"
+                ? "bg-surface-subtle border border-border-default text-text-muted cursor-not-allowed"
+                : "bg-text-primary text-white hover:bg-text-primary/90"
                 }`}
             >
               <Plus className="w-4 h-4" />
@@ -749,8 +749,8 @@ function SettingsContent() {
                         {/* Status Badge */}
                         <div
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium ${account.sync_enabled
-                              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                              : "bg-surface-subtle text-text-muted border border-border-default"
+                            ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                            : "bg-surface-subtle text-text-muted border border-border-default"
                             }`}
                         >
                           <span
@@ -914,8 +914,8 @@ function SettingsContent() {
                         disabled={isProcessing || isStarting}
                         onClick={() => handleStartImport(account)}
                         className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-sans font-medium text-xs transition-all shadow-xs ${isProcessing
-                            ? "bg-surface-subtle border border-border-default text-text-muted cursor-not-allowed"
-                            : "bg-text-primary text-white hover:bg-text-primary/90"
+                          ? "bg-surface-subtle border border-border-default text-text-muted cursor-not-allowed"
+                          : "bg-text-primary text-white hover:bg-text-primary/90"
                           }`}
                       >
                         {isStarting ? (
@@ -960,8 +960,8 @@ function SettingsContent() {
                           animate={{ width: `${Math.min(100, Math.max(0, activeJob.percent))}%` }}
                           transition={{ duration: 0.5, ease: "easeOut" }}
                           className={`h-full rounded-full ${isCompleted
-                              ? "bg-emerald-600"
-                              : "bg-text-primary"
+                            ? "bg-emerald-600"
+                            : "bg-text-primary"
                             }`}
                         />
                       </div>

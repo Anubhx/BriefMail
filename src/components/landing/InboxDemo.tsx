@@ -21,7 +21,7 @@ const DEMO_EMAILS: DemoEmail[] = [
   {
     initials: "LI",
     sender: "LinkedIn Recruiter",
-    subject: "Interview scheduled — Senior Frontend, Thu 3pm",
+    subject: "Interview scheduled - Senior Frontend, Thu 3pm",
     tag: "career",
     tagClass: "bg-[#E0E7FF] text-[#4338CA]",
   },
@@ -35,7 +35,7 @@ const DEMO_EMAILS: DemoEmail[] = [
   {
     initials: "AX",
     sender: "Axis Bank",
-    subject: "Your OTP is 482913 — valid for 5 min",
+    subject: "Your OTP is 482913 - valid for 5 min",
     tag: "otp",
     tagClass: "bg-[#FEF3E7] text-[#C2570F]",
   },

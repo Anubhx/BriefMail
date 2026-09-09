@@ -39,17 +39,23 @@
   --ui: var(--font-inter), 'Inter', -apple-system, sans-serif;
   --mono: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
 
-  --success: 152 69% 31%;        /* #16803C — green-700 */
+  --success: 152 69% 31%;
+  /* #16803C - green-700 */
   --success-foreground: 0 0% 98%;
-  --success-muted: 141 84% 93%;  /* #DCFCE7 — green-100 */
+  --success-muted: 141 84% 93%;
+  /* #DCFCE7 - green-100 */
 
-  --warning: 32 95% 44%;         /* #D97706 — amber-600 */
+  --warning: 32 95% 44%;
+  /* #D97706 - amber-600 */
   --warning-foreground: 0 0% 98%;
-  --warning-muted: 48 96% 89%;   /* #FEF9C3 — yellow-100 */
+  --warning-muted: 48 96% 89%;
+  /* #FEF9C3 - yellow-100 */
 
-  --danger: 0 72% 51%;           /* #DC2626 — red-600 */
+  --danger: 0 72% 51%;
+  /* #DC2626 - red-600 */
   --danger-foreground: 0 0% 98%;
-  --danger-muted: 0 86% 97%;     /* #FEF2F2 — red-50 */
+  --danger-muted: 0 86% 97%;
+  /* #FEF2F2 - red-50 */
 }
 
 .dark {
@@ -66,17 +72,23 @@
   --accent: #FF5A2A;
   --accent-hover: #E94D21;
 
-  --success: 142 71% 45%;        /* #22C55E — green-500 */
+  --success: 142 71% 45%;
+  /* #22C55E - green-500 */
   --success-foreground: 0 0% 98%;
-  --success-muted: 143 64% 9%;   /* #052E16 — green-950 */
+  --success-muted: 143 64% 9%;
+  /* #052E16 - green-950 */
 
-  --warning: 38 92% 50%;         /* #F59E0B — amber-500 */
+  --warning: 38 92% 50%;
+  /* #F59E0B - amber-500 */
   --warning-foreground: 0 0% 98%;
-  --warning-muted: 32 81% 10%;   /* #1C0A00 — amber-950 approx */
+  --warning-muted: 32 81% 10%;
+  /* #1C0A00 - amber-950 approx */
 
-  --danger: 0 91% 71%;           /* #F87171 — red-400 */
+  --danger: 0 91% 71%;
+  /* #F87171 - red-400 */
   --danger-foreground: 0 0% 98%;
-  --danger-muted: 0 63% 10%;     /* #1F0000 — red-950 approx */
+  --danger-muted: 0 63% 10%;
+  /* #1F0000 - red-950 approx */
 }
 
 body {
@@ -94,13 +106,16 @@ body {
   width: 5px;
   height: 5px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #D6D1C8;
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #A2A098;
 }
@@ -109,6 +124,29 @@ body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* Lenis Smooth Scroll Engine */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
 }

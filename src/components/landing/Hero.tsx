@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Show, SignUpButton } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { InboxDemo } from "./InboxDemo";
+import { SplitButton } from "./SplitButton";
 
 export function Hero() {
   return (
@@ -36,7 +37,7 @@ export function Hero() {
               className="font-sans text-[17px] leading-[1.6] text-[var(--text-2)] max-w-[46ch] mt-6"
             >
               BriefMail reads every email that hits your Gmail and sorts it into the thing
-              it actually is — a bank alert, an interview invite, a meeting link, a bill
+              it actually is - a bank alert, an interview invite, a meeting link, a bill
               due Thursday. No more digging.
             </p>
 
@@ -44,30 +45,16 @@ export function Hero() {
             <div data-reveal-hero className="flex flex-wrap items-center gap-[22px] mt-9">
               <Show when="signed-out">
                 <SignUpButton mode="modal">
-                  <motion.button
-                    type="button"
-                    className="font-ui text-[14px] font-medium px-5 py-2.5 rounded-[7px] bg-[var(--brand)] text-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_0_0_1px_rgba(0,0,0,0.03)] inline-flex items-center gap-2 min-h-[44px] cursor-pointer hover:bg-[var(--brand-hover)]"
-                    whileHover={{ y: -1 }}
-                    whileTap={{ y: 0 }}
-                    data-hover
-                  >
+                  <SplitButton>
                     Connect your Gmail →
-                  </motion.button>
+                  </SplitButton>
                 </SignUpButton>
               </Show>
 
               <Show when="signed-in">
-                <Link href="/inbox">
-                  <motion.button
-                    type="button"
-                    className="font-ui text-[14px] font-medium px-5 py-2.5 rounded-[7px] bg-[var(--brand)] text-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_0_0_1px_rgba(0,0,0,0.03)] inline-flex items-center gap-2 min-h-[44px] cursor-pointer hover:bg-[var(--brand-hover)]"
-                    whileHover={{ y: -1 }}
-                    whileTap={{ y: 0 }}
-                    data-hover
-                  >
-                    Go to Inbox →
-                  </motion.button>
-                </Link>
+                <SplitButton href="/inbox">
+                  Go to Inbox →
+                </SplitButton>
               </Show>
 
               <motion.a
