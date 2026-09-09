@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BriefMail — Your inbox, understood</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F5F3EE;
+    --surface:#FFFFFF;
+    --surface-2:#F8F7F4;
+    --surface-3:#F1F0EC;
+    --border:#E4E1DA;
+    --border-strong:#D6D1C8;
+    --text:#171717;
+    --text-2:#4A4A45;
+    --text-3:#77766F;
+    --brand:#FF5A2A;
+    --brand-hover:#E94D21;
+    --brand-subtle:rgba(255,90,42,.08);
+    --brand-muted:rgba(255,90,42,.15);
+
+    --emerald:#2FA66A;
+    --teal:#0D9488;
+    --indigo:#4267D5;
+    --purple:#8B5CC7;
+    --amber:#E46C2E;
+    --rose:#E11D48;
+
+    --serif:'Newsreader', Georgia, serif;
+    --ui:'Inter', -apple-system, sans-serif;
+    --mono:'JetBrains Mono', monospace;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:auto;}
+  body{
+    background:var(--canvas);
+    color:var(--text);
+    font-family:var(--ui);
+    overflow-x:hidden;
+    cursor:none;
+  }
+  ::selection{background:var(--brand-muted);color:var(--text);}
+
+  a{color:inherit;text-decoration:none;}
+  img{display:block;max-width:100%;}
+
+  .wrap{
+    max-width:1200px;
+    margin:0 auto;
+    padding:0 40px;
+  }
+
+  @media(max-width:720px){
+    .wrap{padding:0 24px;}
+    body{cursor:auto;}
+    .cursor,.cursor-ring{display:none;}
+  }
+
+  /* ---------- custom cursor ---------- */
+  .cursor{
+    position:fixed;
+    top:0;left:0;
+    width:6px;height:6px;
+    background:var(--text);
+    border-radius:50%;
+    pointer-events:none;
+    z-index:9999;
+    transform:translate(-50%,-50%);
+    mix-blend-mode:normal;
+  }
+  .cursor-ring{
+    position:fixed;
+    top:0;left:0;
+    width:34px;height:34px;
+    border:1px solid var(--border-strong);
+    border-radius:50%;
+    pointer-events:none;
+    z-index:9998;
+    transform:translate(-50%,-50%);
+    transition:width .25s cubic-bezier(.22,1,.36,1), height .25s cubic-bezier(.22,1,.36,1), border-color .25s ease, background .25s ease;
+  }
+  .cursor-ring.hover{
+    width:64px;height:64px;
+    border-color:var(--brand);
+    background:var(--brand-subtle);
+  }
+  .cursor-ring.text-hover{
+    width:8px;height:44px;
+    border-radius:2px;
+    border-color:var(--brand);
+  }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:fixed;
+    top:0;left:0;right:0;
+    z-index:100;
+    padding:26px 0;
+    background:rgba(245,243,238,0);
+    transition:background .4s ease, border-color .4s ease, backdrop-filter .4s ease;
+    border-bottom:1px solid transparent;
+  }
+  nav.scrolled{
+    background:rgba(245,243,238,.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;}
+  .logo{
+    font-family:var(--serif);
+    font-size:20px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .logo-mark{
+    width:9px;height:9px;
+    background:var(--brand);
+    border-radius:2px;
+    flex-shrink:0;
+  }
+  .nav-links{
+    display:flex;
+    gap:36px;
+    font-size:14px;
+    color:var(--text-2);
+  }
+  .nav-links a{
+    position:relative;
+    padding:4px 0;
+  }
+  .nav-links a::after{
+    content:'';
+    position:absolute;
+    left:0;bottom:0;
+    width:0;height:1px;
+    background:var(--text);
+    transition:width .3s cubic-bezier(.22,1,.36,1);
+  }
+  .nav-links a:hover::after{width:100%;}
+  .nav-links a:hover{color:var(--text);}
+  @media(max-width:720px){.nav-links{display:none;}}
+
+  .btn{
+    font-family:var(--ui);
+    font-size:14px;
+    font-weight:500;
+    padding:10px 20px;
+    border-radius:7px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition:transform .25s cubic-bezier(.22,1,.36,1), background .2s ease, box-shadow .2s ease;
+  }
+  .btn-primary{
+    background:var(--brand);
+    color:#fff;
+    box-shadow:0 1px 2px rgba(0,0,0,.04), 0 0 0 1px rgba(0,0,0,.03);
+  }
+  .btn-primary:hover{background:var(--brand-hover);transform:translateY(-1px);}
+  .btn-primary:active{background:#CF421C;transform:translateY(0);}
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:180px 0 120px;
+    position:relative;
+  }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.1fr .9fr;
+    gap:64px;
+    align-items:center;
+  }
+  @media(max-width:960px){
+    .hero-grid{grid-template-columns:1fr;gap:56px;}
+    .hero{padding:140px 0 80px;}
+  }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text-3);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .eyebrow .dot{
+    width:6px;height:6px;
+    background:var(--emerald);
+    border-radius:50%;
+    box-shadow:0 0 0 3px rgba(47,166,106,.15);
+  }
+
+  h1{
+    font-family:var(--serif);
+    font-size:clamp(38px, 4.6vw, 60px);
+    line-height:1.06;
+    font-weight:500;
+    letter-spacing:-.01em;
+    color:var(--text);
+    max-width:15ch;
+  }
+  h1 em{
+    font-style:italic;
+    color:var(--brand);
+    font-weight:500;
+  }
+
+  .hero-sub{
+    font-size:17px;
+    line-height:1.6;
+    color:var(--text-2);
+    max-width:46ch;
+    margin-top:24px;
+  }
+
+  .hero-cta{
+    display:flex;
+    align-items:center;
+    gap:22px;
+    margin-top:36px;
+  }
+  .link-quiet{
+    font-size:14px;
+    color:var(--text-2);
+    border-bottom:1px solid var(--border-strong);
+    padding-bottom:2px;
+    transition:color .2s ease, border-color .2s ease;
+  }
+  .link-quiet:hover{color:var(--text);border-color:var(--text);}
+
+  .hero-note{
+    margin-top:44px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text-3);
+  }
+
+  /* ---------- hero visual: inbox transform demo ---------- */
+  .inbox-demo{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 8px 24px -3px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.05);
+    overflow:hidden;
+  }
+  .inbox-demo-head{
+    padding:14px 18px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--surface-2);
+  }
+  .inbox-demo-head span{
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--text-3);
+  }
+  .traffic{display:flex;gap:6px;}
+  .traffic i{width:8px;height:8px;border-radius:50%;background:var(--border-strong);display:block;}
+
+  .demo-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:16px 18px;
+    border-bottom:1px solid var(--border);
+    position:relative;
+  }
+  .demo-row:last-child{border-bottom:none;}
+  .demo-avatar{
+    width:34px;height:34px;
+    border-radius:50%;
+    background:var(--surface-3);
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-3);
+  }
+  .demo-body{flex:1;min-width:0;}
+  .demo-sender{font-size:13.5px;font-weight:500;color:var(--text);}
+  .demo-subject{font-size:13px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+  .demo-tag{
+    font-family:var(--mono);
+    font-size:10.5px;
+    padding:4px 8px;
+    border-radius:5px;
+    white-space:nowrap;
+    opacity:0;
+    transform:translateX(6px);
+  }
+  .tag-finance{background:#DCFCE7;color:#16803C;}
+  .tag-jobs{background:#E0E7FF;color:#4338CA;}
+  .tag-meetings{background:#EDE4FB;color:#6D28D9;}
+  .tag-otp{background:#FEF3E7;color:#C2570F;}
+
+  /* ---------- section shared ---------- */
+  section{padding:120px 0;}
+  @media(max-width:720px){section{padding:80px 0;}}
+
+  .section-head{
+    display:grid;
+    grid-template-columns:.42fr .58fr;
+    gap:64px;
+    margin-bottom:72px;
+  }
+  @media(max-width:840px){
+    .section-head{grid-template-columns:1fr;gap:20px;}
+  }
+  .section-kicker{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text-3);
+  }
+  .section-title{
+    font-family:var(--serif);
+    font-size:clamp(28px,3.2vw,40px);
+    line-height:1.15;
+    font-weight:500;
+    letter-spacing:-.01em;
+  }
+  .section-desc{
+    font-size:16px;
+    line-height:1.65;
+    color:var(--text-2);
+    max-width:52ch;
+    align-self:end;
+  }
+
+  hr.rule{
+    border:none;
+    border-top:1px solid var(--border);
+    margin:0 0 72px;
+  }
+
+  /* ---------- section 1: problem ---------- */
+  .problem-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    background:var(--border);
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  @media(max-width:780px){.problem-grid{grid-template-columns:1fr;}}
+  .problem-cell{
+    background:var(--surface);
+    padding:36px 32px;
+  }
+  .problem-num{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-3);
+    margin-bottom:18px;
+  }
+  .problem-cell h3{
+    font-family:var(--serif);
+    font-size:21px;
+    font-weight:500;
+    margin-bottom:12px;
+    letter-spacing:-.005em;
+  }
+  .problem-cell p{
+    font-size:14.5px;
+    line-height:1.65;
+    color:var(--text-2);
+  }
+
+  /* ---------- section 2: pipeline (how it works) ---------- */
+  .pipeline{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    border-top:1px solid var(--border);
+  }
+  .tier{
+    display:grid;
+    grid-template-columns:120px 1fr 200px;
+    gap:32px;
+    padding:40px 0;
+    border-bottom:1px solid var(--border);
+    align-items:start;
+    position:relative;
+  }
+  @media(max-width:780px){
+    .tier{grid-template-columns:1fr;gap:12px;padding:32px 0;}
+  }
+  .tier-label{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text-3);
+    padding-top:4px;
+  }
+  .tier-main h3{
+    font-family:var(--serif);
+    font-size:23px;
+    font-weight:500;
+    margin-bottom:10px;
+  }
+  .tier-main p{
+    font-size:15px;
+    line-height:1.65;
+    color:var(--text-2);
+    max-width:50ch;
+  }
+  .tier-stat{
+    text-align:right;
+    padding-top:4px;
+  }
+  @media(max-width:780px){.tier-stat{text-align:left;}}
+  .tier-stat .num{
+    font-family:var(--mono);
+    font-size:26px;
+    color:var(--text);
+    display:block;
+  }
+  .tier-stat .lbl{
+    font-size:12px;
+    color:var(--text-3);
+    margin-top:4px;
+  }
+
+  /* ---------- section 3: surfaces ---------- */
+  .surfaces{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+  }
+  @media(max-width:780px){.surfaces{grid-template-columns:1fr;}}
+
+  .surface-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:32px;
+    box-shadow:0 1px 2px rgba(0,0,0,.04), 0 0 0 1px rgba(0,0,0,.03);
+    transition:border-color .3s ease, box-shadow .3s ease, transform .3s cubic-bezier(.22,1,.36,1);
+    position:relative;
+    overflow:hidden;
+  }
+  .surface-card::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:3px;
+    background:var(--accent, var(--brand));
+    transform:scaleX(0);
+    transform-origin:left;
+    transition:transform .35s cubic-bezier(.22,1,.36,1);
+  }
+  .surface-card:hover::before{transform:scaleX(1);}
+  .surface-card:hover{
+    box-shadow:0 8px 24px -3px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.05);
+    transform:translateY(-3px);
+  }
+  .surface-card.finance{--accent:var(--emerald);}
+  .surface-card.career{--accent:var(--indigo);}
+  .surface-card.meetings{--accent:var(--purple);}
+  .surface-card.system{--accent:var(--amber);}
+
+  .surface-icon{
+    width:38px;height:38px;
+    border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:22px;
+    background:color-mix(in srgb, var(--accent) 12%, white);
+  }
+  .surface-icon svg{width:18px;height:18px;stroke:var(--accent);}
+
+  .surface-card h3{
+    font-family:var(--serif);
+    font-size:20px;
+    font-weight:500;
+    margin-bottom:10px;
+  }
+  .surface-card p{
+    font-size:14.5px;
+    line-height:1.6;
+    color:var(--text-2);
+    margin-bottom:20px;
+  }
+  .surface-example{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-3);
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    display:flex;
+    justify-content:space-between;
+  }
+  .surface-example b{color:var(--text-2);font-weight:500;}
+
+  /* ---------- section 4: philosophy ---------- */
+  .philosophy{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:64px;
+  }
+  @media(max-width:720px){.philosophy{padding:36px 24px;}}
+  .philosophy-top{
+    display:grid;
+    grid-template-columns:.45fr .55fr;
+    gap:48px;
+    margin-bottom:56px;
+  }
+  @media(max-width:840px){.philosophy-top{grid-template-columns:1fr;gap:24px;}}
+  .philosophy-top h2{
+    font-family:var(--serif);
+    font-size:clamp(26px,3vw,34px);
+    font-weight:500;
+    line-height:1.2;
+  }
+  .philosophy-top p{
+    font-size:15.5px;
+    line-height:1.65;
+    color:var(--text-2);
+    align-self:end;
+  }
+  .principles{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    background:var(--border);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  @media(max-width:780px){.principles{grid-template-columns:1fr;}}
+  .principle{
+    background:var(--surface);
+    padding:28px 26px;
+  }
+  .principle h4{
+    font-size:14.5px;
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  .principle p{
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--text-3);
+  }
+
+  /* ---------- final cta ---------- */
+  .final-cta{
+    text-align:left;
+    padding:140px 0 100px;
+  }
+  .final-cta-inner{
+    max-width:680px;
+  }
+  .final-cta h2{
+    font-family:var(--serif);
+    font-size:clamp(32px,4.6vw,52px);
+    font-weight:500;
+    line-height:1.1;
+    letter-spacing:-.01em;
+  }
+  .final-cta p{
+    font-size:16px;
+    color:var(--text-2);
+    margin-top:20px;
+    max-width:44ch;
+  }
+  .final-cta-actions{
+    display:flex;
+    align-items:center;
+    gap:22px;
+    margin-top:36px;
+  }
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:40px 0;
+  }
+  footer .wrap{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:13px;
+    color:var(--text-3);
+  }
+  @media(max-width:600px){
+    footer .wrap{flex-direction:column;gap:12px;text-align:center;}
+  }
+
+  [data-reveal]{opacity:0;}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav id="nav">
+  <div class="wrap">
+    <div class="logo"><span class="logo-mark"></span>BriefMail</div>
+    <div class="nav-links">
+      <a href="#problem" data-hover>The problem</a>
+      <a href="#pipeline" data-hover>How it works</a>
+      <a href="#surfaces" data-hover>Inside the app</a>
+      <a href="#philosophy" data-hover>Philosophy</a>
+    </div>
+    <a href="#cta" class="btn btn-primary" data-hover>Connect Gmail →</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow"><span class="dot"></span>Reads your inbox in under 5ms, most of the time</div>
+        <h1 data-reveal-hero>Your inbox isn't a list.<br>It's <em>five different jobs</em><br>pretending to be one.</h1>
+        <p class="hero-sub" data-reveal-hero>BriefMail reads every email that hits your Gmail and sorts it into the thing it actually is — a bank alert, an interview invite, a meeting link, a bill due Thursday. No more digging.</p>
+        <div class="hero-cta" data-reveal-hero>
+          <a href="#cta" class="btn btn-primary" data-hover>Connect your Gmail →</a>
+          <a href="#pipeline" class="link-quiet" data-hover>See how classification works</a>
+        </div>
+        <div class="hero-note" data-reveal-hero>read-only by default · revoke access anytime · built on Supabase RLS</div>
+      </div>
+
+      <div class="inbox-demo" data-reveal-hero>
+        <div class="inbox-demo-head">
+          <span>inbox.briefmail.app</span>
+          <div class="traffic"><i></i><i></i><i></i></div>
+        </div>
+        <div class="demo-row" data-demo-row>
+          <div class="demo-avatar">HD</div>
+          <div class="demo-body">
+            <div class="demo-sender">HDFC Bank</div>
+            <div class="demo-subject">₹4,200 debited via UPI to Zomato</div>
+          </div>
+          <div class="demo-tag tag-finance" data-demo-tag>finance</div>
+        </div>
+        <div class="demo-row" data-demo-row>
+          <div class="demo-avatar">LI</div>
+          <div class="demo-body">
+            <div class="demo-sender">LinkedIn Recruiter</div>
+            <div class="demo-subject">Interview scheduled — Senior Frontend, Thu 3pm</div>
+          </div>
+          <div class="demo-tag tag-jobs" data-demo-tag>career</div>
+        </div>
+        <div class="demo-row" data-demo-row>
+          <div class="demo-avatar">GM</div>
+          <div class="demo-body">
+            <div class="demo-sender">Google Meet</div>
+            <div class="demo-subject">Design sync in 15 minutes</div>
+          </div>
+          <div class="demo-tag tag-meetings" data-demo-tag>meetings</div>
+        </div>
+        <div class="demo-row" data-demo-row>
+          <div class="demo-avatar">AX</div>
+          <div class="demo-body">
+            <div class="demo-sender">Axis Bank</div>
+            <div class="demo-subject">Your OTP is 482913 — valid for 5 min</div>
+          </div>
+          <div class="demo-tag tag-otp" data-demo-tag>otp</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section id="problem">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">01 — the problem</div>
+        </div>
+        <div>
+          <h2 class="section-title" data-reveal>Three things are quietly broken about how you use email today.</h2>
+        </div>
+      </div>
+
+      <div class="problem-grid" data-reveal-group>
+        <div class="problem-cell" data-reveal-item>
+          <div class="problem-num">Context fragmentation</div>
+          <h3>The important thing is buried</h3>
+          <p>A ₹15,000 EMI due Friday sits under fourteen unread newsletters. Interview confirmations get lost between promo codes. Nothing about Gmail tells you what matters today.</p>
+        </div>
+        <div class="problem-cell" data-reveal-item>
+          <div class="problem-num">Manual re-entry</div>
+          <h3>You're the integration layer</h3>
+          <p>Copying expenses into a budget sheet. Pasting job links into Notion. Re-typing meeting URLs into your calendar. Your inbox already has this data — nobody's using it.</p>
+        </div>
+        <div class="problem-cell" data-reveal-item>
+          <div class="problem-num">Clutter as insurance</div>
+          <h3>You keep everything, just in case</h3>
+          <p>Thousands of promotional emails stay unarchived because one might contain an invoice you'll need in April. Search shouldn't require hoarding.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pipeline">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-kicker">02 — how it works</div>
+        <div>
+          <h2 class="section-title" data-reveal>A cascade, not a single model.</h2>
+          <p class="section-desc" data-reveal>Every email is expensive to run through an LLM and slow to wait on. BriefMail only escalates when it has to — most mail never reaches Tier 3 at all.</p>
+        </div>
+      </div>
+
+      <div class="pipeline" data-reveal-group>
+        <div class="tier" data-reveal-item>
+          <div class="tier-label">TIER 1</div>
+          <div class="tier-main">
+            <h3>Deterministic rules</h3>
+            <p>Known bank domains, OTP subject patterns, recruitment portals like LinkedIn and Naukri — matched by regex before any model is even loaded. If the rule fires, that's the answer.</p>
+          </div>
+          <div class="tier-stat">
+            <span class="num">&lt;5ms</span>
+            <span class="lbl">resolves ~70% of mail</span>
+          </div>
+        </div>
+
+        <div class="tier" data-reveal-item>
+          <div class="tier-label">TIER 2</div>
+          <div class="tier-main">
+            <h3>Lightweight classifier</h3>
+            <p>Emails Tier 1 can't confidently place get a fast zero-shot pass against a fixed category ontology — still no full LLM call, still fast enough to feel instant.</p>
+          </div>
+          <div class="tier-stat">
+            <span class="num">~200ms</span>
+            <span class="lbl">handles the ambiguous middle</span>
+          </div>
+        </div>
+
+        <div class="tier" data-reveal-item>
+          <div class="tier-label">TIER 3</div>
+          <div class="tier-main">
+            <h3>Gemini 2.5 Flash Lite</h3>
+            <p>Only genuinely unclear mail reaches an LLM — and even then it returns structured JSON: summary, amounts, due dates, meeting links. Nothing is left as an unstructured guess.</p>
+          </div>
+          <div class="tier-stat">
+            <span class="num">~1s</span>
+            <span class="lbl">last resort, not first pass</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="surfaces">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-kicker">03 — inside the app</div>
+        <div>
+          <h2 class="section-title" data-reveal>Four surfaces, one inbox.</h2>
+          <p class="section-desc" data-reveal>Once mail is classified, it stops being a list and becomes structured objects that live in the part of the app built for them.</p>
+        </div>
+      </div>
+
+      <div class="surfaces" data-reveal-group>
+        <div class="surface-card finance" data-reveal-item data-hover>
+          <div class="surface-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></svg></div>
+          <h3>Finance & investments</h3>
+          <p>UPI debits, credit card bills, SIP confirmations, and Demat statements — pulled from raw receipts into running totals and upcoming EMIs, automatically.</p>
+          <div class="surface-example"><span>next EMI</span><b>₹12,400 · Fri</b></div>
+        </div>
+
+        <div class="surface-card career" data-reveal-item data-hover>
+          <div class="surface-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="10" rx="1"/></svg></div>
+          <h3>Career pipeline</h3>
+          <p>Recruiter outreach, application confirmations, assessment links, and offer letters — parsed straight into a drag-and-drop Kanban you don't have to build yourself.</p>
+          <div class="surface-example"><span>active threads</span><b>7 in progress</b></div>
+        </div>
+
+        <div class="surface-card meetings" data-reveal-item data-hover>
+          <div class="surface-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+          <h3>Meetings & calendar</h3>
+          <p>Google Meet, Zoom, and Teams invites unified into one schedule, with a next-up hero card and one-click join — no hunting through threads for the link.</p>
+          <div class="surface-example"><span>next up</span><b>Design sync · 15m</b></div>
+        </div>
+
+        <div class="surface-card system" data-reveal-item data-hover>
+          <div class="surface-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.6L21 9l-5.4 4.5L17 21l-5-3.6L7 21l1.4-7.5L3 9l6.6-.4L12 2z"/></svg></div>
+          <h3>Action blocks & triage</h3>
+          <p>OTPs surface with one-tap copy and a countdown. Bill deadlines get flagged before they're due. Digests and platform alerts get bundled away from your primary view.</p>
+          <div class="surface-example"><span>OTP expires</span><b>4:52</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="philosophy">
+    <div class="wrap">
+      <div class="philosophy">
+        <div class="philosophy-top">
+          <h2 data-reveal>Built on a few strict rules, not vibes.</h2>
+          <p data-reveal>Most inbox tools bolt AI onto search. BriefMail was designed backwards from a simple standard: never guess when a rule will do, and never keep more of your data than the feature needs.</p>
+        </div>
+        <div class="principles" data-reveal-group>
+          <div class="principle" data-reveal-item>
+            <h4>Rules before models</h4>
+            <p>If a deterministic pattern can classify an email with full precision, BriefMail never spends a model call on it.</p>
+          </div>
+          <div class="principle" data-reveal-item>
+            <h4>Privacy by default</h4>
+            <p>Structured metadata and summaries live in Postgres with row-level security — not permanent copies of your full email bodies.</p>
+          </div>
+          <div class="principle" data-reveal-item>
+            <h4>Speed as a feature</h4>
+            <p>Heuristic triage runs in single-digit milliseconds, so the inbox never feels like it's "thinking" before showing you mail.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cta" class="final-cta">
+    <div class="wrap">
+      <div class="final-cta-inner">
+        <h2 data-reveal>Stop reading your inbox like a list.</h2>
+        <p data-reveal>Connect Gmail in under a minute. BriefMail starts classifying immediately — nothing to configure, nothing to migrate.</p>
+        <div class="final-cta-actions" data-reveal>
+          <a href="#" class="btn btn-primary" data-hover>Connect your Gmail →</a>
+          <a href="#pipeline" class="link-quiet" data-hover>Read the architecture</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 BriefMail</span>
+    <span>Built on Next.js, Supabase & Gemini</span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+/* ---------- custom cursor ---------- */
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+const isTouch = window.matchMedia('(max-width:720px)').matches;
+
+if(!isTouch){
+  let mx=0,my=0,rx=0,ry=0;
+  window.addEventListener('mousemove', e=>{
+    mx=e.clientX; my=e.clientY;
+    cursor.style.left=mx+'px';
+    cursor.style.top=my+'px';
+  });
+  gsap.ticker.add(()=>{
+    rx += (mx-rx)*0.18;
+    ry += (my-ry)*0.18;
+    ring.style.left=rx+'px';
+    ring.style.top=ry+'px';
+  });
+
+  document.querySelectorAll('[data-hover]').forEach(el=>{
+    el.addEventListener('mouseenter', ()=>ring.classList.add('hover'));
+    el.addEventListener('mouseleave', ()=>ring.classList.remove('hover'));
+  });
+  document.querySelectorAll('h1, h2, .hero-sub, .section-desc, .surface-card p').forEach(el=>{
+    el.addEventListener('mouseenter', ()=>ring.classList.add('text-hover'));
+    el.addEventListener('mouseleave', ()=>ring.classList.remove('text-hover'));
+  });
+}
+
+/* ---------- nav bg on scroll ---------- */
+const nav = document.getElementById('nav');
+ScrollTrigger.create({
+  start: 40,
+  onUpdate: self => {
+    nav.classList.toggle('scrolled', self.scroll() > 40);
+  }
+});
+
+/* ---------- hero load sequence (single orchestrated moment) ---------- */
+const heroTl = gsap.timeline({defaults:{ease:'power3.out'}});
+heroTl
+  .from('[data-reveal-hero]', {
+    y: 22,
+    opacity: 0,
+    duration: 0.9,
+    stagger: 0.12
+  })
+  .from('[data-demo-row]', {
+    opacity: 0,
+    x: 14,
+    duration: 0.5,
+    stagger: 0.1
+  }, '-=0.5')
+  .to('[data-demo-tag]', {
+    opacity: 1,
+    x: 0,
+    duration: 0.4,
+    stagger: 0.12,
+    ease: 'back.out(1.6)'
+  }, '-=0.2');
+
+/* ---------- scroll-triggered reveals ---------- */
+document.querySelectorAll('[data-reveal]').forEach(el=>{
+  gsap.fromTo(el, {y:26, opacity:0}, {
+    y:0, opacity:1, duration:0.9, ease:'power3.out',
+    scrollTrigger:{ trigger: el, start:'top 85%' }
+  });
+});
+
+document.querySelectorAll('[data-reveal-group]').forEach(group=>{
+  const items = group.querySelectorAll('[data-reveal-item]');
+  gsap.fromTo(items, {y:22, opacity:0}, {
+    y:0, opacity:1, duration:0.7, ease:'power3.out', stagger:0.09,
+    scrollTrigger:{ trigger: group, start:'top 82%' }
+  });
+});
+
+/* ---------- pipeline tier stat count-up feel + connecting line ---------- */
+gsap.utils.toArray('.tier').forEach((tier, i)=>{
+  gsap.fromTo(tier, {opacity:0.4}, {
+    opacity:1, duration:0.6,
+    scrollTrigger:{ trigger: tier, start:'top 80%' }
+  });
+});
+
+/* ---------- surface cards subtle parallax on scroll ---------- */
+gsap.utils.toArray('.surface-card').forEach((card, i)=>{
+  gsap.to(card, {
+    y: i % 2 === 0 ? -10 : -4,
+    ease:'none',
+    scrollTrigger:{
+      trigger: card,
+      start:'top bottom',
+      end:'bottom top',
+      scrub:1
+    }
+  });
+});
+
+/* ---------- respect reduced motion ---------- */
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  gsap.globalTimeline.timeScale(50);
+  ScrollTrigger.getAll().forEach(st => st.disable());
+  document.querySelectorAll('[data-reveal],[data-reveal-item],[data-reveal-hero]').forEach(el=>{
+    el.style.opacity = 1;
+    el.style.transform = 'none';
+  });
+}
+</script>
+
+</body>
+</html>

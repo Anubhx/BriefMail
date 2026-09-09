@@ -16,6 +16,29 @@
   --accent: #FF5A2A;
   --accent-hover: #E94D21;
 
+  /* BriefMail Landing Page Tokens */
+  --canvas: #F5F3EE;
+  --surface-2: #F8F7F4;
+  --surface-3: #F1F0EC;
+  --text: #171717;
+  --text-2: #4A4A45;
+  --text-3: #77766F;
+  --brand: #FF5A2A;
+  --brand-hover: #E94D21;
+  --brand-subtle: rgba(255, 90, 42, 0.08);
+  --brand-muted: rgba(255, 90, 42, 0.15);
+
+  --emerald: #2FA66A;
+  --teal: #0D9488;
+  --indigo: #4267D5;
+  --purple: #8B5CC7;
+  --amber: #E46C2E;
+  --rose: #E11D48;
+
+  --serif: var(--font-newsreader), 'Newsreader', Georgia, serif;
+  --ui: var(--font-inter), 'Inter', -apple-system, sans-serif;
+  --mono: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
+
   --success: 152 69% 31%;        /* #16803C — green-700 */
   --success-foreground: 0 0% 98%;
   --success-muted: 141 84% 93%;  /* #DCFCE7 — green-100 */
