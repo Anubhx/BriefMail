@@ -1,13 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 
-function validateN8nSecret(request: NextRequest): boolean {
-  const secret = request.headers.get("x-n8n-secret");
-  return secret === process.env.N8N_WEBHOOK_SECRET;
+function validateApiSecret(request: NextRequest): boolean {
+  // Check custom header x-api-secret against DIGEST_API_SECRET
+  const apiSecret = request.headers.get("x-api-secret");
+  const digestApiSecret = process.env.DIGEST_API_SECRET;
+
+  if (digestApiSecret && apiSecret === digestApiSecret) {
+    return true;
+  }
+
+  // Also support x-n8n-secret for backward compatibility with existing n8n workflows
+  const n8nSecret = request.headers.get("x-n8n-secret");
+  const n8nWebhookSecret = process.env.N8N_WEBHOOK_SECRET;
+  if (n8nWebhookSecret && n8nSecret === n8nWebhookSecret) {
+    return true;
+  }
+
+  return false;
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  if (!validateN8nSecret(request)) {
+  if (!validateApiSecret(request)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

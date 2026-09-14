@@ -34,6 +34,9 @@ const isPublicRoute = createRouteMatcher([
   "/api/batch/update-progress",
   "/api/emails/reclassify-all",
 
+  // Digest generation endpoint (authenticated via x-api-secret header)
+  "/api/digest/generate",
+
   // Public status endpoint
   "/api/settings/n8n-status",
 
