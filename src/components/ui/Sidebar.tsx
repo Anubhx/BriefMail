@@ -32,7 +32,7 @@ const categoryNavItems = [
   { href: "/investments", label: "Investments", color: "#0D9488" },
   { href: "/inbox?category=social", label: "Social", color: "#0EA5E9" },
   { href: "/inbox?category=newsletter", label: "Newsletter", color: "#8B5CF6" },
-  { href: "/system", label: "OTP & Codes", color: "#E46C2E" },
+  { href: "/system", label: "System & OTP", color: "#E46C2E" },
 ];
 
 const connectedAccounts = [
